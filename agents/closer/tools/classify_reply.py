@@ -99,6 +99,12 @@ def _keyword_fallback(text: str, reason: str) -> dict[str, Any]:
     }
 
 
+def fallback_classification(text: str, reason: str) -> dict[str, Any]:
+    """Return deterministic classification when the live classifier cannot run."""
+
+    return _keyword_fallback(text, reason)
+
+
 def _normalize(payload: dict[str, Any]) -> dict[str, Any]:
     """Normalize Nemotron classification output."""
 
@@ -140,7 +146,7 @@ def run(inbound_id: UUID | str) -> dict[str, Any]:
                 retries=1,
             )
             result = _normalize(payload)
-        except nemotron_client.NemotronClientError as exc:
+        except Exception as exc:
             result = _keyword_fallback(reply_text, str(exc))
 
         get_client().table("inbound").update(
@@ -149,7 +155,7 @@ def run(inbound_id: UUID | str) -> dict[str, Any]:
                 "classification_confidence": result["confidence"],
                 "classification_key_phrase": result["key_phrase"],
             }
-        ).eq("id", str(inbound_id)).execute()
+        ).eq("id", str(inbound_id)).is_("handled_at", "null").execute()
         _safe_log(
             "classify_reply",
             "succeeded",
