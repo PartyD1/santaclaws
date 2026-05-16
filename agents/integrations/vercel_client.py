@@ -13,8 +13,6 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
 
 
 VERCEL_DEPLOYMENTS_URL = "https://api.vercel.com/v13/deployments"
-PUBLIC_CHECK_TIMEOUT_SECONDS = 90.0
-PUBLIC_CHECK_INTERVAL_SECONDS = 3.0
 
 
 class VercelError(RuntimeError):
@@ -102,72 +100,4 @@ def deploy_html_as_site(html: str, slug: str) -> str:
     url = data.get("url")
     if not url:
         raise VercelError("Vercel response did not include a deployment URL.")
-    public_url = f"https://{url}" if not str(url).startswith("http") else str(url)
-    _verify_public_url(public_url, html)
-    return public_url
-
-
-def _looks_protected(text: str, status_code: int) -> bool:
-    """Return True when a Vercel URL is gated behind login/auth protection."""
-
-    lowered = text[:5000].lower()
-    return status_code in {401, 403} or any(
-        marker in lowered
-        for marker in [
-            "vercel authentication",
-            "deployment protection",
-            "log in to vercel",
-            "sign in to vercel",
-            "/_vercel/sso",
-            "request access",
-        ]
-    )
-
-
-def _verify_public_url(url: str, html: str) -> None:
-    """Confirm the deployment can be opened without Vercel account access."""
-
-    try:
-        import httpx
-    except ImportError as exc:  # pragma: no cover - local setup issue.
-        raise VercelConfigError("The `httpx` package is not installed. Run `pip install -r agents/requirements.txt`.") from exc
-
-    expected_marker = _html_marker(html)
-    with httpx.Client(follow_redirects=True, timeout=10.0) as client:
-        import time
-
-        started = time.monotonic()
-        last_status = None
-        last_text = ""
-        while time.monotonic() - started < PUBLIC_CHECK_TIMEOUT_SECONDS:
-            try:
-                response = client.get(url)
-            except httpx.RequestError as exc:
-                last_text = str(exc)
-                time.sleep(PUBLIC_CHECK_INTERVAL_SECONDS)
-                continue
-
-            last_status = response.status_code
-            last_text = response.text[:500]
-            if _looks_protected(response.text, response.status_code):
-                raise VercelError(
-                    "Vercel deployment is protected by login/authentication. "
-                    "Disable Vercel Deployment Protection or use Supabase Storage fallback."
-                )
-            response_lower = response.text.lower()
-            if response.status_code == 200 and expected_marker in response_lower:
-                return
-            if response.status_code == 200 and "<html" in response_lower:
-                return
-            time.sleep(PUBLIC_CHECK_INTERVAL_SECONDS)
-
-    raise VercelError(f"Vercel deployment did not become publicly readable. Last status={last_status}, body={last_text}")
-
-
-def _html_marker(html: str) -> str:
-    """Pick a short marker expected to survive in the deployed HTML."""
-
-    for marker in ["<title>", "<body", "<main"]:
-        if marker in html.lower():
-            return marker
-    return "<html"
+    return f"https://{url}" if not str(url).startswith("http") else str(url)

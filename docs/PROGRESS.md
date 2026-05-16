@@ -37,7 +37,7 @@
 - Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
 - Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
 - Upgraded Designer mockup quality prompts and fallback HTML with richer local-business structure, service cards, trust cues, pain-point fixes, and stronger contact sections.
-- Hardened Vercel mockup deploys to request public deployments and reject login-protected URLs so Designer falls back to public Supabase Storage when needed.
+- Restored Vercel-first mockup URL storage so Designer keeps Vercel deployment links instead of rejecting protected links and falling back to Supabase Storage.
 - Updated Vercel mockup deployment to use one stable project via `VERCEL_PROJECT_ID` or `VERCEL_PROJECT_NAME` instead of creating one project per generated website.
 
 ## Spec Consistency Check
@@ -175,7 +175,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Designer prompt formatting and HTML validation checks passed.
 - Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
 - Designer fallback quality smoke confirmed generated HTML includes hero, service cards, pain-point fixes, contact CTA, and valid document structure.
-- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after public URL verification for mockup deploys.
+- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after restoring Vercel-first URL storage.
 - Vercel payload smoke confirmed mockups target a stable `mainstreet-mockups` project name.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
