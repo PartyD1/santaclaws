@@ -572,7 +572,24 @@ def _agency_template_html(lead: dict[str, Any], variant: str, reason: str = "tem
 </html>"""
 
 
+def _stable_template_index(lead: dict[str, Any], count: int) -> int:
+    """Choose a stable template index from business identity."""
+
+    seed = str(lead.get("business_name") or lead.get("id") or lead.get("address") or "")
+    chars = [char.lower() for char in seed if char.isalnum()]
+    if not chars or not count:
+        return 0
+    return (ord(chars[0]) + len(chars)) % count
+
+
 def _client_website_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render one of several finished client-facing website templates."""
+
+    templates = [_client_showroom_html, _client_concierge_html, _client_performance_html]
+    return templates[_stable_template_index(lead, len(templates))](lead, variant, reason)
+
+
+def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
     """Render a finished premium client website, with no demo/audit language."""
 
     business_name = escape(str(lead.get("business_name") or "Apex Motor Works"))
@@ -821,6 +838,95 @@ def _client_website_html(lead: dict[str, Any], variant: str, reason: str = "clie
   <a class="button mobile-call" href="tel:{phone}">Call {phone}</a>
 </body>
 </html>"""
+
+
+def _client_concierge_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a concierge-service layout for premium repair shops."""
+
+    business_name = escape(str(lead.get("business_name") or "Apex Motor Works"))
+    niche = escape(str(lead.get("niche") or "auto repair"))
+    city = escape(str(lead.get("city") or "Santa Cruz"))
+    phone = escape(str(lead.get("phone") or "(831) 555-0198"))
+    address = escape(str(lead.get("address") or f"{city}, CA"))
+    hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
+    rating = escape(str(lead.get("google_rating") or "4.9"))
+    review_count = escape(str(lead.get("review_count") or "240"))
+    accent = {"clean_modern": "#0f766e", "retro_local": "#b45309", "premium": "#7c3aed"}.get(variant, "#0f766e")
+    image = "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1600&q=85"
+    detail_image = "https://images.unsplash.com/photo-1632823471565-1ecdf5c17bd3?auto=format&fit=crop&w=1200&q=85"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{business_name} | Premium {niche.title()} in {city}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#f7f3ea;color:#171717;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1160px,calc(100% - 34px));margin:0 auto}}
+    nav{{position:sticky;top:0;z-index:50;background:#f7f3eaee;backdrop-filter:blur(16px);border-bottom:1px solid #ded6c8}} nav .wrap{{height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{display:block;font-size:22px}} .brand span,.eyebrow{{display:block;color:#7c7468;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .links{{display:flex;gap:22px;font-weight:800;font-size:14px}} .links a{{text-decoration:none}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:900;box-shadow:0 16px 32px color-mix(in srgb,{accent} 34%,transparent)}}
+    .hero{{padding:34px 0 76px}} .hero-grid{{display:grid;grid-template-columns:.92fr 1.08fr;gap:22px;align-items:stretch}} .hero-copy{{background:#171717;color:white;border-radius:8px;padding:clamp(30px,5vw,62px);min-height:640px;display:flex;flex-direction:column;justify-content:space-between}} h1{{font-size:clamp(48px,7vw,92px);line-height:.9;margin:18px 0 0;letter-spacing:0}} .hero-copy p{{color:#d4d4d4;font-size:20px;line-height:1.65;max-width:640px}} .hero-photo{{border-radius:8px;background:url("{image}") center/cover;min-height:640px;box-shadow:0 30px 80px rgba(0,0,0,.16)}} .hero-actions{{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}} .outline{{border:1px solid rgba(255,255,255,.35);background:transparent}}
+    .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:30px}} .stats div{{border-top:1px solid rgba(255,255,255,.22);padding-top:18px}} .stats strong{{display:block;font-size:34px}} .stats span{{color:#d4d4d4;font-weight:700}}
+    section{{padding:78px 0}} .intro{{display:grid;grid-template-columns:.75fr 1.25fr;gap:34px;margin-bottom:30px}} .intro h2{{font-size:clamp(34px,5vw,66px);line-height:.96;margin:10px 0 0}} .intro p{{font-size:18px;line-height:1.7;color:#625b52}} .journey{{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}} .journey article{{background:white;border:1px solid #ded6c8;border-radius:8px;padding:28px;min-height:270px;box-shadow:0 18px 48px rgba(40,32,20,.08)}} .journey span{{color:{accent};font-weight:950}} .journey h3{{font-size:26px;line-height:1.05;margin:20px 0 0}} .journey p{{color:#625b52;line-height:1.65}}
+    .split{{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}} .shop-img{{border-radius:8px;background:url("{detail_image}") center/cover;min-height:520px;box-shadow:0 24px 70px rgba(0,0,0,.13)}} .panel{{background:white;border:1px solid #ded6c8;border-radius:8px;padding:clamp(30px,5vw,58px)}} .panel h2{{font-size:clamp(34px,5vw,58px);line-height:1;margin:12px 0}} .panel p,.panel li{{color:#625b52;font-size:17px;line-height:1.75}} .panel ul{{padding-left:20px}}
+    .reviews{{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}} blockquote{{margin:0;background:#171717;color:white;border-radius:8px;padding:38px}} blockquote p{{font-size:25px;line-height:1.45;margin:0}} cite{{display:block;margin-top:22px;color:#d4d4d4;font-style:normal;font-weight:800}} .contact{{background:#171717;color:white;border-radius:8px;padding:38px}} .contact p{{color:#d4d4d4;line-height:1.7}} footer{{padding:34px 0 92px;text-align:center;color:#625b52}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.hero-grid,.intro,.split,.reviews{{grid-template-columns:1fr}}.journey,.stats{{grid-template-columns:repeat(2,1fr)}}.hero-copy,.hero-photo{{min-height:auto}}.hero-photo{{height:430px}}}} @media(max-width:640px){{.links,nav .btn{{display:none}}.journey,.stats{{grid-template-columns:1fr}}h1{{font-size:48px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} premium {niche}</span></div><div class="links"><a href="#process">Process</a><a href="#care">Care</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
+  <header class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div><span class="eyebrow">Premium dealership alternative</span><h1>Service that feels managed, not mysterious.</h1><p>{business_name} gives {city} drivers a concierge-level repair experience: clear intake, precise diagnostics, and updates that make every decision easier.</p><div class="hero-actions"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn outline" href="#process">See the process</a></div></div><div class="stats"><div><strong>{rating}</strong><span>star rating</span></div><div><strong>{review_count}</strong><span>local reviews</span></div><div><strong>24 hr</strong><span>diagnostic goal</span></div><div><strong>18+</strong><span>years expertise</span></div></div></div><div class="hero-photo"></div></div></header>
+  <main>
+    <section id="process"><div class="wrap"><div class="intro"><div><span class="eyebrow">The service journey</span><h2>A calmer way to handle car trouble.</h2></div><p>Customers can quickly understand what happens next, from the first call through diagnosis, repair approval, and pickup.</p></div><div class="journey"><article><span>01</span><h3>Listen first</h3><p>Capture symptoms, urgency, driving habits, and service history before the vehicle hits the bay.</p></article><article><span>02</span><h3>Diagnose clearly</h3><p>Use modern tools and plain-language findings so customers can approve work with confidence.</p></article><article><span>03</span><h3>Deliver cleanly</h3><p>Finish with organized notes, maintenance guidance, and a vehicle that feels ready for the road.</p></article></div></div></section>
+    <section id="care"><div class="wrap split"><div class="shop-img"></div><div class="panel"><span class="eyebrow">What we handle</span><h2>Diagnostics, brakes, maintenance, and high-attention repair.</h2><p>Built for drivers who want dealership-level confidence without dealership friction.</p><ul><li>Advanced diagnostics for lights, leaks, electrical issues, and drivability concerns.</li><li>Brake, suspension, maintenance, fluids, batteries, filters, and safety inspections.</li><li>Transparent recommendations and scheduling designed around real life.</li></ul></div></div></section>
+    <section id="reviews"><div class="wrap reviews"><blockquote><p>"Clean shop, sharp communication, and a repair plan that actually made sense."</p><cite>Marisol P.</cite></blockquote><div class="contact" id="contact"><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}</p><a class="btn" href="tel:{phone}">Call {phone}</a></div></div></section>
+  </main>
+  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
+
+
+def _client_performance_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a bold performance-garage layout for visual variety."""
+
+    business_name = escape(str(lead.get("business_name") or "Apex Motor Works"))
+    niche = escape(str(lead.get("niche") or "auto repair"))
+    city = escape(str(lead.get("city") or "Santa Cruz"))
+    phone = escape(str(lead.get("phone") or "(831) 555-0198"))
+    address = escape(str(lead.get("address") or f"{city}, CA"))
+    hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
+    rating = escape(str(lead.get("google_rating") or "4.9"))
+    accent = {"clean_modern": "#f97316", "retro_local": "#ef4444", "premium": "#22c55e"}.get(variant, "#f97316")
+    hero = "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1700&q=85"
+    detail = "https://images.unsplash.com/photo-1606577924006-27d39b132ae2?auto=format&fit=crop&w=1200&q=85"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{business_name} | {city} {niche.title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#070707;color:#f8fafc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .accent{{color:{accent}}}
+    nav{{position:sticky;top:0;z-index:50;background:#070707e8;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.12)}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{font-size:22px}} .brand span,.eyebrow{{display:block;color:#a1a1aa;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .links{{display:flex;gap:22px;font-size:14px;font-weight:800}} .links a{{text-decoration:none}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 20px;background:{accent};color:#070707;text-decoration:none;font-weight:950}}
+    .hero{{position:relative;min-height:760px;display:grid;align-items:end;overflow:hidden}} .hero:before{{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2),#070707 92%),linear-gradient(90deg,#070707 0%,rgba(0,0,0,.55) 42%,rgba(0,0,0,.1)),url("{hero}") center/cover}} .hero .wrap{{position:relative;padding:120px 0 70px}} h1{{max-width:880px;margin:18px 0 0;font-size:clamp(54px,9vw,118px);line-height:.82;letter-spacing:0;text-transform:uppercase}} .hero p{{max-width:640px;color:#d4d4d8;font-size:20px;line-height:1.7}} .hero-row{{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}} .ghost{{border:1px solid rgba(255,255,255,.25);background:transparent;color:white}}
+    .stripe{{background:{accent};color:#070707}} .stripe .wrap{{display:grid;grid-template-columns:repeat(4,1fr);gap:1px}} .stripe div{{padding:26px 18px;border-left:1px solid rgba(0,0,0,.18)}} .stripe strong{{display:block;font-size:36px}} .stripe span{{font-weight:800}}
+    section{{padding:84px 0}} .head{{display:flex;justify-content:space-between;gap:28px;align-items:end;margin-bottom:32px}} .head h2{{max-width:760px;font-size:clamp(36px,5vw,66px);line-height:.9;margin:10px 0 0;text-transform:uppercase}} .head p{{max-width:430px;color:#a1a1aa;line-height:1.7}} .grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}} .card{{border:1px solid rgba(255,255,255,.12);background:#111113;border-radius:8px;padding:28px;min-height:310px}} .card span{{color:{accent};font-weight:950}} .card h3{{font-size:28px;line-height:1;margin:22px 0}} .card p{{color:#a1a1aa;line-height:1.65}}
+    .split{{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}} .photo{{min-height:560px;border-radius:8px;background:url("{detail}") center/cover}} .panel{{background:#f8fafc;color:#111827;border-radius:8px;padding:clamp(32px,5vw,60px)}} .panel h2{{font-size:clamp(34px,5vw,62px);line-height:.95;margin:12px 0}} .panel p,.panel li{{color:#4b5563;line-height:1.75;font-size:17px}} .contact{{border-radius:8px;background:#111113;border:1px solid rgba(255,255,255,.12);padding:34px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}} footer{{padding:36px 0 94px;text-align:center;color:#a1a1aa}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.stripe .wrap,.grid,.split,.contact{{grid-template-columns:1fr}}.hero{{min-height:680px}}}} @media(max-width:640px){{.links,nav .btn{{display:none}}h1{{font-size:52px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} performance-grade {niche}</span></div><div class="links"><a href="#work">Work</a><a href="#standard">Standard</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
+  <header class="hero"><div class="wrap"><span class="eyebrow">Premium dealership alternative</span><h1>Built for drivers who notice everything.</h1><p>{business_name} brings disciplined diagnostics, careful repair work, and performance-minded attention to {city} vehicles.</p><div class="hero-row"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn ghost" href="#work">View services</a></div></div></header>
+  <div class="stripe"><div class="wrap"><div><strong>{rating}</strong><span>star rating</span></div><div><strong>3,200+</strong><span>vehicles serviced</span></div><div><strong>18+</strong><span>years expertise</span></div><div><strong>24 hr</strong><span>diagnostic goal</span></div></div></div>
+  <main>
+    <section id="work"><div class="wrap"><div class="head"><div><span class="eyebrow">Core services</span><h2>Sharp diagnosis. Clean execution.</h2></div><p>Everything is positioned for customers who want speed, clarity, and confidence.</p></div><div class="grid"><article class="card"><span>01</span><h3>Diagnostics</h3><p>Warning lights, drivability issues, electrical faults, leaks, noise, vibration, and second opinions.</p></article><article class="card"><span>02</span><h3>Brakes & ride</h3><p>Brake inspections, rotors, pads, suspension, steering feel, safety checks, and road-ready handling.</p></article><article class="card"><span>03</span><h3>Maintenance</h3><p>Oil, fluids, filters, batteries, belts, inspections, and preventive care for long vehicle life.</p></article></div></div></section>
+    <section id="standard"><div class="wrap split"><div class="photo"></div><div class="panel"><span class="eyebrow">The standard</span><h2>Independent shop. Premium process.</h2><p>Customers get the confidence they expect from a dealership with the communication and practicality of a local specialist.</p><ul><li>Clear estimates before work begins.</li><li>Priority guidance for urgent vs. future repairs.</li><li>Organized pickup notes and next-service recommendations.</li></ul></div></div></section>
+    <section id="contact"><div class="wrap contact"><div><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}</p></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></section>
+  </main>
+  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
+
+
 def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | None = None) -> str:
     """Generate a valid single-file Tailwind HTML mockup."""
 
