@@ -18,6 +18,7 @@
 - Implemented Tasks 22-23 dashboard skeleton, leads table, metrics bar, and realtime activity feed with polling fallback.
 - Implemented Tasks 24-26 Pitcher tools: email generation, email critique, and Resend send helper.
 - Implemented Tasks 27-28 Pitcher claw heartbeat and minimal Discord approval worker.
+- Implemented Tasks 29-31 Closer tools: reply classification, Google Calendar fallback slots, meeting booking, and reply drafting.
 
 ## Spec Consistency Check
 
@@ -73,9 +74,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 26: Pitcher `send_email`.
 - [x] Task 27: Pitcher claw integration.
 - [x] Task 28: Discord inbound approval worker.
-- [ ] Task 29: Closer `classify_reply`.
-- [ ] Task 30: Google Calendar integration.
-- [ ] Task 31: Closer meeting/reply tools.
+- [x] Task 29: Closer `classify_reply`.
+- [x] Task 30: Google Calendar integration.
+- [x] Task 31: Closer meeting/reply tools.
 - [ ] Task 32: Closer claw integration.
 - [ ] Task 33: Resend inbound webhook.
 - [ ] Task 34: Lead detail page.
@@ -160,6 +161,14 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `python -m workers.discord_bridge` printed fallback approval instructions because bot credentials are not configured.
 - Discord approval worker `EDIT` update/approval insert path was validated with a fake client.
+- `python -m compileall agents/closer/tools agents/integrations/gcal_client.py` passed.
+- Closer tool imports and signatures were validated.
+- Google Calendar fallback returned 3 demo-safe meeting slots without credentials.
+- `propose_meeting_times.run(...)` returned formatted slots with missing Google credentials.
+- `classify_reply.run(...)` fallback classified sample replies correctly and updated fake Supabase rows.
+- `book_meeting.run(...)` inserted a fake meeting row and returned a demo Google event id with fake clients.
+- `draft_reply.run(...)` produced a concise fallback interested reply with fake clients.
+- `python -m pip install --dry-run -r agents/requirements.txt` passed after adding Google Calendar dependencies.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -249,3 +258,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need live Nemotron JSON route for reply classification.
 - Need Supabase credentials/schema for updating inbound classification fields.
 - Need Pitcher/Resend inbound webhook path ready if testing with real replies instead of seeded rows.
+
+## TASK 32 Blockers
+
+- Need seeded or real unhandled `inbound` email rows for the Closer heartbeat.
+- Need live Supabase credentials/schema for inbound and meetings writes.
+- Need live Nemotron route for classification and reply drafting, or accept fallback drafts for demo.
+- Need Google Calendar OAuth credentials for live booking; otherwise `demo-gcal-*` event ids will be used.

@@ -1,1 +1,26 @@
-Task 29 placeholder.
+Classify this email reply for the Mainstreet Closer claw.
+
+Inbound reply:
+{reply_text}
+
+Known context:
+- Lead business: {business_name}
+- Lead email: {from_address}
+- Prior outreach subject: {outreach_subject}
+
+Allowed classifications:
+- interested: wants a meeting, asks to talk, asks for availability, or responds positively.
+- not_interested: clearly declines or asks not to be contacted.
+- has_question: asks a factual question before deciding.
+- has_objection: raises a concern about cost, trust, timing, authority, or relevance.
+- spam: automated, unrelated, abusive, or not a real buyer response.
+- uncertain: ambiguous or too little signal.
+
+Return JSON only:
+{{
+  "classification": "one allowed classification",
+  "confidence": 0-100,
+  "key_phrase": "short quote or phrase that drove the decision"
+}}
+
+Do not invent facts beyond the reply and known context.
