@@ -1,1 +1,1 @@
-"""Standalone worker placeholders."""
+"""Standalone Mainstreet NemoClaw worker entrypoints."""

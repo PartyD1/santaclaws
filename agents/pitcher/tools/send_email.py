@@ -126,7 +126,7 @@ def run(outreach_id: UUID | str) -> dict[str, Any]:
         result = {"sent": False, "_status": "failed", "error": str(exc)}
         try:
             _mark_outreach(outreach_id, {"status": "failed"})
-        except Exception:
-            pass
+        except Exception as mark_exc:
+            result["mark_failed_error"] = str(mark_exc)
         _safe_log("send_email", "failed", f"could not send outreach {outreach_id}: {exc}", lead_id, result)
         return result

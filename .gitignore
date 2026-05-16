@@ -24,6 +24,7 @@ lib64/
 !dashboard/lib/
 dashboard/lib/*
 !dashboard/lib/realtime.ts
+!dashboard/lib/supabase-server.ts
 !dashboard/lib/supabase.ts
 !dashboard/lib/types.ts
 parts/

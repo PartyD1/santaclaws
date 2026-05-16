@@ -25,6 +25,7 @@
 - Implemented Tasks 39-41 MEMORY.md updater, demo data seeder, and claw start/stop scripts.
 - Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
 - Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
+- Replaced remaining demo-risk placeholders and documented the placeholder audit in `docs/PLACEHOLDER_AUDIT.md`.
 
 ## Spec Consistency Check
 
@@ -203,6 +204,14 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m agents.closer.claw --once` ran and exited cleanly because local Supabase/OpenAI dependencies are not installed.
 - `npm.cmd run typecheck` passed after Vapi dashboard transcript visibility.
 - `npm.cmd run build` passed after Vapi dashboard transcript visibility. Next.js emitted non-fatal webpack cache snapshot warnings.
+- Placeholder audit search found only acceptable historical/spec references and intentional NemoClaw `openshell` compatibility wording.
+- `python -m compileall agents integrations workers` passed after placeholder replacement.
+- Top-level `integrations.*` compatibility imports passed.
+- `python -m agents.scripts.rate_limit_check --nemotron-rounds 1 --skip-apify` failed clearly because local OpenAI/Nemotron dependencies are not installed.
+- `python -m agents.scripts.nuke_db` refused to run without `--demo-only --yes`.
+- `python -m workers.inbound_email_worker` printed the active dashboard route status.
+- `npm.cmd run typecheck` passed after dashboard API placeholder replacement.
+- `npm.cmd run build` passed after dashboard API placeholder replacement. Next.js emitted non-fatal webpack cache snapshot warnings.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -313,3 +322,4 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need final live monitor pass to tune heartbeat intervals and verify logs.
 - Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for live `start_all_claws.sh` and `stop_all_claws.sh` use.
 - Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.
+- Need run the rate-limit check in an environment with installed Python dependencies and real Nemotron/Apify credentials.

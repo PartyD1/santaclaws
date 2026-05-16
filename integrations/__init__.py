@@ -1,1 +1,1 @@
-"""Reusable Python API client placeholders."""
+"""Compatibility package for reusable Mainstreet integration clients."""
