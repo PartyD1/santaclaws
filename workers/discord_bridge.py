@@ -19,6 +19,7 @@ from agents.shared.supabase_client import get_client
 
 Decision = Literal["approve", "skip", "edit"]
 COMMAND_RE = re.compile(r"^\s*(APPROVE|SKIP|EDIT)\s+([0-9a-fA-F-]{32,36})(?:\s+([\s\S]+))?\s*$", re.IGNORECASE)
+PING_RE = re.compile(r"^\s*!?(PING|HELP)\s*$", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -154,12 +155,20 @@ def run_bot() -> int:
     @client.event
     async def on_ready() -> None:  # type: ignore[no-untyped-def]
         print(f"Discord approval worker connected as {client.user}.")
+        print(f"Listening for approval commands in channel id {approval_channel_id}.")
 
     @client.event
     async def on_message(message: Any) -> None:  # type: ignore[no-untyped-def]
         if message.author.bot or message.channel.id != approval_channel_id:
             return
         try:
+            if PING_RE.match(message.content.strip()):
+                await message.reply(
+                    "NemoClaw approval worker is online. "
+                    "Use `APPROVE <outreach_id>`, `SKIP <outreach_id>`, "
+                    "or `EDIT <outreach_id> <new body>`."
+                )
+                return
             command = parse_command(message.content)
             if command is None:
                 return

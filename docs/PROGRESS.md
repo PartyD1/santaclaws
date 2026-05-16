@@ -34,6 +34,7 @@
 - Added per-claw dashboard pages for live status, action logs, durable memory, and claw-specific work queues/outputs.
 - Added an OpenClaw-compatible runtime context loader plus `agents.scripts.openclaw_run`, and moved `start_all_claws.sh` onto that heartbeat runner.
 - Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
+- Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
 
 ## Spec Consistency Check
 
@@ -184,6 +185,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/pitcher/claw.py workers/discord_bridge.py` passed.
 - Pitcher heartbeat and Discord approval worker imports passed.
 - Discord approval parser validated `APPROVE`, `SKIP`, and one-line `EDIT`.
+- Discord approval worker now recognizes `PING` and `HELP` health checks in the configured approval channel.
 - `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `python -m workers.discord_bridge` printed fallback approval instructions because bot credentials are not configured.
 - Discord approval worker `EDIT` update/approval insert path was validated with a fake client.
