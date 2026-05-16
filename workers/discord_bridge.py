@@ -195,11 +195,8 @@ def _ask_nemotron(question: str, context: str) -> str:
         "Return JSON with a single key 'response' containing a plain text answer under 400 characters."
     )
     user = f"Pipeline context:\n{context}\n\nQuestion: {question}"
-    try:
-        result = nemotron_client.chat_json(system, user)
-        return str(result.get("response", context[:400]))
-    except Exception:
-        return context[:1800]
+    result = nemotron_client.chat_json(system, user)
+    return str(result.get("response", "I couldn't generate a response. Try again."))
 
 
 async def handle_query(message: Any) -> None:
