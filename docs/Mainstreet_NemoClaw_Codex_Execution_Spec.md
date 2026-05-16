@@ -357,11 +357,13 @@ create table leads (
   business_name text not null,
   address text,
   phone text,
+  email text,
   website text,
   niche text not null,
   city text not null,
   google_rating numeric,
   review_count int default 0,
+  review_texts text[],
   top_review_pain_points text[],
   website_score int,                  -- 0-10
   website_score_reasons text[],
@@ -431,6 +433,7 @@ create index idx_generated_sites_winner on generated_sites(lead_id)
 create table outreach (
   id uuid primary key default gen_random_uuid(),
   lead_id uuid references leads(id) not null,
+  to_address text,
   angle text not null,
     -- specific_pain | competitor_comparison | social_proof | curiosity
   subject text not null,
@@ -565,9 +568,11 @@ class Lead:
     city: str
     address: Optional[str]
     phone: Optional[str]
+    email: Optional[str]
     website: Optional[str]
     google_rating: Optional[float]
     review_count: int
+    review_texts: list[str]
     top_review_pain_points: list[str]
     website_score: Optional[int]
     qualification_status: QualStatus
@@ -1571,7 +1576,7 @@ NEMOCLAW_SANDBOX_NAME=mainstreet
 NEMOCLAW_PROVIDER=nvidia
 NEMOCLAW_NON_INTERACTIVE=1
 NEMOCLAW_ACCEPT_THIRD_PARTY_SOFTWARE=1
-OPENCLAW_WORKSPACE=/workspace/mainstreet/agents
+NEMOCLAW_WORKSPACE=/workspace/mainstreet/agents
 
 # Nemotron
 # Inside NemoClaw/OpenShell, prefer https://inference.local/v1.
@@ -1761,7 +1766,7 @@ site → 3-, no URL → 0.
 1. Pull `leads.review_count` and reviews (you need to extend apify scrape
    to capture top 10 reviews — add `scrapeReviewsCount: 10` to the actor
    config in scrape_leads, save review text to a new column
-   `leads.review_texts text[]`. **Update schema in TASK 3 if not done.**)
+   `leads.review_texts text[]`.)
 2. If `review_count` < 5: return empty list, log "insufficient reviews"
 3. Build prompt from `scout_extract_pain.txt` (full prompt in Section 5)
 4. Call `nemotron_client.chat_json`
@@ -1882,17 +1887,19 @@ screenshot...".
 **Objective:** the Designer agent loop.
 **Files:** `agents/designer/SOUL.md`, `AGENTS.md`, `TOOLS.md`, `HEARTBEAT.md`,
 `claw.py`
+**MVP clarification:** Task 21 should ship a reliable one-variant, one-critique
+Designer path by default (`DESIGNER_VARIANT_COUNT=1`). Tasks 36-37 harden this
+into the full 3-variant, multi-iteration winner-picking behavior.
 **Steps:**
 1. Copy SOUL/AGENTS from prior bundle
 2. claw.py implements heartbeat per Section 4 spec
 3. Use the claim pattern to prevent re-pickup
-4. Run 3 variants sequentially (parallel is risk for hackathon — keep simple)
-5. For each variant: generate → screenshot → critique → loop up to 5 → deploy
-6. After all 3: pick_winner, mark winner
-7. MVP shortcut: env var `DESIGNER_VARIANT_COUNT=1` defaults to 3 but can
-   be set to 1 to skip the multi-variant loop
+4. MVP mode: run one variant sequentially and keep one critique pass for demo reliability
+5. Use env var `DESIGNER_VARIANT_COUNT=1` as the MVP default; Tasks 36-37 harden this to full 3-variant, multi-iteration behavior
+6. If `DESIGNER_VARIANT_COUNT=3` is set early, run [clean_modern, retro_local, premium] sequentially and pick a winner
 **Acceptance:** `python -m agents.designer.claw --once` picks a qualified lead,
-produces 3 hosted URLs, marks one as winner.
+produces at least one hosted URL in MVP mode. After Tasks 36-37, it produces
+3 hosted URLs and marks one as winner.
 **Complexity:** complex.
 
 ### TASK 22 — Dashboard skeleton
@@ -1972,7 +1979,7 @@ overall_score < 5.
 1. resend_client.py per Section 6
 2. send_email.py: `def run(outreach_id: UUID) -> dict`:
    - Fetch outreach row
-   - Fetch lead row for `to` address (use `leads.email` — add column if missing)
+   - Fetch lead row for `to` address (use `leads.email`)
    - Convert body (plain text) to minimal HTML (wrap in `<p>`, preserve line breaks)
    - Call resend_client
    - Update outreach: status='sent', sent_at=now(), resend_message_id=resp.id
@@ -2077,7 +2084,6 @@ update.
 1. POST handler
 2. Parse Resend's payload
 3. Match to lead: lookup `outreach` rows where `to_address` matches `from`
-   (need to add a `to_address` column to outreach to track this — extend schema)
 4. INSERT into `inbound` with channel='email', from_address, raw_content
 5. Return 200 OK
 6. **In Resend dashboard:** configure inbound webhook URL to this endpoint
@@ -2106,8 +2112,8 @@ all data loads.
 **Acceptance:** numbers update live as agents work.
 **Complexity:** simple.
 
-### TASK 36 — Designer self-critique loop upgrade
-**Objective:** add the iteration loop to Designer (was MVP=1 iteration).
+### TASK 36 — Designer self-critique loop hardening
+**Objective:** harden the iteration loop to full demo behavior after Task 21 MVP.
 **Files:** `agents/designer/claw.py`
 **Steps:**
 1. After generating a variant, run critique
@@ -2116,8 +2122,8 @@ all data loads.
 **Acceptance:** in the action log, see entries like "iteration 3 scored 8.4, shipped".
 **Complexity:** moderate.
 
-### TASK 37 — Designer 3-variant + pick_winner upgrade
-**Objective:** upgrade from MVP=1 variant to 3 variants + winner pick.
+### TASK 37 — Designer 3-variant + pick_winner hardening
+**Objective:** harden from Task 21 MVP one-variant mode to 3 variants + winner pick.
 **Files:** `agents/designer/claw.py`
 **Steps:**
 1. Loop over [clean_modern, retro_local, premium]
@@ -2244,7 +2250,7 @@ collision because each inbound is a separate row and Closer claims via
 `handled_at = NULL` predicate.
 
 **MEMORY.md file write race.** Two heartbeats of same claw can't run
-concurrently (NemoClaw/OpenClaw heartbeat scheduling should enforce this, but keep the DB claim pattern anyway). Different claws have different files.
+concurrently (NemoClaw/OpenShell heartbeat scheduling should enforce this, but keep the DB claim pattern anyway). Different claws have different files.
 Safe.
 
 ---

@@ -1,0 +1,9 @@
+{
+  "sandbox": "mainstreet",
+  "runtime": "nemoclaw",
+  "workspace": "/workspace/mainstreet/agents",
+  "provider": "nvidia",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "inference_base_url": "https://inference.local/v1",
+  "notes": "Task 0 should replace placeholder values with the verified NemoClaw/OpenShell route."
+}

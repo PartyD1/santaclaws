@@ -2,6 +2,11 @@
 __pycache__/
 *.py[codz]
 *$py.class
+node_modules/
+.next/
+out/
+logs/
+*.tsbuildinfo
 
 # C extensions
 *.so
