@@ -55,6 +55,20 @@ def _trim_sentences(text: str, limit: int = 5) -> str:
     return trimmed or text.strip()
 
 
+def _business_salutation(body: str, business_name: str) -> str:
+    """Force the opening greeting to use the business name, not an owner name."""
+
+    business_name = business_name.strip() or "there"
+    greeting = f"Hi {business_name},"
+    return re.sub(
+        r"^\s*(hi|hello|hey|dear)\s+[^,\n.!?-]{1,60}\s*[,!?.-]?\s*",
+        f"{greeting}\n\n",
+        body.strip(),
+        count=1,
+        flags=re.IGNORECASE,
+    )
+
+
 def _validate(payload: dict[str, Any]) -> dict[str, str]:
     """Validate Nemotron's email draft payload."""
 
@@ -126,6 +140,7 @@ def run(lead: dict[str, Any], mockup_url: str, angle: str) -> dict[str, Any]:
                 retries=1,
             )
             draft = _validate(payload)
+            draft["body"] = _business_salutation(draft["body"], business_name)
             result: dict[str, Any] = {"angle": angle, **draft}
             _safe_log(
                 "generate_email",

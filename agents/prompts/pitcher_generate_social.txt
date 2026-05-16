@@ -15,6 +15,7 @@ Rules:
 - Return JSON only: {{"subject": "...", "body": "..."}}.
 - Subject must be 50 characters or fewer.
 - Body must be 5 sentences or fewer.
+- Address the email to the business name, not an owner, founder, manager, or guessed person name.
 - Compliment the existing reputation only if rating/review data is present.
 - Connect that reputation to a clearer website.
 - Mention the mockup URL naturally.

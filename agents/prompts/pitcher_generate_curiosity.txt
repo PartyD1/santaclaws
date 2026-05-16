@@ -13,6 +13,7 @@ Rules:
 - Return JSON only: {{"subject": "...", "body": "..."}}.
 - Subject must be 50 characters or fewer.
 - Body must be 5 sentences or fewer.
+- Address the email to the business name, not an owner, founder, manager, or guessed person name.
 - Keep it low-pressure and conversational.
 - Mention that a quick mockup was made for them.
 - Mention the mockup URL naturally.

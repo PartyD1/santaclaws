@@ -492,3 +492,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/tools/send_email.py` passed.
 - Validation: local HTML smoke check confirmed the brand, business name, CTA text, and mockup URL render in the outgoing template.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:37 PDT — Business-Name Email Greetings
+
+- Updated Pitcher generation prompts to address outreach to the business name instead of an owner or guessed person.
+- Added a generation guard that rewrites opening salutations to `Hi {business_name},` before outreach is inserted.
+- Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
+- Validation: local salutation smoke checks rewrote guessed names while preserving the email body.
+- Validation: `git diff --check` passed.
