@@ -400,3 +400,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py agents/designer/tools/generate_mockup.py` passed.
 - Validation: legacy target niche lists now normalize to the broader default list and custom lists drop `auto detailing`.
 - Validation: generated smoke HTML for a coffee shop lead; output was complete and did not contain plumbing copy.
+
+## 2026-05-16 15:15 PDT — Scout Multi-Niche Fallback
+
+- Updated Scout so one empty Places result no longer ends the heartbeat; it now tries up to `SCOUT_NICHE_ATTEMPTS` categories per run, defaulting to 4.
+- Switched broad default search terms to plural, Places-friendly queries: restaurants, cafes, hair salons, barbers, fitness centers, spas, house cleaners, and contractors.
+- Updated pending-lead processing to pull from all attempted niches in the heartbeat.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
+- Validation: local smoke check confirmed selected niche ordering and legacy singular target normalization.

@@ -128,7 +128,7 @@ SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_KEY=
 
 APIFY_TOKEN=
-SCOUT_NICHES=restaurant,coffee shop,hair salon,barber shop,gym,day spa,cleaning service,home services
+SCOUT_NICHES=restaurants,cafes,hair salons,barbers,fitness centers,spas,house cleaners,contractors
 RESEND_API_KEY=
 OUTREACH_FROM_ADDRESS=
 VERCEL_TOKEN=
