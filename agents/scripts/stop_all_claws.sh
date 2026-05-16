@@ -34,6 +34,10 @@ stop_claw() {
   rm -f "${pid_file}"
 }
 
+# Stop unified all_claws process (default mode)
+stop_claw "all_claws"
+
+# Stop any per-claw processes (fallback mode)
 stop_claw "scout"
 stop_claw "designer"
 stop_claw "pitcher"

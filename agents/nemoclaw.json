@@ -5,5 +5,31 @@
   "provider": "nvidia",
   "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
   "inference_base_url": "https://inference.local/v1",
+  "agents": [
+    {
+      "name": "scout",
+      "entrypoint": "claw.py:heartbeat",
+      "interval": "60s",
+      "description": "Finds local auto repair shops, scores websites, extracts pain points"
+    },
+    {
+      "name": "designer",
+      "entrypoint": "claw.py:heartbeat",
+      "interval": "60s",
+      "description": "Generates Tailwind mockups and picks winning variant"
+    },
+    {
+      "name": "pitcher",
+      "entrypoint": "claw.py:heartbeat",
+      "interval": "60s",
+      "description": "Generates email angles and queues for approval"
+    },
+    {
+      "name": "closer",
+      "entrypoint": "claw.py:heartbeat",
+      "interval": "30s",
+      "description": "Classifies replies and books meetings"
+    }
+  ],
   "notes": "Verify these values against the live NemoClaw/OpenShell route before the demo."
 }

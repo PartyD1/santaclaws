@@ -2,12 +2,27 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
 
 CONTEXT_FILES = ("SOUL.md", "AGENTS.md", "TOOLS.md", "HEARTBEAT.md", "MEMORY.md")
-VALID_CLAWS = {"scout", "designer", "pitcher", "closer"}
+
+
+def _load_nemoclaw_config() -> dict:
+    """Read nemoclaw.json from the agents root."""
+    config_path = Path(__file__).resolve().parents[1] / "nemoclaw.json"
+    return json.loads(config_path.read_text(encoding="utf-8"))
+
+
+def list_agents() -> list[dict]:
+    """Return the agents list from nemoclaw.json."""
+    return _load_nemoclaw_config().get("agents", [])
+
+
+# Computed from nemoclaw.json so it stays in sync with the config file.
+VALID_CLAWS: set[str] = {agent["name"] for agent in list_agents()}
 
 
 class OpenClawRuntimeError(RuntimeError):
