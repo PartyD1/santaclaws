@@ -1,6 +1,8 @@
 Clean modern:
 - Bright, clear, service-forward design.
 - White background, dark text, restrained blue, green, and slate accents.
+- Use a crisp top contact bar, white service cards, a pale blue-green trust band, and a dark footer/contact panel.
+- Layout should feel dense enough for a real business site: no oversized empty hero, no marketing fluff.
 - Organized service cards, obvious phone CTA, scan-friendly hours/location band.
 - Feels trustworthy for a busy local repair shop owner.
 - Should look practical and crisp, not like a generic startup template.

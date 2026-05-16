@@ -36,6 +36,7 @@
 - Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
 - Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
 - Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
+- Upgraded Designer mockup quality prompts and fallback HTML with richer local-business structure, service cards, trust cues, pain-point fixes, and stronger contact sections.
 
 ## Spec Consistency Check
 
@@ -171,6 +172,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Designer tool imports passed.
 - Designer prompt formatting and HTML validation checks passed.
 - Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
+- Designer fallback quality smoke confirmed generated HTML includes hero, service cards, pain-point fixes, contact CTA, and valid document structure.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.

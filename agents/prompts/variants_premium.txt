@@ -3,5 +3,7 @@ Premium:
 - Spacious but not sparse layout, strong service positioning, premium dark and light contrast.
 - Good for shops with strong ratings or specialty services.
 - Emphasize expertise, diagnostics, transparency, and appointment confidence.
+- Use a dark hero, bright white content bands, tight metric/trust chips, and precise service cards.
+- It should feel like a serious independent shop, not a luxury hotel or generic SaaS product.
 - Use precise, grounded language and avoid luxury cliches.
 - Make the phone CTA feel concierge-level without inventing facts.

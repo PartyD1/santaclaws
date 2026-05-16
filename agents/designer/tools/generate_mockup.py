@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -84,62 +85,168 @@ def _valid_html(html: str, business_name: str | None = None) -> bool:
 def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
     """Build a deterministic demo mockup when Nemotron is unavailable."""
 
-    business_name = str(lead.get("business_name") or "Local Auto Repair")
-    city = str(lead.get("city") or "Santa Cruz")
-    phone = str(lead.get("phone") or "Call now")
-    address = str(lead.get("address") or f"{city}, CA")
-    rating = lead.get("google_rating") or "local favorite"
-    pain_points = [str(item) for item in lead.get("top_review_pain_points") or []][:3]
+    business_name = escape(str(lead.get("business_name") or "Local Auto Repair"))
+    niche = escape(str(lead.get("niche") or "auto repair"))
+    city = escape(str(lead.get("city") or "Santa Cruz"))
+    phone = escape(str(lead.get("phone") or "Call now"))
+    address = escape(str(lead.get("address") or f"{city}, CA"))
+    hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Call for today's hours"))
+    rating = escape(str(lead.get("google_rating") or "local favorite"))
+    review_count = escape(str(lead.get("review_count") or ""))
+    pain_points = [escape(str(item)) for item in lead.get("top_review_pain_points") or []][:3]
     if not pain_points:
         pain_points = ["clear service menu", "faster appointment booking", "mobile-friendly contact flow"]
-    style = {
-        "clean_modern": ("bg-slate-950", "bg-sky-500", "Clean, fast, and mobile-ready"),
-        "retro_local": ("bg-emerald-950", "bg-amber-400", "Trusted neighborhood service"),
-        "premium": ("bg-zinc-950", "bg-rose-500", "Premium care without the dealership wait"),
-    }.get(variant, ("bg-slate-950", "bg-sky-500", "Built for local trust"))
-    hero_bg, accent_bg, headline = style
-    pain_items = "\n".join(f"<li>{item}</li>" for item in pain_points)
+    palette = {
+        "clean_modern": {
+            "body": "bg-slate-50 text-slate-950",
+            "hero": "bg-white",
+            "hero_panel": "bg-slate-950 text-white",
+            "accent": "bg-sky-600 text-white",
+            "soft": "bg-sky-50 border-sky-100",
+            "label": "text-sky-700",
+            "headline": f"Reliable {niche} in {city}, made easy to book",
+        },
+        "retro_local": {
+            "body": "bg-stone-50 text-stone-950",
+            "hero": "bg-[#f7f1e7]",
+            "hero_panel": "bg-[#12343b] text-white",
+            "accent": "bg-red-700 text-white",
+            "soft": "bg-teal-50 border-teal-100",
+            "label": "text-red-700",
+            "headline": f"Straightforward repairs from a local {city} shop",
+        },
+        "premium": {
+            "body": "bg-zinc-50 text-zinc-950",
+            "hero": "bg-zinc-950 text-white",
+            "hero_panel": "bg-white text-zinc-950",
+            "accent": "bg-emerald-500 text-zinc-950",
+            "soft": "bg-zinc-100 border-zinc-200",
+            "label": "text-emerald-600",
+            "headline": f"Confident diagnostics and service for {city} drivers",
+        },
+    }.get(variant, {})
+    if not palette:
+        palette = {
+            "body": "bg-slate-50 text-slate-950",
+            "hero": "bg-white",
+            "hero_panel": "bg-slate-950 text-white",
+            "accent": "bg-sky-600 text-white",
+            "soft": "bg-sky-50 border-sky-100",
+            "label": "text-sky-700",
+            "headline": f"Reliable {niche} in {city}, made easy to book",
+        }
+
+    services = [
+        ("Diagnostics", "Clear next steps for warning lights, strange sounds, and drivability issues."),
+        ("Brake service", "Pads, rotors, inspections, and safety checks explained in plain language."),
+        ("Maintenance", "Oil, fluids, belts, batteries, tires, and seasonal care for daily drivers."),
+        ("Appointments", "A simple call-first flow that works on mobile and helps customers act fast."),
+    ]
+    service_cards = "\n".join(
+        f"""
+        <article class="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">{title}</p>
+          <p class="mt-3 text-sm leading-6 text-slate-600">{copy}</p>
+        </article>"""
+        for title, copy in services
+    )
+    pain_cards = "\n".join(
+        f"""
+        <li class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+          <span class="text-sm font-semibold text-slate-950">Website improvement</span>
+          <p class="mt-2 text-sm leading-6 text-slate-600">{item.capitalize()} so customers know what to do next.</p>
+        </li>"""
+        for item in pain_points
+    )
+    rating_text = f"{rating} rating" if not review_count else f"{rating} rating from {review_count} reviews"
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{business_name} | Auto Repair in {city}</title>
+  <title>{business_name} | {niche.title()} in {city}</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-white text-slate-950">
+<body class="{palette['body']}">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-normal text-slate-500">{city} {niche}</p>
+        <p class="text-lg font-bold tracking-normal text-slate-950">{business_name}</p>
+      </div>
+      <a class="w-full rounded-md bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white sm:w-auto" href="tel:{phone}">Call {phone}</a>
+    </div>
+  </header>
   <main>
-    <section class="{hero_bg} px-6 py-16 text-white">
-      <div class="mx-auto max-w-5xl">
-        <p class="text-sm font-semibold uppercase tracking-normal text-white/70">{city} auto repair</p>
-        <h1 class="mt-4 max-w-3xl text-5xl font-bold tracking-normal">{business_name}</h1>
-        <p class="mt-5 max-w-2xl text-xl text-white/80">{headline}. Book service, ask a question, or get a quote from a shop people already trust.</p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <a class="{accent_bg} rounded-md px-5 py-3 font-semibold text-white" href="tel:{phone}">Call {phone}</a>
-          <a class="rounded-md border border-white/30 px-5 py-3 font-semibold text-white" href="#contact">Get directions</a>
+    <section class="{palette['hero']} px-5 py-10 sm:py-14">
+      <div class="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+        <div class="flex flex-col justify-center rounded-md border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">{city} drivers</p>
+          <h1 class="mt-3 max-w-3xl text-4xl font-bold tracking-normal sm:text-5xl">{palette['headline']}</h1>
+          <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-600">A clearer website for {business_name}: practical service information, fast phone access, and a calmer path from problem to appointment.</p>
+          <div class="mt-7 flex flex-col gap-3 sm:flex-row">
+            <a class="{palette['accent']} rounded-md px-5 py-3 text-center font-semibold shadow-sm" href="tel:{phone}">Call {phone}</a>
+            <a class="rounded-md border border-slate-300 bg-white px-5 py-3 text-center font-semibold text-slate-950" href="#contact">Hours and location</a>
+          </div>
+          <div class="mt-7 grid gap-3 text-sm sm:grid-cols-3">
+            <div class="rounded-md border border-slate-200 bg-slate-50 p-3"><strong>Fast</strong><br><span class="text-slate-600">Tap-to-call on mobile</span></div>
+            <div class="rounded-md border border-slate-200 bg-slate-50 p-3"><strong>Clear</strong><br><span class="text-slate-600">Services up front</span></div>
+            <div class="rounded-md border border-slate-200 bg-slate-50 p-3"><strong>Local</strong><br><span class="text-slate-600">{rating_text}</span></div>
+          </div>
+        </div>
+        <aside class="{palette['hero_panel']} rounded-md p-6 shadow-sm sm:p-8">
+          <p class="text-sm font-semibold uppercase tracking-normal opacity-70">Today's service board</p>
+          <div class="mt-6 space-y-4">
+            <div class="rounded-md bg-white/10 p-4"><p class="font-semibold">Check engine light</p><p class="mt-1 text-sm opacity-75">Diagnostics and clear repair options.</p></div>
+            <div class="rounded-md bg-white/10 p-4"><p class="font-semibold">Brake inspection</p><p class="mt-1 text-sm opacity-75">Noise, vibration, and safety checks.</p></div>
+            <div class="rounded-md bg-white/10 p-4"><p class="font-semibold">Maintenance visit</p><p class="mt-1 text-sm opacity-75">Oil, fluids, battery, and road-trip readiness.</p></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+    <section class="px-5 py-10">
+      <div class="mx-auto max-w-6xl">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{service_cards}
         </div>
       </div>
     </section>
-    <section class="px-6 py-12">
-      <div class="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+    <section class="{palette['soft']} border-y px-5 py-10">
+      <div class="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <div>
-          <h2 class="text-2xl font-bold tracking-normal">Services</h2>
-          <p class="mt-3 text-slate-600">Diagnostics, brakes, oil changes, tune-ups, and repair guidance for local drivers.</p>
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">What the new site fixes</p>
+          <h2 class="mt-2 text-3xl font-bold tracking-normal">Less hunting around. More confident calls.</h2>
+          <p class="mt-4 leading-7 text-slate-600">The page puts the shop's phone number, services, trust signals, and location in a simple flow built for repeat local customers.</p>
         </div>
-        <div>
-          <h2 class="text-2xl font-bold tracking-normal">Why customers call</h2>
-          <ul class="mt-3 list-disc space-y-2 pl-5 text-slate-600">{pain_items}</ul>
+        <ul class="grid gap-3 sm:grid-cols-3">{pain_cards}
+        </ul>
+      </div>
+    </section>
+    <section id="contact" class="px-5 py-12">
+      <div class="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1fr_0.8fr]">
+        <div class="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">Visit or call</p>
+          <h2 class="mt-2 text-3xl font-bold tracking-normal">Ready when a customer needs help now.</h2>
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-md bg-slate-50 p-4">
+              <p class="text-sm font-semibold text-slate-500">Address</p>
+              <p class="mt-1 font-medium">{address}</p>
+            </div>
+            <div class="rounded-md bg-slate-50 p-4">
+              <p class="text-sm font-semibold text-slate-500">Hours</p>
+              <p class="mt-1 font-medium">{hours}</p>
+            </div>
+          </div>
         </div>
-        <div id="contact">
-          <h2 class="text-2xl font-bold tracking-normal">Contact</h2>
-          <p class="mt-3 text-slate-600">{address}</p>
-          <p class="mt-2 text-slate-600">Rating: {rating}</p>
-          <a class="mt-5 inline-block rounded-md bg-slate-950 px-5 py-3 font-semibold text-white" href="tel:{phone}">Schedule service</a>
+        <div class="rounded-md bg-slate-950 p-6 text-white shadow-sm">
+          <p class="text-sm font-semibold uppercase tracking-normal text-white/60">Primary action</p>
+          <h2 class="mt-2 text-3xl font-bold tracking-normal">Call {business_name}</h2>
+          <p class="mt-4 text-white/70">The phone CTA stays visible, readable, and easy to tap from any device.</p>
+          <a class="mt-6 block rounded-md bg-white px-5 py-3 text-center font-semibold text-slate-950" href="tel:{phone}">Call {phone}</a>
         </div>
       </div>
     </section>
   </main>
-  <footer class="px-6 py-8 text-center text-sm text-slate-500">Demo Mainstreet mockup generated by Designer fallback. Reason: {reason[:160]}</footer>
+  <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-sm text-slate-500">{business_name} - {city} {niche}. Built for clear calls, local trust, and mobile service requests.</footer>
 </body>
 </html>"""
 
