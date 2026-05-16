@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fetchMetrics, hasSupabaseConfig } from "@/lib/supabase";
+import { fetchMetrics, hasSupabaseConfig, supabaseConfigMessage } from "@/lib/supabase";
 import type { DashboardMetrics } from "@/lib/types";
 
 const emptyMetrics: DashboardMetrics = {
@@ -75,7 +75,7 @@ export function MetricsBar() {
       </div>
       {(error || !hasSupabaseConfig()) && (
         <p className="mt-3 text-xs text-slate-500">
-          {error ?? "Live Supabase credentials are not configured yet."}
+          {error ?? supabaseConfigMessage()}
         </p>
       )}
     </section>

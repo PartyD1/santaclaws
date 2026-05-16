@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchLeadDetail, hasSupabaseConfig } from "@/lib/supabase";
+import { fetchLeadDetail, hasSupabaseConfig, supabaseConfigMessage } from "@/lib/supabase";
 import type { ActionRow, InboundRow, LeadDetailData, MeetingRow, OutreachRow } from "@/lib/types";
 import { MockupPreview } from "./MockupPreview";
 
@@ -135,7 +135,7 @@ export function LeadDetail({ leadId }: LeadDetailProps) {
   const { lead } = detail;
 
   if (!hasSupabaseConfig()) {
-    return <EmptyRow label="Live Supabase credentials are not configured yet." />;
+    return <EmptyRow label={supabaseConfigMessage() ?? "Live Supabase credentials are not configured yet."} />;
   }
 
   if (error) {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { fetchClawDetail, hasSupabaseConfig } from "@/lib/supabase";
+import { fetchClawDetail, hasSupabaseConfig, supabaseConfigMessage } from "@/lib/supabase";
 import type {
   ActionRow,
   AgentMemoryRow,
@@ -368,7 +368,7 @@ export function ClawDetail({ clawName }: ClawDetailProps) {
   const status = useMemo(() => deriveStatus(latest, meta.cadenceSeconds), [latest, meta.cadenceSeconds]);
 
   if (!hasSupabaseConfig()) {
-    return <EmptyState label="Live Supabase credentials are not configured yet." />;
+    return <EmptyState label={supabaseConfigMessage() ?? "Live Supabase credentials are not configured yet."} />;
   }
 
   if (error) {

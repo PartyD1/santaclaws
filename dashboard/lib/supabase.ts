@@ -16,10 +16,30 @@ import type {
 
 let browserClient: SupabaseClient<Database> | null = null;
 
-export function hasSupabaseConfig() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+function supabaseBrowserKey() {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    ""
   );
+}
+
+export function hasSupabaseConfig() {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && supabaseBrowserKey());
+}
+
+export function supabaseConfigMessage() {
+  if (hasSupabaseConfig()) {
+    return null;
+  }
+  const missing = [];
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    missing.push("NEXT_PUBLIC_SUPABASE_URL");
+  }
+  if (!supabaseBrowserKey()) {
+    missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+  }
+  return `Live Supabase credentials are not configured yet. Missing: ${missing.join(", ")}.`;
 }
 
 export function getSupabaseClient() {
@@ -30,7 +50,7 @@ export function getSupabaseClient() {
   if (!browserClient) {
     browserClient = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseBrowserKey(),
     );
   }
 
