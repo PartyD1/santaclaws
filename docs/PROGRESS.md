@@ -30,6 +30,7 @@
 - Fixed Supabase timestamp parsing for Python 3.9 local venvs that reject five-digit fractional seconds.
 - Added Supabase-backed `agent_memory` persistence with `MEMORY.md` as a compatibility cache and deterministic fallback memory when Nemotron is unreachable.
 - Added a `agents/scripts/preflight_check.py` runtime checker for Python/package/env/Supabase table readiness.
+- Added `SETUP.md` as a teammate command reference for Brev, Ubuntu, NemoClaw, claw tests, dashboard, and full demo runs.
 
 ## Spec Consistency Check
 
