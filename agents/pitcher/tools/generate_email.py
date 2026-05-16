@@ -47,6 +47,14 @@ def _sentences(text: str) -> list[str]:
     return [part.strip() for part in re.split(r"[.!?]+", text) if part.strip()]
 
 
+def _trim_sentences(text: str, limit: int = 5) -> str:
+    """Trim long model output to the first few sentences for demo reliability."""
+
+    matches = re.findall(r"[^.!?]+[.!?]?", text)
+    trimmed = "".join(match.strip() + " " for match in matches[:limit]).strip()
+    return trimmed or text.strip()
+
+
 def _validate(payload: dict[str, Any]) -> dict[str, str]:
     """Validate Nemotron's email draft payload."""
 
@@ -57,9 +65,9 @@ def _validate(payload: dict[str, Any]) -> dict[str, str]:
     if not body:
         raise ValueError("body is required.")
     if len(subject) > 50:
-        raise ValueError("subject must be 50 characters or fewer.")
+        subject = subject[:47].rstrip() + "..."
     if len(_sentences(body)) > 5:
-        raise ValueError("body must be 5 sentences or fewer.")
+        body = _trim_sentences(body, 5)
     return {"subject": subject, "body": body}
 
 

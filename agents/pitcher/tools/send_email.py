@@ -1,13 +1,14 @@
-"""Pitcher tool for sending approved outreach through Resend."""
+"""Pitcher tool for sending approved outreach through the configured provider."""
 
 from __future__ import annotations
 
 import html
+import os
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from agents.integrations import resend_client
+from agents.integrations import resend_client, smtp_client
 from agents.shared.logger import logger
 from agents.shared.supabase_client import get_client
 
@@ -51,6 +52,17 @@ def _plain_text_to_html(text: str) -> str:
     return "\n".join(rendered)
 
 
+def _provider() -> str:
+    """Return the configured email provider."""
+
+    configured = os.environ.get("EMAIL_PROVIDER", "").strip().lower()
+    if configured:
+        return configured
+    if os.environ.get("SMTP_HOST", "").strip():
+        return "smtp"
+    return "resend"
+
+
 def _fetch_outreach(outreach_id: UUID | str) -> dict[str, Any]:
     """Fetch one outreach row."""
 
@@ -77,8 +89,30 @@ def _mark_outreach(outreach_id: UUID | str, payload: dict[str, Any]) -> None:
     get_client().table("outreach").update(payload).eq("id", str(outreach_id)).execute()
 
 
+def _send_via_provider(to_address: str, subject: str, body: str) -> dict[str, Any]:
+    """Send through SMTP or Resend based on env configuration."""
+
+    html_body = _plain_text_to_html(body)
+    provider = _provider()
+    if provider == "smtp":
+        return smtp_client.send_email(
+            to=to_address,
+            subject=subject,
+            html=html_body,
+            text=body,
+        )
+    if provider == "resend":
+        return resend_client.send_email(
+            to=to_address,
+            subject=subject,
+            html=html_body,
+            text=body,
+        )
+    raise RuntimeError("EMAIL_PROVIDER must be `smtp` or `resend`.")
+
+
 def run(outreach_id: UUID | str) -> dict[str, Any]:
-    """Send an approved outreach email via Resend.
+    """Send an approved outreach email.
 
     Uses `outreach.to_address` first, then falls back to `leads.email`.
     Expected setup failures return a structured result and mark outreach failed
@@ -103,11 +137,10 @@ def run(outreach_id: UUID | str) -> dict[str, Any]:
         if not to_address:
             raise RuntimeError("No recipient address found in outreach.to_address or leads.email.")
 
-        response = resend_client.send_email(
-            to=to_address,
+        response = _send_via_provider(
+            to_address=to_address,
             subject=str(outreach["subject"]),
-            html=_plain_text_to_html(str(outreach["body"])),
-            text=str(outreach["body"]),
+            body=str(outreach["body"]),
         )
         message_id = str(response["id"])
         _mark_outreach(
@@ -119,8 +152,19 @@ def run(outreach_id: UUID | str) -> dict[str, Any]:
                 "resend_message_id": message_id,
             },
         )
-        result = {"sent": True, "message_id": message_id, "to_address": to_address}
-        _safe_log("send_email", "succeeded", f"sent approved email to {to_address}.", lead_id, result)
+        result = {
+            "sent": True,
+            "message_id": message_id,
+            "to_address": to_address,
+            "provider": response.get("provider", _provider()),
+        }
+        _safe_log(
+            "send_email",
+            "succeeded",
+            f"sent approved email to {to_address} via {result['provider']}.",
+            lead_id,
+            result,
+        )
         return result
     except Exception as exc:
         result = {"sent": False, "_status": "failed", "error": str(exc)}

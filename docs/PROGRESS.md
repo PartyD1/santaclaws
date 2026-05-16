@@ -4,6 +4,8 @@
 
 - Read `AGENTS.md`.
 - Read `docs/Mainstreet_NemoClaw_Codex_Execution_Spec.md`.
+- Audited the repo against the full NemoClaw multi-agent execution spec for remaining incomplete work.
+- Prepared Task 0 NemoClaw onboarding docs and smoke-test script; live completion remains blocked because `nemoclaw` is not installed on this machine.
 - Created the Task 4 monorepo skeleton.
 - Added corrected schema columns to the spec and `agents/scripts/setup_supabase.sql`.
 - Dashboard dependencies were resolved and installed locally for validation.
@@ -37,14 +39,7 @@
 - Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
 - Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
 - Upgraded Designer mockup quality prompts and fallback HTML with richer local-business structure, service cards, trust cues, pain-point fixes, and stronger contact sections.
-- Switched Designer to template-first rendering by default, adding Scout audit statistics, opportunity cards, service clarity panels, and polished variant styling.
-- Replaced the visible Designer renderer with agency-grade templates using custom CSS, asymmetric hero layouts, audit dashboards, sticky mobile CTA, and stronger service/contact composition.
-- Replaced the visible Designer renderer again with finished client-facing websites: no Scout/Mainstreet/audit language, premium dealership-alternative positioning, full-site sections, real image assets, and client-facing stats.
-- Added three auto-repair website layouts with deterministic per-business rotation: showroom premium, concierge service journey, and performance garage.
-- Updated Designer one-variant MVP mode to rotate between `clean_modern`, `retro_local`, and `premium` per business instead of always generating `clean_modern`; fallback winner now avoids clean-modern tie bias.
-- Restored Vercel-first mockup URL storage so Designer keeps Vercel deployment links instead of rejecting protected links and falling back to Supabase Storage.
-- Updated Vercel mockup deployment to use one stable project via `VERCEL_PROJECT_ID` or `VERCEL_PROJECT_NAME` instead of creating one project per generated website.
-- Rebranded the visible product and dashboard UI from Mainstreet to Santa Claws, with festive agent names: Rudolph Scout, Workshop Elves, Snowball Pitcher, and Cookie Closer.
+- Hardened Vercel mockup deploys to request public deployments and reject login-protected URLs so Designer falls back to public Supabase Storage when needed.
 
 ## Spec Consistency Check
 
@@ -181,13 +176,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Designer prompt formatting and HTML validation checks passed.
 - Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
 - Designer fallback quality smoke confirmed generated HTML includes hero, service cards, pain-point fixes, contact CTA, and valid document structure.
-- Designer template-first smoke confirmed generated HTML includes audit stats, Scout score, service board, service cards, pain fixes, and contact CTA.
-- Agency template smoke confirmed all variants include custom CSS, audit dashboard, mobile CTA, services, contact, and valid HTML.
-- Client website template smoke confirmed all variants include real image assets, premium positioning, services, reviews, contact, and no Scout/Mainstreet/audit language.
-- Multi-template smoke confirmed different auto shops rotate across at least two finished website layouts while preserving client-facing content.
-- Designer variant selection smoke confirmed MVP mode rotates styles across sample businesses and fallback winner prefers premium/local on ties.
-- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after restoring Vercel-first URL storage.
-- Vercel payload smoke confirmed mockups target a stable `mainstreet-mockups` project name.
+- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after public URL verification for mockup deploys.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
@@ -357,6 +346,7 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 
 ## Remaining Demo Blockers
 
+- Task 0 live completion: install/login to NemoClaw or Brev runtime, run `nemoclaw onboard --sandbox mainstreet`, verify sandbox status/connect, then run the Nemotron and Supabase smoke checks from `nemoclaw/README.md`.
 - Need run the rehearsal checklist with real credentials and seeded data.
 - Need record the backup demo video before presentation time.
 - Need final live monitor pass to tune heartbeat intervals and verify logs.
@@ -364,23 +354,18 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.
 - Need run the rate-limit check in an environment with installed Python dependencies and real Nemotron/Apify credentials.
 
-## 2026-05-16 14:41 PDT — Scout Niche Rotation
+## Repo Audit Findings - 2026-05-16
 
-- Updated Scout target resolution so the legacy single `auto repair` config rotates through a broader Santa Cruz local-services niche list.
-- Added `SCOUT_NICHES` as the fastest demo override for comma-separated Scout categories.
-- Seeded new Supabase installs with a `config.target.niches` list instead of one fixed niche.
-- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
-- Validation: local target parsing smoke check confirmed `SCOUT_NICHES`, legacy single-target upgrade, and Supabase `niches` list handling.
+- Section 10 Tasks 0-3 and 5-7 remain manual/live-environment incomplete: NemoClaw onboarding, rate-limit run with real credentials, Resend DNS/domain verification, Supabase cloud schema/bucket application, Vercel project, Apify live scrape, and Discord setup.
+- Task 6 files are missing: `agents/scripts/test_apify.py` and `agents/scripts/sample_leads.json`.
+- Task 30 is missing the one-time OAuth helper script `agents/scripts/gcal_oauth.py`.
+- `nemoclaw/README.md` and `nemoclaw/network-policy.md` still contain Task 0 scaffolding instead of verified sandbox commands and exact hostnames.
+- `agents/pyproject.toml` is behind `agents/requirements.txt`; it omits `discord.py`, Google Calendar dependencies, and `tzdata`.
+- `README.md` Known Gaps is stale: it still calls `rate_limit_check.py`, `dashboard/app/api/discord-reply`, and `dashboard/app/api/trigger-demo` placeholders even though those files now contain working fallback implementations.
+- Local validation on this machine: `python3 -m compileall agents integrations workers` passed; `npm run typecheck` and `npm run build` could not run because dashboard dependencies are not installed; preflight reports missing Python packages and required env vars.
 
-## 2026-05-16 14:47 PDT — Industry-Aware Designer Templates
+## Local Env Notes - 2026-05-16
 
-- Added Designer industry profiles for automotive, dental, plumbing, electrical, roofing, landscaping, HVAC, and pet grooming leads.
-- Wired the three polished client-facing website layouts to use industry-specific hero copy, services, stats, reviews, process language, and image assets.
-- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
-- Validation: generated local smoke HTML for dentist, plumber, and electrician leads; each produced complete HTML with the right business name and industry title.
-
-## 2026-05-16 14:49 PDT — Scout Balancing Schema Fix
-
-- Fixed Scout niche balancing to count leads by `city` and `niche` only because the live `leads` table does not have a `state` column.
-- Validation: `python -m compileall agents/scout/claw.py` passed.
-- Validation: local query-shape smoke check confirmed `_lead_count` filters on `city` and `niche`, not `state`.
+- Added a Scout-focused `.env` template with required Nemotron, Supabase, and Apify fields plus optional Scout heartbeat tuning.
+- Fixed Scout Apify location targeting so the scraper sends `Santa Cruz, CA, United States` instead of bare `Santa Cruz`, preventing Santa Cruz, Spain matches while preserving `leads.city = Santa Cruz`.
+- Added an SMTP email provider path for Pitcher so approved outreach can send through a personal Gmail, Outlook, or custom mailbox without Resend domain verification.
