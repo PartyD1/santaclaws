@@ -102,6 +102,15 @@ export type MeetingRow = {
   booked_at: string | null;
 };
 
+export type AgentMemoryRow = {
+  id: string;
+  claw_name: ClawName;
+  pattern: string;
+  source: string;
+  heartbeat_summary: Record<string, unknown> | null;
+  created_at: string | null;
+};
+
 export type DashboardMetrics = {
   totalLeads: number;
   qualifiedLeads: number;
@@ -119,6 +128,18 @@ export type LeadDetailData = {
   inbound: InboundRow[];
   meetings: MeetingRow[];
   actions: ActionRow[];
+};
+
+export type ClawDetailData = {
+  clawName: ClawName;
+  actions: ActionRow[];
+  memory: AgentMemoryRow[];
+  leads: LeadRow[];
+  generatedSites: GeneratedSiteRow[];
+  outreach: OutreachRow[];
+  inbound: InboundRow[];
+  meetings: MeetingRow[];
+  warnings: string[];
 };
 
 export type Database = {
@@ -153,6 +174,11 @@ export type Database = {
         Row: MeetingRow;
         Insert: Partial<MeetingRow>;
         Update: Partial<MeetingRow>;
+      };
+      agent_memory: {
+        Row: AgentMemoryRow;
+        Insert: Partial<AgentMemoryRow>;
+        Update: Partial<AgentMemoryRow>;
       };
     };
   };

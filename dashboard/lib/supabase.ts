@@ -1,5 +1,18 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { ActionRow, DashboardMetrics, Database, LeadDetailData, LeadRow } from "./types";
+import type {
+  ActionRow,
+  AgentMemoryRow,
+  ClawDetailData,
+  ClawName,
+  DashboardMetrics,
+  Database,
+  GeneratedSiteRow,
+  InboundRow,
+  LeadDetailData,
+  LeadRow,
+  MeetingRow,
+  OutreachRow,
+} from "./types";
 
 let browserClient: SupabaseClient<Database> | null = null;
 
@@ -41,6 +54,119 @@ export async function fetchRecentActions(limit = 50): Promise<ActionRow[]> {
   }
 
   return data ?? [];
+}
+
+export async function fetchClawDetail(clawName: ClawName): Promise<ClawDetailData> {
+  const empty: ClawDetailData = {
+    clawName,
+    actions: [],
+    memory: [],
+    leads: [],
+    generatedSites: [],
+    outreach: [],
+    inbound: [],
+    meetings: [],
+    warnings: [],
+  };
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return empty;
+  }
+
+  const warnings: string[] = [];
+  const [actions, memory] = await Promise.all([
+    supabase.from("actions").select("*").eq("claw_name", clawName).order("started_at", { ascending: false }).limit(100),
+    supabase
+      .from("agent_memory")
+      .select("*")
+      .eq("claw_name", clawName)
+      .order("created_at", { ascending: false })
+      .limit(30),
+  ]);
+
+  if (actions.error) {
+    throw new Error(`Could not load ${clawName} actions: ${actions.error.message}`);
+  }
+  if (memory.error) {
+    warnings.push(`Memory table unavailable: ${memory.error.message}`);
+  }
+
+  const data: ClawDetailData = {
+    ...empty,
+    actions: actions.data ?? [],
+    memory: (memory.data ?? []) as AgentMemoryRow[],
+    warnings,
+  };
+
+  if (clawName === "scout") {
+    const leads = await supabase
+      .from("leads")
+      .select("*")
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .limit(25);
+    if (leads.error) {
+      warnings.push(`Could not load Scout leads: ${leads.error.message}`);
+    } else {
+      data.leads = leads.data ?? [];
+    }
+  } else if (clawName === "designer") {
+    const [leads, generatedSites] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("*")
+        .in("qualification_status", ["qualified_for_mockup", "qualified_for_rebuild"])
+        .order("updated_at", { ascending: false, nullsFirst: false })
+        .limit(20),
+      supabase.from("generated_sites").select("*").order("generated_at", { ascending: false }).limit(25),
+    ]);
+    if (leads.error) {
+      warnings.push(`Could not load Designer queue: ${leads.error.message}`);
+    } else {
+      data.leads = leads.data ?? [];
+    }
+    if (generatedSites.error) {
+      warnings.push(`Could not load generated sites: ${generatedSites.error.message}`);
+    } else {
+      data.generatedSites = (generatedSites.data ?? []) as GeneratedSiteRow[];
+    }
+  } else if (clawName === "pitcher") {
+    const [leads, outreach] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("*")
+        .eq("worked_by_designer", true)
+        .order("updated_at", { ascending: false, nullsFirst: false })
+        .limit(20),
+      supabase.from("outreach").select("*").order("drafted_at", { ascending: false }).limit(25),
+    ]);
+    if (leads.error) {
+      warnings.push(`Could not load Pitcher queue: ${leads.error.message}`);
+    } else {
+      data.leads = leads.data ?? [];
+    }
+    if (outreach.error) {
+      warnings.push(`Could not load outreach: ${outreach.error.message}`);
+    } else {
+      data.outreach = (outreach.data ?? []) as OutreachRow[];
+    }
+  } else if (clawName === "closer") {
+    const [inbound, meetings] = await Promise.all([
+      supabase.from("inbound").select("*").order("received_at", { ascending: false }).limit(25),
+      supabase.from("meetings").select("*").order("booked_at", { ascending: false, nullsFirst: false }).limit(25),
+    ]);
+    if (inbound.error) {
+      warnings.push(`Could not load inbound replies: ${inbound.error.message}`);
+    } else {
+      data.inbound = (inbound.data ?? []) as InboundRow[];
+    }
+    if (meetings.error) {
+      warnings.push(`Could not load meetings: ${meetings.error.message}`);
+    } else {
+      data.meetings = (meetings.data ?? []) as MeetingRow[];
+    }
+  }
+
+  return data;
 }
 
 export async function fetchRecentLeads(limit = 25): Promise<LeadRow[]> {

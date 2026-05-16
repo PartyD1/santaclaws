@@ -31,6 +31,7 @@
 - Added Supabase-backed `agent_memory` persistence with `MEMORY.md` as a compatibility cache and deterministic fallback memory when Nemotron is unreachable.
 - Added a `agents/scripts/preflight_check.py` runtime checker for Python/package/env/Supabase table readiness.
 - Added `SETUP.md` as a teammate command reference for Brev, Ubuntu, NemoClaw, claw tests, dashboard, and full demo runs.
+- Added per-claw dashboard pages for live status, action logs, durable memory, and claw-specific work queues/outputs.
 
 ## Spec Consistency Check
 
@@ -139,6 +140,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Fallback Scout memory pattern generation validated with a 5-lead heartbeat summary.
 - `python -m compileall agents/scripts/preflight_check.py` passed.
 - `python -m agents.scripts.preflight_check --skip-live` produced clear FAIL/WARN diagnostics in the local non-venv shell.
+- `npm run typecheck` passed after adding per-claw dashboard pages.
+- `npm run build` passed after adding per-claw dashboard pages.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ClawName } from "@/lib/types";
 
 type ClawCardProps = {
@@ -18,7 +19,7 @@ const toneClasses: Record<ClawCardProps["tone"], string> = {
 
 export function ClawCard({ name, title, focus, state, cadence, tone }: ClawCardProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <Link href={`/claws/${name}`} className="block rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-normal text-slate-500">{name}</p>
@@ -31,8 +32,8 @@ export function ClawCard({ name, title, focus, state, cadence, tone }: ClawCardP
       <p className="mt-3 min-h-16 text-sm leading-5 text-slate-600">{focus}</p>
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-xs font-medium text-slate-500">
         <span>{cadence}</span>
-        <span>MEMORY.md</span>
+        <span>Open status</span>
       </div>
-    </section>
+    </Link>
   );
 }
