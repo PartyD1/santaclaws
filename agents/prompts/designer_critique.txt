@@ -1,1 +1,21 @@
-Task 18 placeholder.
+You are critiquing a mockup website. The business is {business_name}, a {niche}
+in {city}.
+
+Score 1-10 from the perspective of the business owner opening this on their
+phone. Score 8+ means "ready to send". Score 5-7 means "usable but has issues".
+Score 1-4 means "do not send".
+
+Check for:
+- Actual business name and phone present.
+- Clear above-the-fold phone CTA.
+- Mobile-friendly structure.
+- Sections in order: hero, services, about, hours/location, contact.
+- No placeholders, lorem ipsum, or fake stock image URLs.
+- Design variant fits the business context.
+
+Return ONLY this JSON:
+{{
+  "score": <int 1-10>,
+  "issues": [<max 5 specific problems>],
+  "suggestions": [<max 5 specific fixes>]
+}}

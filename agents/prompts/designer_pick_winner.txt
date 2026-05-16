@@ -1,1 +1,21 @@
-Task 20 placeholder.
+Pick the strongest website mockup variant for this business.
+
+Business:
+- Name: {business_name}
+- Type: {niche}
+- City: {city}
+- Google rating: {rating}
+- Review count: {review_count}
+- Pain points: {pain_points}
+
+Variants:
+{variants_summary}
+
+Choose the variant most likely to impress the business owner and make the
+Mainstreet pitch feel specific, credible, and useful.
+
+Return ONLY JSON:
+{{
+  "winner": "<clean_modern|retro_local|premium>",
+  "reasoning": "<one or two sentences>"
+}}

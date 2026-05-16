@@ -13,6 +13,7 @@
 - Implemented Task 11 outbound Discord webhook bridge in `agents/shared/discord_bridge.py`.
 - Implemented Tasks 12-14 Scout tools: Apify scraping, website scoring, and review pain extraction.
 - Implemented Task 15 Scout claw heartbeat and `--once` CLI mode.
+- Implemented Tasks 16-20 Designer tools: mockup generation, screenshotting, critique, deploy fallback, and winner selection.
 
 ## Spec Consistency Check
 
@@ -55,11 +56,11 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 13: Scout `score_website`.
 - [x] Task 14: Scout `extract_pain_points`.
 - [x] Task 15: Scout claw integration.
-- [ ] Task 16: Designer `generate_mockup`.
-- [ ] Task 17: Designer `screenshot_html`.
-- [ ] Task 18: Designer `critique_mockup`.
-- [ ] Task 19: Designer deploy with Supabase Storage fallback.
-- [ ] Task 20: Designer `pick_winner`.
+- [x] Task 16: Designer `generate_mockup`.
+- [x] Task 17: Designer `screenshot_html`.
+- [x] Task 18: Designer `critique_mockup`.
+- [x] Task 19: Designer deploy with Supabase Storage fallback.
+- [x] Task 20: Designer `pick_winner`.
 - [ ] Task 21: Designer claw integration.
 - [ ] Task 22: Dashboard skeleton.
 - [ ] Task 23: Dashboard realtime activity feed.
@@ -133,6 +134,12 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Scout tool signatures were validated with `inspect.signature`.
 - `python -m compileall agents/scout/claw.py` passed.
 - `python -m agents.scout.claw --once` ran and exited cleanly with default target fallback because local Supabase/Python dependencies are not installed.
+- `python -m compileall agents/designer/tools agents/integrations/vercel_client.py agents/integrations/supabase_storage_client.py` passed.
+- Designer tool imports passed.
+- Designer prompt formatting and HTML validation checks passed.
+- `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
+- `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
+- `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -184,4 +191,13 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 
 - Need a working Nemotron JSON call from Task 8.
 - Need at least one qualified lead from Scout or seeded sample lead data.
-- Need final prompt content for `designer_generate.txt` and variant prompt files beyond current placeholders.
+- Need Python dependencies installed locally for live `openai`, `httpx`, `supabase`, and `playwright` calls.
+- Need `playwright install chromium` before screenshot-based critique.
+- Need `VERCEL_TOKEN` or Supabase Storage bucket `mockups` plus Supabase credentials before live deploy validation.
+
+## TASK 21 Blockers
+
+- Need at least one lead with `qualification_status` of `qualified_for_mockup` or `qualified_for_rebuild`.
+- Need live Nemotron route for actual mockup generation.
+- Need Playwright browser install or accept HTML-structure critique fallback.
+- Need Vercel or Supabase Storage deploy credentials for hosted mockup URLs.

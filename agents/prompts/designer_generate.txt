@@ -1,1 +1,32 @@
-Task 16 placeholder.
+Generate a single-file HTML website mockup for the business below.
+
+Business:
+- Name: {business_name}
+- Type: {niche}
+- City: {city}
+- Address: {address}
+- Phone: {phone}
+- Hours: {hours}
+- Google rating: {rating} ({review_count} reviews)
+- Customer pain points to address: {pain_points}
+
+Design variant: {variant_name}
+Variant style guide:
+{variant_style_block}
+
+Requirements:
+- Output ONE complete HTML file with Tailwind via CDN.
+- Mobile-responsive, especially around iPhone 12 width.
+- One clear above-the-fold CTA: "Call {phone}" as a tel: link.
+- Sections in order: hero, services, about, hours and location, contact.
+- Use the actual business name, phone, city, and address when present.
+- No lorem ipsum.
+- No stock-image URLs. Use Tailwind colors, gradients, panels, and typography.
+- No JavaScript required.
+
+{previous_critique_block}
+
+Return ONLY JSON:
+{{
+  "html": "<!DOCTYPE html>..."
+}}

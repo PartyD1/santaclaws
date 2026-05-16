@@ -1,1 +1,5 @@
-Task 16 placeholder.
+Clean modern:
+- Bright, clear, service-forward design.
+- White background, dark text, restrained blue and green accents.
+- Organized service cards, obvious phone CTA, easy scanning.
+- Feels trustworthy for a busy local repair shop owner.
