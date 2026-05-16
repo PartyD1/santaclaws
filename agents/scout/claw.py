@@ -117,12 +117,10 @@ def _niches_from_target(target: dict[str, Any]) -> list[str]:
     return list(DEFAULT_SCOUT_NICHES)
 
 
-def _lead_count(city: str, state: str | None, niche: str) -> int:
+def _lead_count(city: str, niche: str) -> int:
     """Return current lead count for a niche so Scout fills sparse categories."""
 
     query = get_client().table("leads").select("id").eq("city", city).eq("niche", niche).limit(1000)
-    if state:
-        query = query.eq("state", state)
     response = query.execute()
     rows = getattr(response, "data", None)
     if not isinstance(rows, list):
@@ -138,7 +136,7 @@ def _choose_niche(city: str, state: str | None, niches: list[str]) -> str:
     if len(niches) == 1:
         return niches[0]
     try:
-        return min(niches, key=lambda niche: (_lead_count(city, state, niche), niches.index(niche)))
+        return min(niches, key=lambda niche: (_lead_count(city, niche), niches.index(niche)))
     except Exception as exc:
         print(f"Scout niche balancing unavailable; rotating by time. Reason: {exc}")
         index = int(datetime.now(timezone.utc).timestamp() // 60) % len(niches)

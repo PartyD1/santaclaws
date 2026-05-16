@@ -378,3 +378,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Wired the three polished client-facing website layouts to use industry-specific hero copy, services, stats, reviews, process language, and image assets.
 - Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
 - Validation: generated local smoke HTML for dentist, plumber, and electrician leads; each produced complete HTML with the right business name and industry title.
+
+## 2026-05-16 14:49 PDT — Scout Balancing Schema Fix
+
+- Fixed Scout niche balancing to count leads by `city` and `niche` only because the live `leads` table does not have a `state` column.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: local query-shape smoke check confirmed `_lead_count` filters on `city` and `niche`, not `state`.
