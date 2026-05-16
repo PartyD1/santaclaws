@@ -43,9 +43,9 @@ def _now_iso() -> str:
 
 
 def _variant_count() -> int:
-    """Return variant count, defaulting to the full 3-variant quality path."""
+    """Return variant count, defaulting to the reliable one-variant MVP path."""
 
-    value = os.environ.get("DESIGNER_VARIANT_COUNT", "3").strip()
+    value = os.environ.get("DESIGNER_VARIANT_COUNT", "1").strip()
     return 1 if value == "1" else 3
 
 
@@ -305,7 +305,12 @@ def heartbeat() -> dict[str, Any]:
             )
 
     if not variant_results:
-        final_text = f"Designer failed to produce a mockup for {lead.get('business_name')}."
+        first_error = str(summary["errors"][0]) if summary["errors"] else "unknown error"
+        final_text = f"Designer failed to produce a mockup for {lead.get('business_name')}: {first_error}"
+        try:
+            get_client().table("leads").update({"worked_by_designer": False, "updated_at": _now_iso()}).eq("id", lead_id).execute()
+        except Exception as exc:
+            summary["errors"].append(f"claim reset failed: {exc}")
         _safe_log("heartbeat", "failed", final_text, summary, lead_id)
         _safe_discord(f"Designer: {final_text}")
         print(final_text)

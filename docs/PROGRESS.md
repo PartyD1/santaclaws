@@ -35,6 +35,7 @@
 - Added an OpenClaw-compatible runtime context loader plus `agents.scripts.openclaw_run`, and moved `start_all_claws.sh` onto that heartbeat runner.
 - Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
 - Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
+- Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
 
 ## Spec Consistency Check
 
@@ -169,6 +170,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/designer/tools agents/integrations/vercel_client.py agents/integrations/supabase_storage_client.py` passed.
 - Designer tool imports passed.
 - Designer prompt formatting and HTML validation checks passed.
+- Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
