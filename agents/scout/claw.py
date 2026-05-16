@@ -17,11 +17,37 @@ from agents.scout.tools import extract_pain_points, score_website, scrape_leads
 from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.openclaw_runtime import load_openclaw_context
-from agents.shared.supabase_client import DEFAULT_SCOUT_NICHES, DEFAULT_TARGET, get_client, next_scout_target, read_memory
+from agents.shared.supabase_client import (
+    DEFAULT_SCOUT_NICHES,
+    DEFAULT_TARGET,
+    get_client,
+    insert_leads,
+    next_scout_target,
+    read_memory,
+)
 
 
 DEFAULT_SCRAPE_LIMIT = 20
 DEFAULT_PROCESS_LIMIT = 5
+DEFAULT_NICHE_ATTEMPTS = 4
+LEGACY_SCOUT_NICHES = {
+    "auto detailing",
+    "barber shop",
+    "cleaning service",
+    "coffee shop",
+    "dentist",
+    "day spa",
+    "electrician",
+    "gym",
+    "hair salon",
+    "home services",
+    "hvac contractor",
+    "landscaper",
+    "pet groomer",
+    "plumber",
+    "restaurant",
+    "roofing contractor",
+}
 
 
 def _load_env() -> None:
@@ -47,6 +73,15 @@ def _int_env(name: str, default: int) -> int:
         return max(1, int(value))
     except ValueError:
         return default
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    """Read a boolean env flag."""
+
+    value = os.environ.get(name, "").strip().lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
 
 
 def _list_env(name: str) -> list[str]:
@@ -101,15 +136,23 @@ def _niches_from_target(target: dict[str, Any]) -> list[str]:
     if env_niches:
         return env_niches
 
+    def _fresh_niches(values: list[str]) -> list[str]:
+        """Replace the old narrow service list with broader demo categories."""
+
+        normalized = {value.lower() for value in values}
+        if normalized and normalized.issubset(LEGACY_SCOUT_NICHES):
+            return list(DEFAULT_SCOUT_NICHES)
+        return [value for value in values if value.lower() != "auto detailing"]
+
     raw_niches = target.get("niches")
     if isinstance(raw_niches, list):
         niches = [str(niche).strip() for niche in raw_niches if str(niche).strip()]
         if niches:
-            return niches
+            return _fresh_niches(niches)
     if isinstance(raw_niches, str):
         niches = [part.strip() for part in raw_niches.split(",") if part.strip()]
         if niches:
-            return niches
+            return _fresh_niches(niches)
 
     niche = str(target.get("niche") or "").strip()
     if niche and niche.lower() != "auto repair":
@@ -117,12 +160,10 @@ def _niches_from_target(target: dict[str, Any]) -> list[str]:
     return list(DEFAULT_SCOUT_NICHES)
 
 
-def _lead_count(city: str, state: str | None, niche: str) -> int:
+def _lead_count(city: str, niche: str) -> int:
     """Return current lead count for a niche so Scout fills sparse categories."""
 
     query = get_client().table("leads").select("id").eq("city", city).eq("niche", niche).limit(1000)
-    if state:
-        query = query.eq("state", state)
     response = query.execute()
     rows = getattr(response, "data", None)
     if not isinstance(rows, list):
@@ -138,11 +179,18 @@ def _choose_niche(city: str, state: str | None, niches: list[str]) -> str:
     if len(niches) == 1:
         return niches[0]
     try:
-        return min(niches, key=lambda niche: (_lead_count(city, state, niche), niches.index(niche)))
+        return min(niches, key=lambda niche: (_lead_count(city, niche), niches.index(niche)))
     except Exception as exc:
         print(f"Scout niche balancing unavailable; rotating by time. Reason: {exc}")
         index = int(datetime.now(timezone.utc).timestamp() // 60) % len(niches)
         return niches[index]
+
+
+def _ordered_niches(niches: list[str], chosen: str) -> list[str]:
+    """Return niches with the selected one first while preserving order."""
+
+    unique = list(dict.fromkeys([niche for niche in [chosen, *niches] if niche]))
+    return unique
 
 
 def _target() -> dict[str, Any]:
@@ -257,6 +305,43 @@ def _process_lead(lead: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _seed_demo_lead(city: str, niche: str) -> int:
+    """Insert one realistic demo lead when live scraping returns nothing."""
+
+    timestamp = datetime.now(timezone.utc).strftime("%H%M%S")
+    display_niche = niche.rstrip("s") if niche.endswith("s") else niche
+    email = (
+        os.environ.get("SCOUT_TEST_EMAIL", "").strip()
+        or os.environ.get("OUTREACH_TEST_EMAIL", "").strip()
+        or None
+    )
+    row = {
+        "business_name": f"DEMO - {city} {display_niche.title()} Studio {timestamp}",
+        "address": f"100 Pacific Ave, {city}, CA",
+        "phone": "(831) 555-0198",
+        "email": email,
+        "website": None,
+        "niche": niche,
+        "city": city,
+        "google_rating": 4.7,
+        "review_count": 86,
+        "review_texts": [
+            "Great service, but I had to call twice to understand availability.",
+            "Friendly local team. I wish their website made booking easier.",
+            "The staff was helpful once I reached them by phone.",
+        ],
+        "qualification_status": "pending",
+    }
+    inserted = insert_leads([row])
+    _safe_log(
+        "seed_demo_lead",
+        "succeeded",
+        f"seeded fallback demo lead for {niche} in {city} after live scraping returned no new rows.",
+        {"business_name": row["business_name"], "niche": niche, "city": city, "has_test_email": bool(email)},
+    )
+    return inserted
+
+
 def heartbeat() -> dict[str, Any]:
     """Run one Scout heartbeat."""
 
@@ -267,12 +352,16 @@ def heartbeat() -> dict[str, Any]:
     city = str(target.get("city", DEFAULT_TARGET["city"]))
     state = target.get("state")
     niche = str(target.get("niche", DEFAULT_TARGET["niche"]))
+    niches = [str(item) for item in target.get("niches", [niche]) if str(item).strip()]
     location = f"{city}, {state}" if state else city
     scrape_limit = _int_env("SCOUT_SCRAPE_LIMIT", DEFAULT_SCRAPE_LIMIT)
     process_limit = _int_env("SCOUT_PROCESS_LIMIT", DEFAULT_PROCESS_LIMIT)
+    niche_attempts = min(len(niches) or 1, _int_env("SCOUT_NICHE_ATTEMPTS", DEFAULT_NICHE_ATTEMPTS))
+    scrape_niches = _ordered_niches(niches, niche)[:niche_attempts]
+    demo_fallback = _bool_env("SCOUT_DEMO_FALLBACK", True)
 
     summary: dict[str, Any] = {
-        "target": {"city": city, "state": state, "niche": niche, "niches": target.get("niches", [niche])},
+        "target": {"city": city, "state": state, "niche": niche, "niches": niches, "attempted_niches": scrape_niches},
         "memory_loaded": bool(memory.strip()),
         "openclaw_context": openclaw_context.summary(),
         "scraped_inserted": 0,
@@ -280,6 +369,7 @@ def heartbeat() -> dict[str, Any]:
         "qualified_for_mockup": 0,
         "qualified_for_rebuild": 0,
         "skipped": 0,
+        "demo_fallback_seeded": False,
         "errors": [],
     }
 
@@ -291,26 +381,63 @@ def heartbeat() -> dict[str, Any]:
         openclaw_context.summary(),
     )
 
-    try:
-        inserted = scrape_leads.run(city=city, niche=niche, limit=scrape_limit, state=state, country="United States")
-        summary["scraped_inserted"] = inserted
-        if inserted == 0:
-            _safe_log(
-                "scrape_dedup_check",
-                "skipped",
-                f"found no new {niche} leads in {location}; possible dedup saturation.",
-                {"city": city, "niche": niche},
+    for scrape_niche in scrape_niches:
+        try:
+            inserted = scrape_leads.run(
+                city=city,
+                niche=scrape_niche,
+                limit=scrape_limit,
+                state=state,
+                country="United States",
             )
-    except Exception as exc:
-        summary["errors"].append(f"scrape failed: {exc}")
-        _safe_log("scrape_batch", "failed", f"scrape failed for {niche} in {location}: {exc}", {"error": str(exc)})
+            summary["scraped_inserted"] += inserted
+            if inserted == 0:
+                _safe_log(
+                    "scrape_dedup_check",
+                    "skipped",
+                    f"found no new {scrape_niche} leads in {location}; trying next niche if available.",
+                    {"city": city, "niche": scrape_niche},
+                )
+            else:
+                niche = scrape_niche
+                break
+        except Exception as exc:
+            summary["errors"].append(f"scrape failed for {scrape_niche}: {exc}")
+            _safe_log(
+                "scrape_batch",
+                "failed",
+                f"scrape failed for {scrape_niche} in {location}: {exc}",
+                {"error": str(exc), "niche": scrape_niche},
+            )
 
-    try:
-        leads = _pending_leads(city=city, niche=niche, limit=process_limit)
-    except Exception as exc:
-        summary["errors"].append(f"pending lead fetch failed: {exc}")
-        _safe_log("fetch_pending_leads", "failed", f"could not fetch pending Scout leads: {exc}", {"error": str(exc)})
-        leads = []
+    if summary["scraped_inserted"] == 0 and demo_fallback and scrape_niches:
+        try:
+            seeded = _seed_demo_lead(city=city, niche=scrape_niches[0])
+            summary["scraped_inserted"] += seeded
+            summary["demo_fallback_seeded"] = bool(seeded)
+        except Exception as exc:
+            summary["errors"].append(f"demo fallback seed failed: {exc}")
+            _safe_log(
+                "seed_demo_lead",
+                "failed",
+                f"could not seed fallback demo lead for {scrape_niches[0]} in {location}: {exc}",
+                {"error": str(exc), "niche": scrape_niches[0]},
+            )
+
+    leads = []
+    for pending_niche in scrape_niches:
+        if len(leads) >= process_limit:
+            break
+        try:
+            leads.extend(_pending_leads(city=city, niche=pending_niche, limit=process_limit - len(leads)))
+        except Exception as exc:
+            summary["errors"].append(f"pending lead fetch failed for {pending_niche}: {exc}")
+            _safe_log(
+                "fetch_pending_leads",
+                "failed",
+                f"could not fetch pending Scout leads for {pending_niche}: {exc}",
+                {"error": str(exc), "niche": pending_niche},
+            )
 
     for lead in leads[:process_limit]:
         try:
@@ -335,7 +462,7 @@ def heartbeat() -> dict[str, Any]:
 
     final_status = "succeeded" if not summary["errors"] else "failed"
     final_text = (
-        f"heartbeat finished for {niche} in {location}. "
+        f"heartbeat finished for {', '.join(scrape_niches)} in {location}. "
         f"Inserted {summary['scraped_inserted']}, processed {summary['processed']}, "
         f"mockup {summary['qualified_for_mockup']}, rebuild {summary['qualified_for_rebuild']}, skipped {summary['skipped']}."
     )

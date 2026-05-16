@@ -153,7 +153,7 @@ create table if not exists agent_memory (
 create index if not exists idx_agent_memory_claw_recent on agent_memory(claw_name, created_at desc);
 
 insert into config (key, value) values
-  ('target', '{"niches": ["dentist", "plumber", "electrician", "landscaper", "roofing contractor", "HVAC contractor", "pet groomer", "auto detailing"], "city": "Santa Cruz", "state": "CA"}'),
+  ('target', '{"niches": ["restaurants", "cafes", "hair salons", "barbers", "fitness centers", "spas", "house cleaners", "contractors"], "city": "Santa Cruz", "state": "CA"}'),
   ('autonomous_mode', 'false'),
   ('ignore_quiet_hours', 'true'),
   ('session_lead_cap', '500')

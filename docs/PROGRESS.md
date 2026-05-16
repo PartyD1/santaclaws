@@ -4,6 +4,8 @@
 
 - Read `AGENTS.md`.
 - Read `docs/Mainstreet_NemoClaw_Codex_Execution_Spec.md`.
+- Audited the repo against the full NemoClaw multi-agent execution spec for remaining incomplete work.
+- Prepared Task 0 NemoClaw onboarding docs and smoke-test script; live completion remains blocked because `nemoclaw` is not installed on this machine.
 - Created the Task 4 monorepo skeleton.
 - Added corrected schema columns to the spec and `agents/scripts/setup_supabase.sql`.
 - Dashboard dependencies were resolved and installed locally for validation.
@@ -26,6 +28,18 @@
 - Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
 - Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
 - Replaced remaining demo-risk placeholders and documented the placeholder audit in `docs/PLACEHOLDER_AUDIT.md`.
+- Updated the default NemoClaw/Nemotron model configuration to `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`.
+- Fixed Supabase timestamp parsing for Python 3.9 local venvs that reject five-digit fractional seconds.
+- Added Supabase-backed `agent_memory` persistence with `MEMORY.md` as a compatibility cache and deterministic fallback memory when Nemotron is unreachable.
+- Added a `agents/scripts/preflight_check.py` runtime checker for Python/package/env/Supabase table readiness.
+- Added `SETUP.md` as a teammate command reference for Brev, Ubuntu, NemoClaw, claw tests, dashboard, and full demo runs.
+- Added per-claw dashboard pages for live status, action logs, durable memory, and claw-specific work queues/outputs.
+- Added an OpenClaw-compatible runtime context loader plus `agents.scripts.openclaw_run`, and moved `start_all_claws.sh` onto that heartbeat runner.
+- Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
+- Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
+- Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
+- Upgraded Designer mockup quality prompts and fallback HTML with richer local-business structure, service cards, trust cues, pain-point fixes, and stronger contact sections.
+- Hardened Vercel mockup deploys to request public deployments and reject login-protected URLs so Designer falls back to public Supabase Storage when needed.
 
 ## Spec Consistency Check
 
@@ -149,6 +163,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/designer/tools agents/integrations/vercel_client.py agents/integrations/supabase_storage_client.py` passed.
 - Designer tool imports passed.
 - Designer prompt formatting and HTML validation checks passed.
+- Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
+- Designer fallback quality smoke confirmed generated HTML includes hero, service cards, pain-point fixes, contact CTA, and valid document structure.
+- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after public URL verification for mockup deploys.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
@@ -317,6 +334,7 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 
 ## Remaining Demo Blockers
 
+- Task 0 live completion: install/login to NemoClaw or Brev runtime, run `nemoclaw onboard --sandbox mainstreet`, verify sandbox status/connect, then run the Nemotron and Supabase smoke checks from `nemoclaw/README.md`.
 - Need run the rehearsal checklist with real credentials and seeded data.
 - Need record the backup demo video before presentation time.
 - Need final live monitor pass to tune heartbeat intervals and verify logs.
@@ -355,3 +373,66 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Run `playwright install chromium` before screenshot-based Designer validation.
 - Use Git Bash, WSL, or NemoClaw shell for `agents/scripts/start_all_claws.sh` and `agents/scripts/stop_all_claws.sh`.
 - Configure Vapi stretch values only if voice is included: `VAPI_API_KEY`, `VAPI_PHONE_NUMBER`, and `VAPI_WEBHOOK_URL`.
+
+## Repo Audit Findings - 2026-05-16
+
+- Section 10 Tasks 0-3 and 5-7 remain manual/live-environment incomplete: NemoClaw onboarding, rate-limit run with real credentials, Resend DNS/domain verification, Supabase cloud schema/bucket application, Vercel project, Apify live scrape, and Discord setup.
+- Task 6 files are missing: `agents/scripts/test_apify.py` and `agents/scripts/sample_leads.json`.
+- Task 30 is missing the one-time OAuth helper script `agents/scripts/gcal_oauth.py`.
+- `nemoclaw/README.md` and `nemoclaw/network-policy.md` still contain Task 0 scaffolding instead of verified sandbox commands and exact hostnames.
+- `agents/pyproject.toml` is behind `agents/requirements.txt`; it omits `discord.py`, Google Calendar dependencies, and `tzdata`.
+- `README.md` Known Gaps is stale: it still calls `rate_limit_check.py`, `dashboard/app/api/discord-reply`, and `dashboard/app/api/trigger-demo` placeholders even though those files now contain working fallback implementations.
+- Local validation on this machine: `python3 -m compileall agents integrations workers` passed; `npm run typecheck` and `npm run build` could not run because dashboard dependencies are not installed; preflight reports missing Python packages and required env vars.
+
+## Local Env Notes - 2026-05-16
+
+- Added a Scout-focused `.env` template with required Nemotron, Supabase, and Apify fields plus optional Scout heartbeat tuning.
+- Fixed Scout Apify location targeting so the scraper sends `Santa Cruz, CA, United States` instead of bare `Santa Cruz`, preventing Santa Cruz, Spain matches while preserving `leads.city = Santa Cruz`.
+- Added an SMTP email provider path for Pitcher so approved outreach can send through a personal Gmail, Outlook, or custom mailbox without Resend domain verification.
+
+## 2026-05-16 14:47 PDT — Industry-Aware Designer Templates
+
+- Added Designer industry profiles for automotive, dental, plumbing, electrical, roofing, landscaping, HVAC, and pet grooming leads.
+- Wired the three polished client-facing website layouts to use industry-specific hero copy, services, stats, reviews, process language, and image assets.
+- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
+- Validation: generated local smoke HTML for dentist, plumber, and electrician leads; each produced complete HTML with the right business name and industry title.
+
+## 2026-05-16 14:49 PDT — Scout Balancing Schema Fix
+
+- Fixed Scout niche balancing to count leads by `city` and `niche` only because the live `leads` table does not have a `state` column.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: local query-shape smoke check confirmed `_lead_count` filters on `city` and `niche`, not `state`.
+
+## 2026-05-16 14:59 PDT — Expanded Designer Template Library
+
+- Expanded client-facing Designer mockups from 3 to 8 layouts by adding editorial, booking-first, local-proof, luxury-card, and service-menu templates.
+- Added industry-tailored stock photo selection slots for hero, detail, portrait, and texture images so each layout can use different visual assets.
+- Kept every new template wired to industry profiles for services, stats, reviews, hero copy, and contact flows.
+- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
+- Validation: generated smoke HTML for all 8 template functions using a dental lead; each returned complete HTML with business and industry text.
+- Validation: generated smoke HTML across dentist, plumber, electrician, landscaper, pet groomer, roofing, HVAC, and auto detailing leads.
+
+## 2026-05-16 15:12 PDT — Broader Scout Niches
+
+- Replaced narrow trade-service Scout defaults with broader high-volume local categories: restaurant, coffee shop, hair salon, barber shop, gym, day spa, cleaning service, and home services.
+- Removed `auto detailing` from Scout defaults and from legacy Supabase target-list handling.
+- Added a generic local-business Designer profile so broad Scout categories do not inherit plumbing copy.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py agents/designer/tools/generate_mockup.py` passed.
+- Validation: legacy target niche lists now normalize to the broader default list and custom lists drop `auto detailing`.
+- Validation: generated smoke HTML for a coffee shop lead; output was complete and did not contain plumbing copy.
+
+## 2026-05-16 15:15 PDT — Scout Multi-Niche Fallback
+
+- Updated Scout so one empty Places result no longer ends the heartbeat; it now tries up to `SCOUT_NICHE_ATTEMPTS` categories per run, defaulting to 4.
+- Switched broad default search terms to plural, Places-friendly queries: restaurants, cafes, hair salons, barbers, fitness centers, spas, house cleaners, and contractors.
+- Updated pending-lead processing to pull from all attempted niches in the heartbeat.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
+- Validation: local smoke check confirmed selected niche ordering and legacy singular target normalization.
+
+## 2026-05-16 15:21 PDT — Scout Demo Lead Safety Net
+
+- Added `SCOUT_DEMO_FALLBACK=true` behavior so Scout seeds one clearly labeled `DEMO - ...` lead when all live scrape attempts insert 0 rows.
+- Added optional `SCOUT_TEST_EMAIL` / `OUTREACH_TEST_EMAIL` support so fallback leads can route Pitcher email to a safe test inbox.
+- Fallback leads are realistic pending rows with missing websites, review text, rating, phone, and address so Scout can immediately qualify them for Designer.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: fake insert smoke test confirmed fallback rows are clearly labeled, have `website = null`, and carry `SCOUT_TEST_EMAIL` when set.

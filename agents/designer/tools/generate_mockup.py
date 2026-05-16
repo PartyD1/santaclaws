@@ -15,6 +15,244 @@ PROMPT_DIR = Path(__file__).resolve().parents[2] / "prompts"
 VALID_VARIANTS = {"clean_modern", "retro_local", "premium"}
 
 
+def _industry_key(lead: dict[str, Any]) -> str:
+    """Map scraped niche labels to a small set of polished template profiles."""
+
+    niche = str(lead.get("niche") or "").lower()
+    if any(term in niche for term in ["dentist", "dental", "orthodont"]):
+        return "dental"
+    if any(term in niche for term in ["plumb", "water heater", "drain"]):
+        return "plumbing"
+    if any(term in niche for term in ["electric", "lighting", "panel"]):
+        return "electrical"
+    if any(term in niche for term in ["roof", "gutter"]):
+        return "roofing"
+    if any(term in niche for term in ["landscap", "garden", "lawn"]):
+        return "landscaping"
+    if any(term in niche for term in ["hvac", "heating", "air conditioning", "furnace"]):
+        return "hvac"
+    if any(term in niche for term in ["pet", "groom", "dog"]):
+        return "pet_grooming"
+    if any(term in niche for term in ["detail", "wash", "auto", "tire", "body", "car", "vehicle"]):
+        return "automotive"
+    return "local_service"
+
+
+def _profile(lead: dict[str, Any]) -> dict[str, Any]:
+    """Return industry-specific copy, stats, reviews, and real image assets."""
+
+    profiles: dict[str, dict[str, Any]] = {
+        "automotive": {
+            "category": "premium auto service",
+            "hero": "Dealership-grade care. Independent-shop clarity.",
+            "sub": "Advanced diagnostics, clean communication, and high-confidence repairs for everyday, European, and performance vehicles.",
+            "concierge_hero": "Service that feels managed, not mysterious.",
+            "performance_hero": "Built for drivers who notice everything.",
+            "eyebrow": "Premium dealership alternative",
+            "image": "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Advanced Diagnostics", "Electrical, drivability, warning lights, leaks, and performance issues explained before work begins."),
+                ("Brake & Suspension", "Quiet stops, confident handling, pads, rotors, shocks, struts, and safety-critical repairs."),
+                ("Factory Maintenance", "Mileage-based service, fluids, batteries, belts, filters, and preventive care for long vehicle life."),
+                ("Performance Care", "High-attention service for drivers who care about response, ride quality, reliability, and detail."),
+            ],
+            "stats": [("4.9", "average rating"), ("18+", "years expertise"), ("24 hr", "diagnostic goal"), ("3,200+", "vehicles serviced")],
+            "reviews": [
+                ("Clean shop, clear quote, and no pressure. It felt like dealership quality without the runaround.", "Maya R."),
+                ("They diagnosed the issue quickly and explained what mattered now versus what could wait.", "Jordan T."),
+                ("Easy scheduling and the car came back feeling perfect.", "Elena S."),
+            ],
+            "process": ["Listen first", "Diagnose clearly", "Deliver cleanly"],
+        },
+        "dental": {
+            "category": "modern dental care",
+            "hero": "A calmer, clearer way to care for your smile.",
+            "sub": "Preventive visits, cosmetic consults, emergency care, and family dentistry presented with warmth, confidence, and easy booking.",
+            "concierge_hero": "Dental care that feels personal from the first click.",
+            "performance_hero": "Confident care for healthier smiles.",
+            "eyebrow": "Modern family dental studio",
+            "image": "https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Preventive Care", "Cleanings, exams, digital x-rays, fluoride care, and proactive guidance for every age."),
+                ("Cosmetic Dentistry", "Whitening, bonding, veneers, and smile upgrades explained with clear expectations."),
+                ("Emergency Visits", "Fast help for tooth pain, chips, swelling, and urgent dental concerns."),
+                ("Family Appointments", "Simple scheduling for kids, adults, and busy households."),
+            ],
+            "stats": [("4.9", "patient rating"), ("7k+", "smiles cared for"), ("Same day", "urgent visits"), ("98%", "comfort-first reviews")],
+            "reviews": [
+                ("The team made everything feel easy and calm. Best dental visit I have had.", "Priya S."),
+                ("Clear pricing, gentle care, and a beautiful office.", "Daniel K."),
+                ("They helped my whole family get scheduled without stress.", "Monica L."),
+            ],
+            "process": ["Book easily", "Feel comfortable", "Leave smiling"],
+        },
+        "plumbing": {
+            "category": "trusted plumbing",
+            "hero": "Fast plumbing help without the guesswork.",
+            "sub": "Emergency leaks, water heaters, drain clearing, fixture upgrades, and clean communication from arrival to repair.",
+            "concierge_hero": "Plumbing service that explains the problem before the invoice.",
+            "performance_hero": "Built for homes that need water moving right.",
+            "eyebrow": "Reliable home plumbing",
+            "image": "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Leak Repair", "Locate pipe, fixture, and slab leaks quickly with clean repair recommendations."),
+                ("Drain Clearing", "Clogs, slow drains, sewer backups, and camera inspections when needed."),
+                ("Water Heaters", "Repair, replacement, tankless upgrades, flushing, and safety checks."),
+                ("Fixture Installs", "Faucets, toilets, disposals, valves, and remodel-ready plumbing work."),
+            ],
+            "stats": [("24/7", "urgent response"), ("4.8", "local rating"), ("90 min", "arrival goal"), ("12k+", "repairs completed")],
+            "reviews": [
+                ("They found the leak fast, explained the fix, and left the area spotless.", "Chris M."),
+                ("Honest, quick, and the price made sense.", "Alyssa B."),
+                ("Our water heater was replaced the same day. Huge relief.", "Rene P."),
+            ],
+            "process": ["Find the issue", "Explain options", "Fix it cleanly"],
+        },
+        "electrical": {
+            "category": "licensed electrical service",
+            "hero": "Safer power, cleaner installs, clearer estimates.",
+            "sub": "Panels, outlets, EV chargers, lighting, troubleshooting, and code-aware work for homes and small businesses.",
+            "concierge_hero": "Electrical work that feels organized and safe.",
+            "performance_hero": "Power upgrades done with precision.",
+            "eyebrow": "Modern electrical contractor",
+            "image": "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1565608087341-404b25492fee?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Panel Upgrades", "Capacity planning, safer panels, breakers, subpanels, and modernization."),
+                ("EV Chargers", "Home charging installs with clean routing and load-aware recommendations."),
+                ("Lighting", "Interior, exterior, security, recessed, and energy-conscious lighting upgrades."),
+                ("Troubleshooting", "Outlets, flickering lights, tripped breakers, and mysterious power issues."),
+            ],
+            "stats": [("4.9", "homeowner rating"), ("2k+", "projects wired"), ("100%", "permit-aware"), ("24 hr", "estimate follow-up")],
+            "reviews": [
+                ("They upgraded our panel cleanly and explained every step.", "Nina G."),
+                ("The EV charger install looks perfect.", "Sam R."),
+                ("Professional, safe, and easy to schedule.", "Leah T."),
+            ],
+            "process": ["Inspect safely", "Plan clearly", "Power reliably"],
+        },
+        "roofing": {
+            "category": "roofing and exterior protection",
+            "hero": "Roofing confidence before the next storm.",
+            "sub": "Inspections, leak repair, replacements, gutters, and exterior protection with clear photos, timelines, and warranty guidance.",
+            "concierge_hero": "Roofing work with photos, timelines, and no mystery.",
+            "performance_hero": "Built to keep weather outside.",
+            "eyebrow": "Trusted roofing contractor",
+            "image": "https://images.unsplash.com/photo-1632759145351-1d592919f522?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1626885930974-4b69aa21bbf9?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Roof Inspections", "Photo-backed condition reports for leaks, wear, flashing, vents, and storm damage."),
+                ("Leak Repair", "Targeted repair for active leaks, missing shingles, flashing, and water intrusion."),
+                ("Replacements", "Clear options for asphalt, metal, flat roofs, ventilation, and warranties."),
+                ("Gutters", "Gutter repair, cleaning, guards, drainage, and exterior water control."),
+            ],
+            "stats": [("15 yr", "workmanship focus"), ("4.8", "local rating"), ("48 hr", "inspection goal"), ("1,900+", "roofs protected")],
+            "reviews": [
+                ("They showed photos, gave a clear plan, and finished ahead of the rain.", "Luis F."),
+                ("Professional crew and no mess left behind.", "Hannah W."),
+                ("The inspection made the decision easy.", "Omar J."),
+            ],
+            "process": ["Inspect thoroughly", "Document clearly", "Protect the home"],
+        },
+        "landscaping": {
+            "category": "landscape design and maintenance",
+            "hero": "Outdoor spaces that look cared for every week.",
+            "sub": "Design, planting, irrigation, cleanups, hardscape details, and maintenance plans that make curb appeal feel effortless.",
+            "concierge_hero": "Landscaping with a plan, not just a crew.",
+            "performance_hero": "Built for curb appeal that lasts.",
+            "eyebrow": "Premium landscape service",
+            "image": "https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1598902108854-10e335adac99?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Maintenance Plans", "Mowing, pruning, edging, seasonal color, and consistent property care."),
+                ("Landscape Design", "Planting plans, curb appeal upgrades, outdoor rooms, and drought-aware choices."),
+                ("Irrigation", "Sprinkler repair, drip systems, smart controllers, and water-efficient tuning."),
+                ("Cleanups", "Overgrowth, hauling, storm cleanup, mulch, and property refreshes."),
+            ],
+            "stats": [("52 wk", "care plans"), ("4.9", "owner rating"), ("30%", "water savings goal"), ("800+", "yards refreshed")],
+            "reviews": [
+                ("Our yard finally looks intentional and easy to maintain.", "Becca H."),
+                ("Reliable crew, beautiful planting, and smart irrigation fixes.", "Andre V."),
+                ("They transformed the front yard in a weekend.", "Sofia N."),
+            ],
+            "process": ["Plan the space", "Build the look", "Maintain the beauty"],
+        },
+        "hvac": {
+            "category": "heating and cooling service",
+            "hero": "Comfort you can feel before the weather turns.",
+            "sub": "AC repair, furnace service, heat pumps, tune-ups, indoor air quality, and fast scheduling for homes that need comfort now.",
+            "concierge_hero": "Heating and cooling help with clear next steps.",
+            "performance_hero": "Built for homes that stay comfortable.",
+            "eyebrow": "Home comfort specialists",
+            "image": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("AC Repair", "Cooling diagnostics, refrigerant checks, airflow issues, and emergency summer repairs."),
+                ("Heating Service", "Furnaces, heat pumps, thermostats, safety checks, and winter readiness."),
+                ("System Replacement", "Right-sized systems, efficiency options, financing-ready estimates, and clean installs."),
+                ("Maintenance", "Seasonal tune-ups, filters, coils, ducts, and comfort performance checks."),
+            ],
+            "stats": [("24/7", "comfort calls"), ("4.8", "home rating"), ("12 mo", "maintenance plans"), ("2,400+", "systems serviced")],
+            "reviews": [
+                ("They got our AC working before the heat wave and explained the issue clearly.", "Drew C."),
+                ("Professional install, clean crew, and a quieter system.", "Anika M."),
+                ("The maintenance plan already saved us a breakdown.", "Joel S."),
+            ],
+            "process": ["Diagnose comfort", "Explain options", "Restore airflow"],
+        },
+        "pet_grooming": {
+            "category": "pet grooming studio",
+            "hero": "A cleaner, calmer grooming day for pets and people.",
+            "sub": "Baths, cuts, de-shedding, nail trims, breed-aware styling, and a booking flow built for busy pet parents.",
+            "concierge_hero": "Grooming that feels gentle, organized, and easy to book.",
+            "performance_hero": "Built for pets who deserve the good treatment.",
+            "eyebrow": "Premium pet grooming",
+            "image": "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Full Groom", "Bath, haircut, blow dry, brush-out, ears, nails, and finishing touches."),
+                ("Bath & Brush", "Coat care, de-shedding, skin-friendly wash, and tidy-up service."),
+                ("Nail Care", "Quick trims, grinding, paw care, and add-ons for regular visits."),
+                ("Puppy Visits", "Gentle first appointments that help young pets learn grooming calmly."),
+            ],
+            "stats": [("4.9", "pet parent rating"), ("6k+", "happy grooms"), ("Same week", "booking goal"), ("100%", "gentle handling")],
+            "reviews": [
+                ("My nervous dog came home happy, clean, and adorable.", "Kate D."),
+                ("Easy booking and the cut was exactly what we asked for.", "Miguel A."),
+                ("The team is patient and so kind with older pets.", "Tara E."),
+            ],
+            "process": ["Welcome gently", "Groom carefully", "Send them home fresh"],
+        },
+        "local_service": {
+            "category": "local business",
+            "hero": "A sharper local website that makes the next step obvious.",
+            "sub": "Clear services, stronger photos, visible reviews, and fast contact paths for customers deciding where to go next.",
+            "concierge_hero": "Local service that feels easy from the first click.",
+            "performance_hero": "Built for customers ready to act.",
+            "eyebrow": "Neighborhood favorite",
+            "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Services", "Make the core offer easy to scan with plain-language categories and quick answers."),
+                ("Appointments", "Give high-intent customers a clear call path, booking prompt, and location details."),
+                ("Reviews", "Surface local credibility with rating, review count, testimonials, and recognizable proof."),
+                ("Visit Info", "Show hours, address, service area, and mobile-friendly contact options before customers bounce."),
+            ],
+            "stats": [("4.8", "local rating"), ("1k+", "customers served"), ("Same day", "response goal"), ("30 sec", "decision path")],
+            "reviews": [
+                ("Easy to understand, easy to contact, and exactly what I needed.", "Local Customer"),
+                ("The service was clear from the first call.", "Santa Cruz Resident"),
+                ("Professional, fast, and simple to book.", "Verified Review"),
+            ],
+            "process": ["Scan quickly", "Choose confidently", "Contact easily"],
+        },
+    }
+    return profiles.get(_industry_key(lead), profiles["local_service"])
+
+
 def _safe_log(action_type: str, status: str, message: str, lead_id: str | None, result: dict[str, Any]) -> None:
     """Best-effort action logging."""
 
@@ -585,8 +823,107 @@ def _stable_template_index(lead: dict[str, Any], count: int) -> int:
 def _client_website_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
     """Render one of several finished client-facing website templates."""
 
-    templates = [_client_showroom_html, _client_concierge_html, _client_performance_html]
+    templates = [
+        _client_showroom_html,
+        _client_concierge_html,
+        _client_performance_html,
+        _client_editorial_html,
+        _client_booking_html,
+        _client_local_proof_html,
+        _client_luxury_card_html,
+        _client_service_menu_html,
+    ]
     return templates[_stable_template_index(lead, len(templates))](lead, variant, reason)
+
+
+def _stock_photo(profile: dict[str, Any], slot: str) -> str:
+    """Return a stock image URL tailored to the profile and template slot."""
+
+    key = str(profile.get("category", "local service")).lower()
+    queries = {
+        "premium auto service": {
+            "hero": "auto,repair,garage",
+            "detail": "mechanic,workshop",
+            "portrait": "car,interior",
+            "texture": "automotive,tools",
+        },
+        "modern dental care": {
+            "hero": "dentist,clinic",
+            "detail": "dental,office",
+            "portrait": "smiling,patient",
+            "texture": "dental,tools",
+        },
+        "trusted plumbing": {
+            "hero": "plumber,home",
+            "detail": "modern,bathroom",
+            "portrait": "technician,plumbing",
+            "texture": "pipes,tools",
+        },
+        "licensed electrical service": {
+            "hero": "electrician,home",
+            "detail": "electrical,panel",
+            "portrait": "lighting,interior",
+            "texture": "copper,wires",
+        },
+        "roofing and exterior protection": {
+            "hero": "roofing,house",
+            "detail": "roof,shingles",
+            "portrait": "home,exterior",
+            "texture": "roof,texture",
+        },
+        "landscape design and maintenance": {
+            "hero": "landscape,garden",
+            "detail": "yard,design",
+            "portrait": "outdoor,living",
+            "texture": "plants,texture",
+        },
+        "heating and cooling service": {
+            "hero": "hvac,technician",
+            "detail": "air,conditioning",
+            "portrait": "home,comfort",
+            "texture": "ventilation",
+        },
+        "pet grooming studio": {
+            "hero": "dog,grooming",
+            "detail": "pet,groomer",
+            "portrait": "happy,dog",
+            "texture": "pet,care",
+        },
+    }
+    query = queries.get(key, {}).get(slot, f"{key},service").replace(" ", ",")
+    # Source images keep demo pages visually fresh without storing binary assets.
+    return f"https://source.unsplash.com/1600x1000/?{query}"
+
+
+def _client_bits(lead: dict[str, Any]) -> dict[str, Any]:
+    """Collect escaped client-template values in one place."""
+
+    profile = _profile(lead)
+    services = [(escape(str(title)), escape(str(copy))) for title, copy in profile["services"]]
+    stats = [(escape(str(value)), escape(str(label))) for value, label in profile["stats"]]
+    reviews = [(escape(str(quote)), escape(str(name))) for quote, name in profile["reviews"]]
+    return {
+        "business_name": escape(str(lead.get("business_name") or "Apex Local Co.")),
+        "niche": escape(str(lead.get("niche") or "local service")),
+        "city": escape(str(lead.get("city") or "Santa Cruz")),
+        "phone": escape(str(lead.get("phone") or "(831) 555-0198")),
+        "address": escape(str(lead.get("address") or f"{lead.get('city') or 'Santa Cruz'}, CA")),
+        "hours": escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM")),
+        "rating": escape(str(lead.get("google_rating") or "4.9")),
+        "review_count": escape(str(lead.get("review_count") or "240")),
+        "profile": profile,
+        "category": escape(str(profile["category"])),
+        "eyebrow": escape(str(profile["eyebrow"])),
+        "hero": escape(str(profile["hero"])),
+        "sub": escape(str(profile["sub"])),
+        "services": services,
+        "stats": stats,
+        "reviews": reviews,
+        "hero_image": _stock_photo(profile, "hero"),
+        "detail_image": _stock_photo(profile, "detail"),
+        "portrait_image": _stock_photo(profile, "portrait"),
+        "texture_image": _stock_photo(profile, "texture"),
+    }
 
 
 def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
@@ -600,6 +937,9 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
     hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
     rating = escape(str(lead.get("google_rating") or "4.9"))
     review_count = escape(str(lead.get("review_count") or "240"))
+    profile = _profile(lead)
+    category = escape(str(profile["category"]))
+    eyebrow = escape(str(profile["eyebrow"]))
 
     theme = {
         "clean_modern": {
@@ -644,20 +984,14 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
             "image": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1600&q=85",
             "bay": "https://images.unsplash.com/photo-1625047509168-a7026f36de04?auto=format&fit=crop&w=1200&q=85",
         }
+    theme["hero"] = str(profile["hero"])
+    theme["sub"] = str(profile["sub"])
+    theme["image"] = str(profile["image"])
+    theme["bay"] = str(profile["detail"])
 
-    stats = [
-        ("4.9", "average customer rating"),
-        ("18+", "years of combined expertise"),
-        ("24 hr", "diagnostic turnaround goal"),
-        ("3,200+", "vehicles serviced"),
-    ]
+    stats = [(str(value), str(label)) for value, label in profile["stats"]]
     stat_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in stats)
-    services = [
-        ("Advanced Diagnostics", "Electrical, drivability, warning lights, fluid leaks, and performance issues explained clearly before work begins."),
-        ("Brake & Suspension", "Quiet stops, confident handling, inspections, pads, rotors, shocks, struts, and safety-critical repairs."),
-        ("Factory Maintenance", "Mileage-based service, fluids, batteries, belts, filters, inspections, and preventive care for long vehicle life."),
-        ("Performance Care", "High-attention service for drivers who care about response, ride quality, reliability, and detail."),
-    ]
+    services = [(str(title), str(copy)) for title, copy in profile["services"]]
     service_html = "".join(
         f"""
         <article>
@@ -667,11 +1001,7 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
         </article>"""
         for index, (title, copy) in enumerate(services, start=1)
     )
-    reviews = [
-        ("Clean shop, clear quote, and no pressure. It felt like dealership quality without the dealership runaround.", "Maya R."),
-        ("They diagnosed the issue quickly and actually explained what mattered now versus what could wait.", "Jordan T."),
-        ("Best repair experience I've had in years. Easy scheduling and the car came back feeling perfect.", "Elena S."),
-    ]
+    reviews = [(str(quote), str(name)) for quote, name in profile["reviews"]]
     review_html = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in reviews)
 
     return f"""<!DOCTYPE html>
@@ -679,7 +1009,7 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{business_name} | Premium {niche.title()} in {city}</title>
+  <title>{business_name} | {category.title()} in {city}</title>
   <style>
     :root {{
       --accent: {theme['accent']};
@@ -765,7 +1095,7 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
 <body>
   <nav class="nav">
     <div class="wrap">
-      <div class="brand"><strong>{business_name}</strong><span>{city} premium {niche}</span></div>
+      <div class="brand"><strong>{business_name}</strong><span>{city} {category}</span></div>
       <div class="nav-links"><a href="#services">Services</a><a href="#about">About</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></div>
       <a class="button dark" href="tel:{phone}">Call {phone}</a>
     </div>
@@ -773,7 +1103,7 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
   <header class="hero">
     <div class="wrap">
       <div class="hero-copy">
-        <span class="eyebrow">Premium dealership alternative</span>
+        <span class="eyebrow">{eyebrow}</span>
         <h1>{theme['hero']}</h1>
         <p>{theme['sub']}</p>
         <div class="hero-actions"><a class="button" href="tel:{phone}">Call {phone}</a><a class="ghost" href="#services">Explore services</a></div>
@@ -785,8 +1115,8 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
     <section id="services">
       <div class="wrap">
         <div class="section-head">
-          <div><span class="eyebrow">What we service</span><h2>Everything your vehicle needs, presented with confidence.</h2></div>
-          <p>Clear categories help customers understand the shop's expertise before they ever pick up the phone.</p>
+          <div><span class="eyebrow">What we do</span><h2>Everything customers need, presented with confidence.</h2></div>
+          <p>Clear categories help customers understand the business before they ever pick up the phone.</p>
         </div>
         <div class="services">{service_html}</div>
       </div>
@@ -795,13 +1125,13 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
       <div class="wrap split">
         <div class="photo" aria-label="Premium auto repair shop"></div>
         <div class="panel">
-          <span class="eyebrow">Why drivers choose {business_name}</span>
-          <h2>Independent service with a premium standard.</h2>
-          <p>{business_name} gives {city} drivers a cleaner way to handle repairs: strong diagnostics, thoughtful communication, and work that feels organized from the first call.</p>
+          <span class="eyebrow">Why locals choose {business_name}</span>
+          <h2>Local service with a premium standard.</h2>
+          <p>{business_name} gives {city} customers a cleaner way to get help: clear expertise, thoughtful communication, and service that feels organized from the first call.</p>
           <ul>
-            <li>Transparent recommendations before repair work begins.</li>
-            <li>Modern diagnostics for warning lights, drivability, electrical, and performance issues.</li>
-            <li>Convenient scheduling and a polished customer experience from drop-off to pickup.</li>
+            <li>Transparent recommendations before work begins.</li>
+            <li>Clear service options for common needs and urgent situations.</li>
+            <li>Convenient scheduling and a polished experience from first contact to completion.</li>
           </ul>
         </div>
       </div>
@@ -834,7 +1164,7 @@ def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "cli
       </div>
     </section>
   </main>
-  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer>
+  <footer class="wrap">{business_name} - {category.title()} in {city}</footer>
   <a class="button mobile-call" href="tel:{phone}">Call {phone}</a>
 </body>
 </html>"""
@@ -851,15 +1181,29 @@ def _client_concierge_html(lead: dict[str, Any], variant: str, reason: str = "cl
     hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
     rating = escape(str(lead.get("google_rating") or "4.9"))
     review_count = escape(str(lead.get("review_count") or "240"))
+    profile = _profile(lead)
+    category = escape(str(profile["category"]))
+    eyebrow = escape(str(profile["eyebrow"]))
+    process = [escape(str(item)) for item in profile["process"]]
+    services = [(escape(str(title)), escape(str(copy))) for title, copy in profile["services"][:3]]
+    reviews = [(escape(str(quote)), escape(str(name))) for quote, name in profile["reviews"]]
+    stats = [(escape(str(value)), escape(str(label))) for value, label in profile["stats"]]
     accent = {"clean_modern": "#0f766e", "retro_local": "#b45309", "premium": "#7c3aed"}.get(variant, "#0f766e")
-    image = "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1600&q=85"
-    detail_image = "https://images.unsplash.com/photo-1632823471565-1ecdf5c17bd3?auto=format&fit=crop&w=1200&q=85"
+    image = str(profile["image"])
+    detail_image = str(profile["detail"])
+    journey_html = "".join(
+        f"""<article><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>"""
+        for index, ((title, copy), _) in enumerate(zip(services, process), start=1)
+    )
+    stats_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in stats)
+    review_quote, review_name = reviews[0]
+    service_list = "".join(f"<li>{title}: {copy}</li>" for title, copy in services)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{business_name} | Premium {niche.title()} in {city}</title>
+  <title>{business_name} | {category.title()} in {city}</title>
   <style>
     *{{box-sizing:border-box}} body{{margin:0;background:#f7f3ea;color:#171717;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1160px,calc(100% - 34px));margin:0 auto}}
     nav{{position:sticky;top:0;z-index:50;background:#f7f3eaee;backdrop-filter:blur(16px);border-bottom:1px solid #ded6c8}} nav .wrap{{height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{display:block;font-size:22px}} .brand span,.eyebrow{{display:block;color:#7c7468;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .links{{display:flex;gap:22px;font-weight:800;font-size:14px}} .links a{{text-decoration:none}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:900;box-shadow:0 16px 32px color-mix(in srgb,{accent} 34%,transparent)}}
@@ -872,14 +1216,14 @@ def _client_concierge_html(lead: dict[str, Any], variant: str, reason: str = "cl
   </style>
 </head>
 <body>
-  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} premium {niche}</span></div><div class="links"><a href="#process">Process</a><a href="#care">Care</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
-  <header class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div><span class="eyebrow">Premium dealership alternative</span><h1>Service that feels managed, not mysterious.</h1><p>{business_name} gives {city} drivers a concierge-level repair experience: clear intake, precise diagnostics, and updates that make every decision easier.</p><div class="hero-actions"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn outline" href="#process">See the process</a></div></div><div class="stats"><div><strong>{rating}</strong><span>star rating</span></div><div><strong>{review_count}</strong><span>local reviews</span></div><div><strong>24 hr</strong><span>diagnostic goal</span></div><div><strong>18+</strong><span>years expertise</span></div></div></div><div class="hero-photo"></div></div></header>
+  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} {category}</span></div><div class="links"><a href="#process">Process</a><a href="#care">Care</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
+  <header class="hero"><div class="wrap hero-grid"><div class="hero-copy"><div><span class="eyebrow">{eyebrow}</span><h1>{escape(str(profile["concierge_hero"]))}</h1><p>{escape(str(profile["sub"]))}</p><div class="hero-actions"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn outline" href="#process">See the process</a></div></div><div class="stats">{stats_html}</div></div><div class="hero-photo"></div></div></header>
   <main>
-    <section id="process"><div class="wrap"><div class="intro"><div><span class="eyebrow">The service journey</span><h2>A calmer way to handle car trouble.</h2></div><p>Customers can quickly understand what happens next, from the first call through diagnosis, repair approval, and pickup.</p></div><div class="journey"><article><span>01</span><h3>Listen first</h3><p>Capture symptoms, urgency, driving habits, and service history before the vehicle hits the bay.</p></article><article><span>02</span><h3>Diagnose clearly</h3><p>Use modern tools and plain-language findings so customers can approve work with confidence.</p></article><article><span>03</span><h3>Deliver cleanly</h3><p>Finish with organized notes, maintenance guidance, and a vehicle that feels ready for the road.</p></article></div></div></section>
-    <section id="care"><div class="wrap split"><div class="shop-img"></div><div class="panel"><span class="eyebrow">What we handle</span><h2>Diagnostics, brakes, maintenance, and high-attention repair.</h2><p>Built for drivers who want dealership-level confidence without dealership friction.</p><ul><li>Advanced diagnostics for lights, leaks, electrical issues, and drivability concerns.</li><li>Brake, suspension, maintenance, fluids, batteries, filters, and safety inspections.</li><li>Transparent recommendations and scheduling designed around real life.</li></ul></div></div></section>
-    <section id="reviews"><div class="wrap reviews"><blockquote><p>"Clean shop, sharp communication, and a repair plan that actually made sense."</p><cite>Marisol P.</cite></blockquote><div class="contact" id="contact"><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}</p><a class="btn" href="tel:{phone}">Call {phone}</a></div></div></section>
+    <section id="process"><div class="wrap"><div class="intro"><div><span class="eyebrow">The service journey</span><h2>A calmer way to get expert help.</h2></div><p>Customers can quickly understand what happens next, from the first call through the visit, approval, and completion.</p></div><div class="journey">{journey_html}</div></div></section>
+    <section id="care"><div class="wrap split"><div class="shop-img"></div><div class="panel"><span class="eyebrow">What we handle</span><h2>Focused services, clear expectations, and high-attention care.</h2><p>Built for customers who want expertise without confusion.</p><ul>{service_list}</ul></div></div></section>
+    <section id="reviews"><div class="wrap reviews"><blockquote><p>"{review_quote}"</p><cite>{review_name}</cite></blockquote><div class="contact" id="contact"><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}<br>{rating} rating from {review_count} reviews</p><a class="btn" href="tel:{phone}">Call {phone}</a></div></div></section>
   </main>
-  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+  <footer class="wrap">{business_name} - {category.title()} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
 </body>
 </html>"""
 
@@ -894,15 +1238,26 @@ def _client_performance_html(lead: dict[str, Any], variant: str, reason: str = "
     address = escape(str(lead.get("address") or f"{city}, CA"))
     hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
     rating = escape(str(lead.get("google_rating") or "4.9"))
+    profile = _profile(lead)
+    category = escape(str(profile["category"]))
+    eyebrow = escape(str(profile["eyebrow"]))
+    services = [(escape(str(title)), escape(str(copy))) for title, copy in profile["services"][:3]]
+    stats = [(escape(str(value)), escape(str(label))) for value, label in profile["stats"]]
     accent = {"clean_modern": "#f97316", "retro_local": "#ef4444", "premium": "#22c55e"}.get(variant, "#f97316")
-    hero = "https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1700&q=85"
-    detail = "https://images.unsplash.com/photo-1606577924006-27d39b132ae2?auto=format&fit=crop&w=1200&q=85"
+    hero = str(profile["image"])
+    detail = str(profile["detail"])
+    stats_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in stats)
+    service_cards = "".join(
+        f"""<article class="card"><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>"""
+        for index, (title, copy) in enumerate(services, start=1)
+    )
+    service_list = "".join(f"<li>{title}: {copy}</li>" for title, copy in services)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{business_name} | {city} {niche.title()}</title>
+  <title>{business_name} | {city} {category.title()}</title>
   <style>
     *{{box-sizing:border-box}} body{{margin:0;background:#070707;color:#f8fafc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .accent{{color:{accent}}}
     nav{{position:sticky;top:0;z-index:50;background:#070707e8;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.12)}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{font-size:22px}} .brand span,.eyebrow{{display:block;color:#a1a1aa;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .links{{display:flex;gap:22px;font-size:14px;font-weight:800}} .links a{{text-decoration:none}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:8px;padding:0 20px;background:{accent};color:#070707;text-decoration:none;font-weight:950}}
@@ -914,15 +1269,174 @@ def _client_performance_html(lead: dict[str, Any], variant: str, reason: str = "
   </style>
 </head>
 <body>
-  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} performance-grade {niche}</span></div><div class="links"><a href="#work">Work</a><a href="#standard">Standard</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
-  <header class="hero"><div class="wrap"><span class="eyebrow">Premium dealership alternative</span><h1>Built for drivers who notice everything.</h1><p>{business_name} brings disciplined diagnostics, careful repair work, and performance-minded attention to {city} vehicles.</p><div class="hero-row"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn ghost" href="#work">View services</a></div></div></header>
-  <div class="stripe"><div class="wrap"><div><strong>{rating}</strong><span>star rating</span></div><div><strong>3,200+</strong><span>vehicles serviced</span></div><div><strong>18+</strong><span>years expertise</span></div><div><strong>24 hr</strong><span>diagnostic goal</span></div></div></div>
+  <nav><div class="wrap"><div class="brand"><strong>{business_name}</strong><span>{city} {category}</span></div><div class="links"><a href="#work">Work</a><a href="#standard">Standard</a><a href="#contact">Contact</a></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></nav>
+  <header class="hero"><div class="wrap"><span class="eyebrow">{eyebrow}</span><h1>{escape(str(profile["performance_hero"]))}</h1><p>{escape(str(profile["sub"]))}</p><div class="hero-row"><a class="btn" href="tel:{phone}">Call {phone}</a><a class="btn ghost" href="#work">View services</a></div></div></header>
+  <div class="stripe"><div class="wrap">{stats_html}</div></div>
   <main>
-    <section id="work"><div class="wrap"><div class="head"><div><span class="eyebrow">Core services</span><h2>Sharp diagnosis. Clean execution.</h2></div><p>Everything is positioned for customers who want speed, clarity, and confidence.</p></div><div class="grid"><article class="card"><span>01</span><h3>Diagnostics</h3><p>Warning lights, drivability issues, electrical faults, leaks, noise, vibration, and second opinions.</p></article><article class="card"><span>02</span><h3>Brakes & ride</h3><p>Brake inspections, rotors, pads, suspension, steering feel, safety checks, and road-ready handling.</p></article><article class="card"><span>03</span><h3>Maintenance</h3><p>Oil, fluids, filters, batteries, belts, inspections, and preventive care for long vehicle life.</p></article></div></div></section>
-    <section id="standard"><div class="wrap split"><div class="photo"></div><div class="panel"><span class="eyebrow">The standard</span><h2>Independent shop. Premium process.</h2><p>Customers get the confidence they expect from a dealership with the communication and practicality of a local specialist.</p><ul><li>Clear estimates before work begins.</li><li>Priority guidance for urgent vs. future repairs.</li><li>Organized pickup notes and next-service recommendations.</li></ul></div></div></section>
+    <section id="work"><div class="wrap"><div class="head"><div><span class="eyebrow">Core services</span><h2>Sharp expertise. Clean execution.</h2></div><p>Everything is positioned for customers who want speed, clarity, and confidence.</p></div><div class="grid">{service_cards}</div></div></section>
+    <section id="standard"><div class="wrap split"><div class="photo"></div><div class="panel"><span class="eyebrow">The standard</span><h2>Local team. Premium process.</h2><p>Customers get the confidence they expect from a polished service brand with the practicality of a local specialist.</p><ul>{service_list}</ul></div></div></section>
     <section id="contact"><div class="wrap contact"><div><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}</p></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></section>
   </main>
-  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+  <footer class="wrap">{business_name} - {category.title()} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
+
+
+def _client_editorial_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render an editorial magazine-style local business site."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#2563eb", "retro_local": "#c2410c", "premium": "#0f766e"}.get(variant, "#2563eb")
+    service_html = "".join(
+        f"<article><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>"
+        for index, (title, copy) in enumerate(c["services"][:4], start=1)
+    )
+    stat_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    quote, reviewer = c["reviews"][0]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | {c['category'].title()} in {c['city']}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#fafaf7;color:#171717;font-family:Georgia,"Times New Roman",serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1160px,calc(100% - 34px));margin:0 auto}} .sans{{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+    nav{{position:sticky;top:0;z-index:50;background:#fafaf7ee;backdrop-filter:blur(16px);border-bottom:1px solid #dedbd2}} nav .wrap{{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{font-family:Inter,ui-sans-serif,system-ui;font-size:20px}} .eyebrow,.brand span{{display:block;color:{accent};font-family:Inter,ui-sans-serif,system-ui;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:#171717;color:white;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui;font-weight:900}}
+    .hero{{padding:44px 0 72px}} .hero-grid{{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:end}} h1{{max-width:840px;margin:18px 0 0;font-size:clamp(58px,9vw,118px);line-height:.86;letter-spacing:0}} .lead{{font-family:Inter,ui-sans-serif,system-ui;max-width:640px;color:#57534e;font-size:20px;line-height:1.7}} .photo{{min-height:620px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.18)),url("{c['hero_image']}") center/cover;box-shadow:0 24px 70px rgba(0,0,0,.14)}} .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#dedbd2;border:1px solid #dedbd2}} .stats div{{background:white;padding:24px}} .stats strong{{display:block;font-family:Inter,ui-sans-serif,system-ui;font-size:34px}} .stats span{{font-family:Inter,ui-sans-serif,system-ui;color:#57534e;font-weight:750}}
+    section{{padding:76px 0}} .section-head{{display:flex;align-items:end;justify-content:space-between;gap:26px;margin-bottom:28px}} .section-head h2{{margin:10px 0 0;font-size:clamp(38px,5vw,70px);line-height:.92;max-width:760px}} .section-head p{{font-family:Inter,ui-sans-serif,system-ui;max-width:420px;color:#57534e;line-height:1.7}} .services{{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}} .services article{{border-top:3px solid {accent};background:white;border-radius:8px;padding:24px;min-height:285px;box-shadow:0 16px 44px rgba(23,23,23,.08)}} .services span{{font-family:Inter,ui-sans-serif,system-ui;color:{accent};font-weight:950}} .services h3{{font-size:30px;line-height:1;margin:20px 0 0}} .services p{{font-family:Inter,ui-sans-serif,system-ui;color:#57534e;line-height:1.65}}
+    .quote{{background:#171717;color:white;border-radius:8px;padding:clamp(30px,5vw,62px);display:grid;grid-template-columns:1fr .75fr;gap:28px;align-items:center}} blockquote{{margin:0;font-size:clamp(30px,4vw,56px);line-height:1.04}} cite{{display:block;margin-top:20px;color:#d4d4d4;font-family:Inter,ui-sans-serif,system-ui;font-style:normal;font-weight:800}} .mini-photo{{min-height:360px;border-radius:8px;background:url("{c['detail_image']}") center/cover}} footer{{padding:34px 0 94px;text-align:center;color:#57534e;font-family:Inter,ui-sans-serif,system-ui}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:920px){{.hero-grid,.quote{{grid-template-columns:1fr}}.services,.stats{{grid-template-columns:repeat(2,1fr)}}.photo{{min-height:440px}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:50px}}.services,.stats{{grid-template-columns:1fr}}.section-head{{display:block}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand sans"><strong>{c['business_name']}</strong><span>{c['city']} {c['category']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap hero-grid"><div><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p class="lead">{c['sub']}</p><a class="btn" href="#contact">Schedule service</a></div><div class="photo"></div></div></header>
+  <div class="wrap stats">{stat_html}</div>
+  <main>
+    <section><div class="wrap"><div class="section-head"><div><span class="eyebrow">Services</span><h2>Expert help, organized like a premium publication.</h2></div><p>Customers see the offer, the proof, and the next step without reading a wall of text.</p></div><div class="services">{service_html}</div></div></section>
+    <section><div class="wrap quote"><div><blockquote>"{quote}"</blockquote><cite>{reviewer}</cite></div><div class="mini-photo"></div></div></section>
+    <section id="contact"><div class="wrap section-head"><div><span class="eyebrow">Visit or call</span><h2>{c['business_name']}</h2></div><p>{c['address']}<br>{c['hours']}<br>{c['rating']} rating from {c['review_count']} reviews</p></div></section>
+  </main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_booking_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a conversion-first booking website with dense useful sections."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0284c7", "retro_local": "#be123c", "premium": "#7c3aed"}.get(variant, "#0284c7")
+    service_rows = "".join(f"<li><strong>{title}</strong><span>{copy}</span></li>" for title, copy in c["services"][:4])
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    review_cards = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in c["reviews"][:2])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Book {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#eef2f7;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950;box-shadow:0 18px 36px color-mix(in srgb,{accent} 30%,transparent)}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{position:sticky;top:0;z-index:50;background:#fffffff2;backdrop-filter:blur(18px);border-bottom:1px solid #dbe3ef}} nav .wrap{{height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px}} .brand strong{{display:block;font-size:21px}} .brand span{{color:#64748b;font-size:13px;font-weight:800}} .hero{{padding:46px 0}} .grid{{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:stretch}} .hero-card{{border-radius:8px;background:white;padding:clamp(30px,5vw,64px);box-shadow:0 24px 70px rgba(15,23,42,.13);border:1px solid #dbe3ef}} h1{{max-width:760px;margin:14px 0 0;font-size:clamp(48px,7vw,88px);line-height:.9;letter-spacing:0}} .hero-card p{{max-width:640px;color:#475569;font-size:19px;line-height:1.7}} .booking{{border-radius:8px;background:#0f172a;color:white;padding:26px;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 70px rgba(15,23,42,.2)}} .booking h2{{font-size:32px;line-height:1;margin:0}} .field{{border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:15px;color:#cbd5e1}} .booking .btn{{background:white;color:#0f172a;box-shadow:none}} .photo{{height:260px;border-radius:8px;background:url("{c['hero_image']}") center/cover;margin-top:20px}}
+    .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}} .stats div{{border-radius:8px;background:#f8fafc;border:1px solid #dbe3ef;padding:18px}} .stats strong{{display:block;font-size:30px}} .stats span{{display:block;margin-top:6px;color:#64748b;font-weight:750}} section{{padding:56px 0}} .split{{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}} .panel{{border-radius:8px;background:white;border:1px solid #dbe3ef;padding:32px;box-shadow:0 18px 50px rgba(15,23,42,.08)}} .panel h2{{font-size:clamp(34px,5vw,58px);line-height:1;margin:10px 0}} .services{{list-style:none;margin:0;padding:0;display:grid;gap:12px}} .services li{{display:grid;grid-template-columns:190px 1fr;gap:16px;border-bottom:1px solid #e2e8f0;padding:18px 0}} .services span{{color:#64748b;line-height:1.6}} .image-panel{{min-height:520px;border-radius:8px;background:url("{c['detail_image']}") center/cover;box-shadow:0 18px 50px rgba(15,23,42,.1)}} .reviews{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}} blockquote{{margin:0;background:white;border:1px solid #dbe3ef;border-radius:8px;padding:24px}} blockquote p{{color:#334155;line-height:1.65}} cite{{font-style:normal;font-weight:900}} footer{{padding:30px 0 94px;text-align:center;color:#64748b}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.grid,.split{{grid-template-columns:1fr}}.stats{{grid-template-columns:repeat(2,1fr)}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:46px}}.stats,.reviews{{grid-template-columns:1fr}}.services li{{grid-template-columns:1fr}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong><span>{c['category']} in {c['city']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap grid"><div class="hero-card"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><div class="stats">{stats}</div><div class="photo"></div></div><aside class="booking"><span class="eyebrow">Fast booking</span><h2>Start here.</h2><div class="field">1. Choose the service you need</div><div class="field">2. Call for the fastest opening</div><div class="field">3. Get clear next steps</div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a><p>{c['address']}<br>{c['hours']}</p></aside></div></header>
+  <main><section><div class="wrap split"><div class="image-panel"></div><div class="panel"><span class="eyebrow">Service menu</span><h2>Clear options, easy decisions.</h2><ul class="services">{service_rows}</ul></div></div></section><section><div class="wrap reviews">{review_cards}</div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['city']} {c['category']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_local_proof_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a neighborhood-proof website with reviews and local trust first."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0d9488", "retro_local": "#a16207", "premium": "#4f46e5"}.get(variant, "#0d9488")
+    services = "".join(f"<article><h3>{title}</h3><p>{copy}</p></article>" for title, copy in c["services"][:3])
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    reviews = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in c["reviews"])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Local {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#fffdf7;color:#1c1917;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1140px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{border-bottom:1px solid #e7e0d2;background:#fffdf7}} nav .wrap{{height:74px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .hero{{padding:52px 0 38px}} h1{{font-size:clamp(50px,8vw,96px);line-height:.88;margin:16px 0 0;max-width:920px}} .hero p{{color:#57534e;font-size:20px;line-height:1.7;max-width:690px}} .hero-photo{{margin-top:34px;min-height:500px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.32)),url("{c['portrait_image']}") center/cover;display:flex;align-items:end;padding:24px;color:white;box-shadow:0 24px 70px rgba(28,25,23,.14)}} .proof{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}} .proof div{{background:white;border:1px solid #e7e0d2;border-radius:8px;padding:20px}} .proof strong{{font-size:32px}} .proof span{{display:block;color:#78716c;margin-top:6px;font-weight:750}}
+    section{{padding:62px 0}} .two{{display:grid;grid-template-columns:.78fr 1.22fr;gap:18px}} .card{{background:white;border:1px solid #e7e0d2;border-radius:8px;padding:30px;box-shadow:0 16px 44px rgba(28,25,23,.07)}} .card h2{{font-size:clamp(34px,5vw,60px);line-height:1;margin:12px 0}} .services{{display:grid;gap:14px}} .services article{{background:#f8f4ea;border-radius:8px;padding:24px}} .services h3{{margin:0;font-size:25px}} .services p{{color:#57534e;line-height:1.65}} .reviews{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}} blockquote{{margin:0;background:#1c1917;color:white;border-radius:8px;padding:24px}} blockquote p{{line-height:1.6;color:#f5f5f4}} cite{{display:block;margin-top:18px;font-style:normal;font-weight:900;color:#d6d3d1}} footer{{padding:34px 0 92px;color:#78716c;text-align:center}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.proof{{grid-template-columns:repeat(2,1fr)}}.two,.reviews{{grid-template-columns:1fr}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:46px}}.proof{{grid-template-columns:1fr}}.hero-photo{{min-height:380px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap"><span class="eyebrow">{c['city']} recommended {c['category']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#contact">Get help today</a><div class="hero-photo"><h2>{c['rating']} stars from {c['review_count']} local reviews</h2></div><div class="proof">{stats}</div></div></header>
+  <main><section><div class="wrap two"><div class="card"><span class="eyebrow">Local confidence</span><h2>Proof before pitch.</h2><p>{c['business_name']} leads with clear services, real contact details, and trust signals customers can scan fast.</p></div><div class="services">{services}</div></div></section><section><div class="wrap reviews">{reviews}</div></section><section id="contact"><div class="wrap card"><span class="eyebrow">Call or visit</span><h2>{c['business_name']}</h2><p>{c['address']}<br>{c['hours']}</p><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_luxury_card_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a high-end dark card layout with layered photography."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#60a5fa", "retro_local": "#f59e0b", "premium": "#34d399"}.get(variant, "#34d399")
+    services = "".join(f"<article><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>" for index, (title, copy) in enumerate(c["services"][:4], start=1))
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    quote, name = c["reviews"][1]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Premium {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#08080a;color:#f8fafc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:48px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:#08080a;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{position:sticky;top:0;z-index:50;background:#08080ade;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.12)}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .brand span{{display:block;color:#a1a1aa;font-size:13px;font-weight:800}} .hero{{padding:56px 0}} .frame{{border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:18px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 34px 90px rgba(0,0,0,.45)}} .hero-grid{{display:grid;grid-template-columns:1fr .85fr;gap:18px}} .hero-copy{{padding:clamp(28px,5vw,58px)}} h1{{font-size:clamp(50px,8vw,104px);line-height:.84;margin:16px 0 0}} .hero-copy p{{max-width:620px;color:#cbd5e1;font-size:20px;line-height:1.7}} .photo{{min-height:650px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.42)),url("{c['hero_image']}") center/cover}} .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}} .stats div{{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:18px}} .stats strong{{font-size:32px}} .stats span{{display:block;color:#a1a1aa;margin-top:6px;font-weight:750}}
+    section{{padding:68px 0}} .services{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}} .services article{{background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;min-height:300px}} .services span{{color:{accent};font-weight:950}} .services h3{{font-size:27px;line-height:1;margin:22px 0}} .services p{{color:#a1a1aa;line-height:1.65}} .split{{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}} .texture{{min-height:460px;border-radius:8px;background:url("{c['texture_image']}") center/cover}} .panel{{border-radius:8px;background:#f8fafc;color:#111827;padding:clamp(30px,5vw,58px)}} .panel h2{{font-size:clamp(34px,5vw,62px);line-height:.94;margin:12px 0}} .panel p{{color:#475569;line-height:1.75}} footer{{padding:34px 0 94px;text-align:center;color:#a1a1aa}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:940px){{.hero-grid,.split{{grid-template-columns:1fr}}.services,.stats{{grid-template-columns:repeat(2,1fr)}}.photo{{min-height:440px}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:48px}}.services,.stats{{grid-template-columns:1fr}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong><span>{c['category']} in {c['city']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap frame"><div class="hero-grid"><div class="hero-copy"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#contact">Start now</a><div class="stats">{stats}</div></div><div class="photo"></div></div></div></header>
+  <main><section><div class="wrap services">{services}</div></section><section><div class="wrap split"><div class="texture"></div><div class="panel"><span class="eyebrow">Customer voice</span><h2>"{quote}"</h2><p>- {name}</p><p>{c['business_name']} turns a local service page into a premium brand moment with focused services, credible proof, and a direct call path.</p></div></div></section><section id="contact"><div class="wrap panel"><span class="eyebrow">Schedule service</span><h2>Call {c['business_name']}</h2><p>{c['address']}<br>{c['hours']}</p><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - Premium {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_service_menu_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a crisp service-menu layout built for scanning and mobile action."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0891b2", "retro_local": "#b91c1c", "premium": "#16a34a"}.get(variant, "#0891b2")
+    services = "".join(f"<article><h3>{title}</h3><p>{copy}</p><a href='tel:{c['phone']}'>Ask about {title}</a></article>" for title, copy in c["services"][:4])
+    stats = "".join(f"<li><strong>{value}</strong><span>{label}</span></li>" for value, label in c["stats"])
+    review, reviewer = c["reviews"][2]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    .top{{background:#0f172a;color:white}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .hero{{padding:58px 0}} .hero-grid{{display:grid;grid-template-columns:.95fr 1.05fr;gap:22px;align-items:stretch}} .hero-copy{{display:flex;flex-direction:column;justify-content:center}} h1{{font-size:clamp(50px,8vw,104px);line-height:.86;margin:16px 0 0}} .hero-copy p{{color:#cbd5e1;font-size:20px;line-height:1.7;max-width:620px}} .hero-photo{{min-height:560px;border-radius:8px;background:url("{c['detail_image']}") center/cover}} .proof{{display:grid;grid-template-columns:repeat(4,1fr);gap:0;list-style:none;padding:0;margin:0;border-top:1px solid rgba(255,255,255,.14)}} .proof li{{padding:24px;border-right:1px solid rgba(255,255,255,.14)}} .proof strong{{display:block;font-size:32px}} .proof span{{display:block;color:#cbd5e1;margin-top:6px;font-weight:750}}
+    section{{padding:70px 0}} .head{{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:26px}} .head h2{{font-size:clamp(36px,5vw,68px);line-height:.92;margin:10px 0 0;max-width:720px}} .head p{{max-width:420px;color:#64748b;line-height:1.7}} .menu{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}} .menu article{{background:white;border:1px solid #dbe3ef;border-radius:8px;padding:26px;min-height:250px;box-shadow:0 16px 44px rgba(15,23,42,.07)}} .menu h3{{font-size:30px;margin:0}} .menu p{{color:#64748b;line-height:1.65}} .menu a{{display:inline-flex;margin-top:10px;color:{accent};font-weight:950;text-decoration:none}} .banner{{border-radius:8px;background:white;border:1px solid #dbe3ef;padding:34px;display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:center}} .banner blockquote{{font-size:clamp(28px,4vw,52px);line-height:1.05;margin:0}} .banner p{{color:#64748b;line-height:1.7}} .banner-img{{min-height:320px;border-radius:8px;background:url("{c['portrait_image']}") center/cover}} footer{{padding:34px 0 94px;text-align:center;color:#64748b}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.hero-grid,.banner{{grid-template-columns:1fr}}.proof{{grid-template-columns:repeat(2,1fr)}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:48px}}.proof,.menu{{grid-template-columns:1fr}}.hero-photo{{min-height:380px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <div class="top"><nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav><header class="hero"><div class="wrap hero-grid"><div class="hero-copy"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#menu">See services</a></div><div class="hero-photo"></div></div></header><ul class="wrap proof">{stats}</ul></div>
+  <main><section id="menu"><div class="wrap"><div class="head"><div><span class="eyebrow">Service menu</span><h2>Everything is easy to scan and easy to book.</h2></div><p>{c['business_name']} gives customers direct language, useful categories, and a strong mobile call path.</p></div><div class="menu">{services}</div></div></section><section><div class="wrap banner"><div><span class="eyebrow">Review highlight</span><blockquote>"{review}"</blockquote><p>- {reviewer}</p></div><div class="banner-img"></div></div></section><section id="contact"><div class="wrap banner"><div><span class="eyebrow">Contact</span><h2>{c['business_name']}</h2><p>{c['address']}<br>{c['hours']}<br>{c['rating']} rating from {c['review_count']} reviews</p></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
 </body>
 </html>"""
 
