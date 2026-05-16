@@ -526,3 +526,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
 - Validation: local smoke check repaired the exact truncated `https://santa-claws-8k1c1migm-varad-patwas-projects. vercel.` body into the full `.vercel.app` URL.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:06 PDT — Exact Mockup URL Paste
+
+- Replaced Pitcher URL repair logic with a simple `MOCKUP_URL` token replacement.
+- Pitcher prompts no longer receive the real URL; they receive `MOCKUP_URL`, and code pastes the exact stored mockup URL before saving.
+- If the model omits the token, Pitcher appends the exact stored mockup URL on its own line.
+- Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
+- Validation: local smoke checks confirmed the real URL is absent from prompts and exact in saved bodies.
+- Validation: `git diff --check` passed.

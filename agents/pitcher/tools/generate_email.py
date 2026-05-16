@@ -73,29 +73,16 @@ def _business_salutation(body: str, business_name: str) -> str:
     return replaced
 
 
-def _repair_mockup_urls(body: str, mockup_url: str) -> str:
-    """Replace Vercel-looking links with the exact stored mockup URL.
-
-    Nemotron sometimes inserts spaces into domains, and the sentence trimmer can
-    cut a URL at `.vercel.` before `.app`. In both cases, use the database URL.
-    """
-
-    if not mockup_url or "vercel.app" not in mockup_url:
-        return body
-    return re.sub(
-        r"https://[-A-Za-z0-9.\s]+?vercel(?:\s*\.\s*app)?",
-        mockup_url,
-        body,
-        flags=re.IGNORECASE,
-    )
-
-
-def _strip_url_trailing_punctuation(body: str, mockup_url: str) -> str:
-    """Remove punctuation that mail clients can accidentally include in URLs."""
+def _paste_mockup_url(body: str, mockup_url: str) -> str:
+    """Paste the exact stored mockup URL into the model draft."""
 
     if not mockup_url:
         return body
-    return re.sub(rf"{re.escape(mockup_url)}[.,;:]+", mockup_url, body)
+    if "MOCKUP_URL" in body:
+        return body.replace("MOCKUP_URL", mockup_url)
+    if mockup_url in body:
+        return body
+    return f"{body.rstrip()}\n\n{mockup_url}"
 
 
 def _repair_rating_spacing(body: str) -> str:
@@ -110,6 +97,9 @@ def _capitalize_paragraph_starts(body: str) -> str:
     paragraphs = body.split("\n\n")
     cleaned: list[str] = []
     for paragraph in paragraphs:
+        if paragraph.lstrip().startswith(("http://", "https://")):
+            cleaned.append(paragraph)
+            continue
         match = re.search(r"[A-Za-z]", paragraph)
         if not match:
             cleaned.append(paragraph)
@@ -122,8 +112,7 @@ def _capitalize_paragraph_starts(body: str) -> str:
 def _polish_body(body: str, business_name: str, mockup_url: str) -> str:
     """Apply deterministic cleanup to model email copy before saving it."""
 
-    polished = _repair_mockup_urls(body, mockup_url)
-    polished = _strip_url_trailing_punctuation(polished, mockup_url)
+    polished = _paste_mockup_url(body, mockup_url)
     polished = _repair_rating_spacing(polished)
     polished = _business_salutation(polished, business_name)
     polished = _capitalize_paragraph_starts(polished)
@@ -164,7 +153,7 @@ def _format_prompt(lead: dict[str, Any], mockup_url: str, angle: str) -> str:
         pain_points=", ".join(lead.get("top_review_pain_points") or []) or "none provided",
         website_score=lead.get("website_score") or "unknown",
         website_reasons=", ".join(lead.get("website_score_reasons") or []) or "none provided",
-        mockup_url=mockup_url,
+        mockup_url="MOCKUP_URL",
     )
 
 

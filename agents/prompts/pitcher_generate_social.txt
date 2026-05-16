@@ -9,7 +9,7 @@ Business:
 - Google rating: {rating}
 - Review count: {review_count}
 - Customer pain points: {pain_points}
-- Mockup URL: {mockup_url}
+- Mockup URL token: {mockup_url}
 
 Rules:
 - Return JSON only: {{"subject": "...", "body": "..."}}.
@@ -17,7 +17,7 @@ Rules:
 - Body must be 5 sentences or fewer.
 - Address the email to the business name, not an owner, founder, manager, or guessed person name.
 - Start the body exactly with: Hi {business_name},
-- Copy the mockup URL exactly as provided. Do not add spaces, line breaks, or punctuation inside the URL.
+- Use the exact token MOCKUP_URL where the link belongs. Do not write or alter the real URL yourself.
 - Compliment the existing reputation only if rating/review data is present.
 - Connect that reputation to a clearer website.
 - Mention the mockup URL naturally.

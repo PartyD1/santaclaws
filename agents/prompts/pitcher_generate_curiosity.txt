@@ -7,7 +7,7 @@ Business:
 - Niche: {niche}
 - City: {city}
 - Website: {website}
-- Mockup URL: {mockup_url}
+- Mockup URL token: {mockup_url}
 
 Rules:
 - Return JSON only: {{"subject": "...", "body": "..."}}.
@@ -15,7 +15,7 @@ Rules:
 - Body must be 5 sentences or fewer.
 - Address the email to the business name, not an owner, founder, manager, or guessed person name.
 - Start the body exactly with: Hi {business_name},
-- Copy the mockup URL exactly as provided. Do not add spaces, line breaks, or punctuation inside the URL.
+- Use the exact token MOCKUP_URL where the link belongs. Do not write or alter the real URL yourself.
 - Keep it low-pressure and conversational.
 - Mention that a quick mockup was made for them.
 - Mention the mockup URL naturally.
