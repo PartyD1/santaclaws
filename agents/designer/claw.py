@@ -43,10 +43,32 @@ def _now_iso() -> str:
 
 
 def _variant_count() -> int:
-    """Return MVP variant count, clamped to 1 or 3."""
+    """Return variant count, defaulting to the full 3-variant quality path."""
 
-    value = os.environ.get("DESIGNER_VARIANT_COUNT", "1").strip()
-    return 3 if value == "3" else 1
+    value = os.environ.get("DESIGNER_VARIANT_COUNT", "3").strip()
+    return 1 if value == "1" else 3
+
+
+def _max_iterations() -> int:
+    """Return the Designer self-critique iteration cap."""
+
+    value = os.environ.get("DESIGNER_MAX_ITERATIONS", "5").strip()
+    try:
+        count = int(value)
+    except ValueError:
+        count = 5
+    return max(1, min(5, count))
+
+
+def _score(critique: dict[str, Any] | None) -> int:
+    """Return a normalized critique score."""
+
+    if not critique:
+        return 0
+    try:
+        return int(float(critique.get("score") or 0))
+    except (TypeError, ValueError):
+        return 0
 
 
 def _safe_log(
@@ -101,6 +123,7 @@ def _insert_generated_site(
     critique: dict[str, Any],
     deploy: dict[str, Any],
     is_winner: bool,
+    iterations: int,
     pick_reasoning: str | None = None,
 ) -> dict[str, Any]:
     """Insert one generated_sites row and return the inserted row."""
@@ -113,7 +136,7 @@ def _insert_generated_site(
         "storage_url": deploy.get("url") if provider == "supabase" else None,
         "html_content": html,
         "self_critique_score": critique.get("score"),
-        "self_critique_iterations": 1,
+        "self_critique_iterations": iterations,
         "critique_issues": critique.get("issues", []),
         "is_chosen_winner": is_winner,
         "pick_reasoning": pick_reasoning,
@@ -136,11 +159,43 @@ def _mark_winner(lead_id: str, site_id: str, reasoning: str) -> None:
 
 
 def _process_variant(lead: dict[str, Any], variant: str) -> dict[str, Any]:
-    """Generate, critique, deploy, and persist one variant."""
+    """Generate, self-critique, deploy, and persist one variant."""
 
     lead_id = str(lead["id"])
-    html = generate_mockup.run(lead, variant)
-    critique = critique_mockup.run(html, lead)
+    html: str | None = None
+    critique: dict[str, Any] | None = None
+    iterations = 0
+
+    for iteration in range(1, _max_iterations() + 1):
+        try:
+            html = generate_mockup.run(lead, variant, previous_critique=critique)
+            critique = critique_mockup.run(html, lead)
+            iterations = iteration
+            score = _score(critique)
+            _safe_log(
+                "self_critique_iteration",
+                "succeeded",
+                f"{variant} iteration {iteration} scored {score}/10.",
+                {"variant": variant, "iteration": iteration, "score": score, "issues": critique.get("issues", [])},
+                lead_id,
+            )
+            if score >= 8:
+                break
+        except Exception as exc:
+            if html and critique:
+                _safe_log(
+                    "self_critique_iteration",
+                    "skipped",
+                    f"{variant} iteration {iteration} failed; keeping prior attempt.",
+                    {"variant": variant, "iteration": iteration, "error": str(exc)},
+                    lead_id,
+                )
+                break
+            raise
+
+    if html is None or critique is None:
+        raise RuntimeError(f"{variant} did not produce a mockup.")
+
     deploy = deploy_to_vercel.run(html, _slug(lead, variant), lead_id=lead_id)
     site = _insert_generated_site(
         lead_id=lead_id,
@@ -149,6 +204,7 @@ def _process_variant(lead: dict[str, Any], variant: str) -> dict[str, Any]:
         critique=critique,
         deploy=deploy,
         is_winner=False,
+        iterations=iterations,
     )
     url = deploy.get("url")
     return {
@@ -156,6 +212,7 @@ def _process_variant(lead: dict[str, Any], variant: str) -> dict[str, Any]:
         "variant": variant,
         "url": url,
         "score": critique.get("score"),
+        "iterations": iterations,
         "issues": critique.get("issues", []),
         "html": html,
         "provider": deploy.get("provider"),
@@ -218,8 +275,16 @@ def heartbeat() -> dict[str, Any]:
             _safe_log(
                 "generate_variant",
                 "succeeded",
-                f"built {variant} mockup for {lead.get('business_name')} at {result.get('score')}/10.",
-                {"variant": variant, "url": result.get("url"), "score": result.get("score")},
+                (
+                    f"built {variant} mockup for {lead.get('business_name')} "
+                    f"at {result.get('score')}/10 after {result.get('iterations')} iteration(s)."
+                ),
+                {
+                    "variant": variant,
+                    "url": result.get("url"),
+                    "score": result.get("score"),
+                    "iterations": result.get("iterations"),
+                },
                 lead_id,
             )
         except Exception as exc:

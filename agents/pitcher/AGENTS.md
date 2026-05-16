@@ -14,4 +14,5 @@ Workflow:
 8. Post approval instructions to Discord when a webhook is configured.
 9. In autonomous mode, send immediately through Resend.
 
-Default behavior drafts all 4 angles. Set `PITCHER_ANGLE_COUNT=1` for the MVP single-angle path.
+Default behavior drafts all 4 angles. If one angle fails, log it and continue
+with the viable variants so the demo path stays alive.

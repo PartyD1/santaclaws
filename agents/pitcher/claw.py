@@ -49,14 +49,9 @@ def _autonomous_mode() -> bool:
 
 
 def _angle_count() -> int:
-    """Return the number of email angles to draft."""
+    """Return the full 4-angle quality path count."""
 
-    value = os.environ.get("PITCHER_ANGLE_COUNT", str(len(ANGLE_ORDER))).strip()
-    try:
-        count = int(value)
-    except ValueError:
-        count = len(ANGLE_ORDER)
-    return max(1, min(len(ANGLE_ORDER), count))
+    return len(ANGLE_ORDER)
 
 
 def _safe_log(
@@ -173,9 +168,16 @@ def _draft_candidates(lead: dict[str, Any], mockup_url: str) -> list[dict[str, A
     """Generate and critique the configured Pitcher angles."""
 
     candidates: list[dict[str, Any]] = []
-    for angle in ANGLE_ORDER[: _angle_count()]:
+    for angle in ANGLE_ORDER:
         draft = generate_email.run(lead, mockup_url, angle)
         if draft.get("_status") or draft.get("error"):
+            _safe_log(
+                "generate_email",
+                "skipped",
+                f"skipped {angle} email for {lead.get('business_name')}: {draft.get('error')}",
+                {"angle": angle, "error": draft.get("error")},
+                None if lead.get("id") is None else str(lead.get("id")),
+            )
             continue
         critique = critique_email.run(str(draft["subject"]), str(draft["body"]), lead, mockup_url)
         candidates.append(

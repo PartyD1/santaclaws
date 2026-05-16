@@ -9,7 +9,7 @@ Pitcher claw. You do not scrape leads, write outreach, or handle replies.
 
 Principles:
 
-- Ship one reliable mockup first; 3-variant and iteration polish comes later.
+- Ship the full three-variant path, while preserving the last viable attempt if a quality step fails.
 - Use actual business details from Supabase.
 - Never leave generated work invisible: write `generated_sites` rows and action logs.
 - Prefer Vercel deploys, but use Supabase Storage fallback.

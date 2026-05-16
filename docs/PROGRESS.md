@@ -21,6 +21,7 @@
 - Implemented Tasks 29-31 Closer tools: reply classification, Google Calendar fallback slots, meeting booking, and reply drafting.
 - Implemented Tasks 32-33 Closer claw heartbeat and Resend inbound email webhook.
 - Implemented Tasks 34-35 lead detail page and expanded live metrics polling.
+- Implemented Tasks 36-38 Designer self-critique, three-variant winner selection, and Pitcher four-angle quality path.
 
 ## Spec Consistency Check
 
@@ -83,9 +84,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 33: Resend inbound webhook.
 - [x] Task 34: Lead detail page.
 - [x] Task 35: Live metrics bar.
-- [ ] Task 36: Designer self-critique loop upgrade.
-- [ ] Task 37: Designer 3-variant winner upgrade.
-- [ ] Task 38: Pitcher 4-angle critique upgrade.
+- [x] Task 36: Designer self-critique loop upgrade.
+- [x] Task 37: Designer 3-variant winner upgrade.
+- [x] Task 38: Pitcher 4-angle critique upgrade.
 - [ ] Task 39: MEMORY.md self-update.
 - [ ] Task 40: Demo data seeder.
 - [ ] Task 41: Start/stop all claws scripts.
@@ -178,6 +179,11 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd run build` passed for the dashboard after the inbound webhook route. Next.js emitted non-fatal webpack cache snapshot warnings.
 - `npm.cmd run typecheck` passed for the lead detail page and expanded metrics.
 - `npm.cmd run build` passed for the dashboard after Tasks 34-35. Next.js emitted non-fatal webpack cache snapshot warnings.
+- `python -m compileall agents/designer/claw.py agents/pitcher/claw.py` passed after Tasks 36-38.
+- Designer self-critique smoke validated regeneration until score 8 and `self_critique_iterations` persistence.
+- Pitcher four-angle smoke validated all 4 angles are generated/critiqued and the highest score wins.
+- `python -m agents.designer.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
+- `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -281,8 +287,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
 - Need dashboard Supabase env values available at build/runtime for live detail reads.
 
-## TASK 36 Blockers
+## TASK 39 Blockers
 
-- Need stable Designer live generation before tightening the self-critique loop.
-- Need enough Nemotron rate-limit headroom for multiple critique/regenerate iterations per lead.
-- Need decide whether low-score variants should update the same `generated_sites` row or only persist the final shipped HTML.
+- Need live Nemotron route for memory summarization/updating.
+- Need decide whether `MEMORY.md` self-updates write local files, Supabase memory rows, or both.
+- Need a pruning policy so demo memory stays short and does not rewrite useful hand-authored claw instructions.
+- Need enough rate-limit headroom to avoid memory maintenance slowing the live demo heartbeat.
