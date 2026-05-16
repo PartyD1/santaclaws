@@ -800,8 +800,107 @@ def _stable_template_index(lead: dict[str, Any], count: int) -> int:
 def _client_website_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
     """Render one of several finished client-facing website templates."""
 
-    templates = [_client_showroom_html, _client_concierge_html, _client_performance_html]
+    templates = [
+        _client_showroom_html,
+        _client_concierge_html,
+        _client_performance_html,
+        _client_editorial_html,
+        _client_booking_html,
+        _client_local_proof_html,
+        _client_luxury_card_html,
+        _client_service_menu_html,
+    ]
     return templates[_stable_template_index(lead, len(templates))](lead, variant, reason)
+
+
+def _stock_photo(profile: dict[str, Any], slot: str) -> str:
+    """Return a stock image URL tailored to the profile and template slot."""
+
+    key = str(profile.get("category", "local service")).lower()
+    queries = {
+        "premium auto service": {
+            "hero": "auto,repair,garage",
+            "detail": "mechanic,workshop",
+            "portrait": "car,interior",
+            "texture": "automotive,tools",
+        },
+        "modern dental care": {
+            "hero": "dentist,clinic",
+            "detail": "dental,office",
+            "portrait": "smiling,patient",
+            "texture": "dental,tools",
+        },
+        "trusted plumbing": {
+            "hero": "plumber,home",
+            "detail": "modern,bathroom",
+            "portrait": "technician,plumbing",
+            "texture": "pipes,tools",
+        },
+        "licensed electrical service": {
+            "hero": "electrician,home",
+            "detail": "electrical,panel",
+            "portrait": "lighting,interior",
+            "texture": "copper,wires",
+        },
+        "roofing and exterior protection": {
+            "hero": "roofing,house",
+            "detail": "roof,shingles",
+            "portrait": "home,exterior",
+            "texture": "roof,texture",
+        },
+        "landscape design and maintenance": {
+            "hero": "landscape,garden",
+            "detail": "yard,design",
+            "portrait": "outdoor,living",
+            "texture": "plants,texture",
+        },
+        "heating and cooling service": {
+            "hero": "hvac,technician",
+            "detail": "air,conditioning",
+            "portrait": "home,comfort",
+            "texture": "ventilation",
+        },
+        "pet grooming studio": {
+            "hero": "dog,grooming",
+            "detail": "pet,groomer",
+            "portrait": "happy,dog",
+            "texture": "pet,care",
+        },
+    }
+    query = queries.get(key, {}).get(slot, f"{key},service").replace(" ", ",")
+    # Source images keep demo pages visually fresh without storing binary assets.
+    return f"https://source.unsplash.com/1600x1000/?{query}"
+
+
+def _client_bits(lead: dict[str, Any]) -> dict[str, Any]:
+    """Collect escaped client-template values in one place."""
+
+    profile = _profile(lead)
+    services = [(escape(str(title)), escape(str(copy))) for title, copy in profile["services"]]
+    stats = [(escape(str(value)), escape(str(label))) for value, label in profile["stats"]]
+    reviews = [(escape(str(quote)), escape(str(name))) for quote, name in profile["reviews"]]
+    return {
+        "business_name": escape(str(lead.get("business_name") or "Apex Local Co.")),
+        "niche": escape(str(lead.get("niche") or "local service")),
+        "city": escape(str(lead.get("city") or "Santa Cruz")),
+        "phone": escape(str(lead.get("phone") or "(831) 555-0198")),
+        "address": escape(str(lead.get("address") or f"{lead.get('city') or 'Santa Cruz'}, CA")),
+        "hours": escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM")),
+        "rating": escape(str(lead.get("google_rating") or "4.9")),
+        "review_count": escape(str(lead.get("review_count") or "240")),
+        "profile": profile,
+        "category": escape(str(profile["category"])),
+        "eyebrow": escape(str(profile["eyebrow"])),
+        "hero": escape(str(profile["hero"])),
+        "sub": escape(str(profile["sub"])),
+        "services": services,
+        "stats": stats,
+        "reviews": reviews,
+        "hero_image": _stock_photo(profile, "hero"),
+        "detail_image": _stock_photo(profile, "detail"),
+        "portrait_image": _stock_photo(profile, "portrait"),
+        "texture_image": _stock_photo(profile, "texture"),
+    }
 
 
 def _client_showroom_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
@@ -1156,6 +1255,165 @@ def _client_performance_html(lead: dict[str, Any], variant: str, reason: str = "
     <section id="contact"><div class="wrap contact"><div><span class="eyebrow">Schedule service</span><h2>Call {business_name}</h2><p>{address}<br>{hours}</p></div><a class="btn" href="tel:{phone}">Call {phone}</a></div></section>
   </main>
   <footer class="wrap">{business_name} - {category.title()} in {city}</footer><a class="btn mobile" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
+
+
+def _client_editorial_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render an editorial magazine-style local business site."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#2563eb", "retro_local": "#c2410c", "premium": "#0f766e"}.get(variant, "#2563eb")
+    service_html = "".join(
+        f"<article><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>"
+        for index, (title, copy) in enumerate(c["services"][:4], start=1)
+    )
+    stat_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    quote, reviewer = c["reviews"][0]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | {c['category'].title()} in {c['city']}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#fafaf7;color:#171717;font-family:Georgia,"Times New Roman",serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1160px,calc(100% - 34px));margin:0 auto}} .sans{{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}}
+    nav{{position:sticky;top:0;z-index:50;background:#fafaf7ee;backdrop-filter:blur(16px);border-bottom:1px solid #dedbd2}} nav .wrap{{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}} .brand strong{{font-family:Inter,ui-sans-serif,system-ui;font-size:20px}} .eyebrow,.brand span{{display:block;color:{accent};font-family:Inter,ui-sans-serif,system-ui;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:#171717;color:white;text-decoration:none;font-family:Inter,ui-sans-serif,system-ui;font-weight:900}}
+    .hero{{padding:44px 0 72px}} .hero-grid{{display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:end}} h1{{max-width:840px;margin:18px 0 0;font-size:clamp(58px,9vw,118px);line-height:.86;letter-spacing:0}} .lead{{font-family:Inter,ui-sans-serif,system-ui;max-width:640px;color:#57534e;font-size:20px;line-height:1.7}} .photo{{min-height:620px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.18)),url("{c['hero_image']}") center/cover;box-shadow:0 24px 70px rgba(0,0,0,.14)}} .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#dedbd2;border:1px solid #dedbd2}} .stats div{{background:white;padding:24px}} .stats strong{{display:block;font-family:Inter,ui-sans-serif,system-ui;font-size:34px}} .stats span{{font-family:Inter,ui-sans-serif,system-ui;color:#57534e;font-weight:750}}
+    section{{padding:76px 0}} .section-head{{display:flex;align-items:end;justify-content:space-between;gap:26px;margin-bottom:28px}} .section-head h2{{margin:10px 0 0;font-size:clamp(38px,5vw,70px);line-height:.92;max-width:760px}} .section-head p{{font-family:Inter,ui-sans-serif,system-ui;max-width:420px;color:#57534e;line-height:1.7}} .services{{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}} .services article{{border-top:3px solid {accent};background:white;border-radius:8px;padding:24px;min-height:285px;box-shadow:0 16px 44px rgba(23,23,23,.08)}} .services span{{font-family:Inter,ui-sans-serif,system-ui;color:{accent};font-weight:950}} .services h3{{font-size:30px;line-height:1;margin:20px 0 0}} .services p{{font-family:Inter,ui-sans-serif,system-ui;color:#57534e;line-height:1.65}}
+    .quote{{background:#171717;color:white;border-radius:8px;padding:clamp(30px,5vw,62px);display:grid;grid-template-columns:1fr .75fr;gap:28px;align-items:center}} blockquote{{margin:0;font-size:clamp(30px,4vw,56px);line-height:1.04}} cite{{display:block;margin-top:20px;color:#d4d4d4;font-family:Inter,ui-sans-serif,system-ui;font-style:normal;font-weight:800}} .mini-photo{{min-height:360px;border-radius:8px;background:url("{c['detail_image']}") center/cover}} footer{{padding:34px 0 94px;text-align:center;color:#57534e;font-family:Inter,ui-sans-serif,system-ui}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:920px){{.hero-grid,.quote{{grid-template-columns:1fr}}.services,.stats{{grid-template-columns:repeat(2,1fr)}}.photo{{min-height:440px}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:50px}}.services,.stats{{grid-template-columns:1fr}}.section-head{{display:block}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand sans"><strong>{c['business_name']}</strong><span>{c['city']} {c['category']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap hero-grid"><div><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p class="lead">{c['sub']}</p><a class="btn" href="#contact">Schedule service</a></div><div class="photo"></div></div></header>
+  <div class="wrap stats">{stat_html}</div>
+  <main>
+    <section><div class="wrap"><div class="section-head"><div><span class="eyebrow">Services</span><h2>Expert help, organized like a premium publication.</h2></div><p>Customers see the offer, the proof, and the next step without reading a wall of text.</p></div><div class="services">{service_html}</div></div></section>
+    <section><div class="wrap quote"><div><blockquote>"{quote}"</blockquote><cite>{reviewer}</cite></div><div class="mini-photo"></div></div></section>
+    <section id="contact"><div class="wrap section-head"><div><span class="eyebrow">Visit or call</span><h2>{c['business_name']}</h2></div><p>{c['address']}<br>{c['hours']}<br>{c['rating']} rating from {c['review_count']} reviews</p></div></section>
+  </main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_booking_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a conversion-first booking website with dense useful sections."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0284c7", "retro_local": "#be123c", "premium": "#7c3aed"}.get(variant, "#0284c7")
+    service_rows = "".join(f"<li><strong>{title}</strong><span>{copy}</span></li>" for title, copy in c["services"][:4])
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    review_cards = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in c["reviews"][:2])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Book {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#eef2f7;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950;box-shadow:0 18px 36px color-mix(in srgb,{accent} 30%,transparent)}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{position:sticky;top:0;z-index:50;background:#fffffff2;backdrop-filter:blur(18px);border-bottom:1px solid #dbe3ef}} nav .wrap{{height:74px;display:flex;align-items:center;justify-content:space-between;gap:18px}} .brand strong{{display:block;font-size:21px}} .brand span{{color:#64748b;font-size:13px;font-weight:800}} .hero{{padding:46px 0}} .grid{{display:grid;grid-template-columns:1fr 420px;gap:18px;align-items:stretch}} .hero-card{{border-radius:8px;background:white;padding:clamp(30px,5vw,64px);box-shadow:0 24px 70px rgba(15,23,42,.13);border:1px solid #dbe3ef}} h1{{max-width:760px;margin:14px 0 0;font-size:clamp(48px,7vw,88px);line-height:.9;letter-spacing:0}} .hero-card p{{max-width:640px;color:#475569;font-size:19px;line-height:1.7}} .booking{{border-radius:8px;background:#0f172a;color:white;padding:26px;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 70px rgba(15,23,42,.2)}} .booking h2{{font-size:32px;line-height:1;margin:0}} .field{{border-radius:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:15px;color:#cbd5e1}} .booking .btn{{background:white;color:#0f172a;box-shadow:none}} .photo{{height:260px;border-radius:8px;background:url("{c['hero_image']}") center/cover;margin-top:20px}}
+    .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}} .stats div{{border-radius:8px;background:#f8fafc;border:1px solid #dbe3ef;padding:18px}} .stats strong{{display:block;font-size:30px}} .stats span{{display:block;margin-top:6px;color:#64748b;font-weight:750}} section{{padding:56px 0}} .split{{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}} .panel{{border-radius:8px;background:white;border:1px solid #dbe3ef;padding:32px;box-shadow:0 18px 50px rgba(15,23,42,.08)}} .panel h2{{font-size:clamp(34px,5vw,58px);line-height:1;margin:10px 0}} .services{{list-style:none;margin:0;padding:0;display:grid;gap:12px}} .services li{{display:grid;grid-template-columns:190px 1fr;gap:16px;border-bottom:1px solid #e2e8f0;padding:18px 0}} .services span{{color:#64748b;line-height:1.6}} .image-panel{{min-height:520px;border-radius:8px;background:url("{c['detail_image']}") center/cover;box-shadow:0 18px 50px rgba(15,23,42,.1)}} .reviews{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}} blockquote{{margin:0;background:white;border:1px solid #dbe3ef;border-radius:8px;padding:24px}} blockquote p{{color:#334155;line-height:1.65}} cite{{font-style:normal;font-weight:900}} footer{{padding:30px 0 94px;text-align:center;color:#64748b}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.grid,.split{{grid-template-columns:1fr}}.stats{{grid-template-columns:repeat(2,1fr)}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:46px}}.stats,.reviews{{grid-template-columns:1fr}}.services li{{grid-template-columns:1fr}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong><span>{c['category']} in {c['city']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap grid"><div class="hero-card"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><div class="stats">{stats}</div><div class="photo"></div></div><aside class="booking"><span class="eyebrow">Fast booking</span><h2>Start here.</h2><div class="field">1. Choose the service you need</div><div class="field">2. Call for the fastest opening</div><div class="field">3. Get clear next steps</div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a><p>{c['address']}<br>{c['hours']}</p></aside></div></header>
+  <main><section><div class="wrap split"><div class="image-panel"></div><div class="panel"><span class="eyebrow">Service menu</span><h2>Clear options, easy decisions.</h2><ul class="services">{service_rows}</ul></div></div></section><section><div class="wrap reviews">{review_cards}</div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['city']} {c['category']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_local_proof_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a neighborhood-proof website with reviews and local trust first."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0d9488", "retro_local": "#a16207", "premium": "#4f46e5"}.get(variant, "#0d9488")
+    services = "".join(f"<article><h3>{title}</h3><p>{copy}</p></article>" for title, copy in c["services"][:3])
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    reviews = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in c["reviews"])
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Local {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#fffdf7;color:#1c1917;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1140px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{border-bottom:1px solid #e7e0d2;background:#fffdf7}} nav .wrap{{height:74px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .hero{{padding:52px 0 38px}} h1{{font-size:clamp(50px,8vw,96px);line-height:.88;margin:16px 0 0;max-width:920px}} .hero p{{color:#57534e;font-size:20px;line-height:1.7;max-width:690px}} .hero-photo{{margin-top:34px;min-height:500px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.32)),url("{c['portrait_image']}") center/cover;display:flex;align-items:end;padding:24px;color:white;box-shadow:0 24px 70px rgba(28,25,23,.14)}} .proof{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}} .proof div{{background:white;border:1px solid #e7e0d2;border-radius:8px;padding:20px}} .proof strong{{font-size:32px}} .proof span{{display:block;color:#78716c;margin-top:6px;font-weight:750}}
+    section{{padding:62px 0}} .two{{display:grid;grid-template-columns:.78fr 1.22fr;gap:18px}} .card{{background:white;border:1px solid #e7e0d2;border-radius:8px;padding:30px;box-shadow:0 16px 44px rgba(28,25,23,.07)}} .card h2{{font-size:clamp(34px,5vw,60px);line-height:1;margin:12px 0}} .services{{display:grid;gap:14px}} .services article{{background:#f8f4ea;border-radius:8px;padding:24px}} .services h3{{margin:0;font-size:25px}} .services p{{color:#57534e;line-height:1.65}} .reviews{{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}} blockquote{{margin:0;background:#1c1917;color:white;border-radius:8px;padding:24px}} blockquote p{{line-height:1.6;color:#f5f5f4}} cite{{display:block;margin-top:18px;font-style:normal;font-weight:900;color:#d6d3d1}} footer{{padding:34px 0 92px;color:#78716c;text-align:center}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.proof{{grid-template-columns:repeat(2,1fr)}}.two,.reviews{{grid-template-columns:1fr}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:46px}}.proof{{grid-template-columns:1fr}}.hero-photo{{min-height:380px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap"><span class="eyebrow">{c['city']} recommended {c['category']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#contact">Get help today</a><div class="hero-photo"><h2>{c['rating']} stars from {c['review_count']} local reviews</h2></div><div class="proof">{stats}</div></div></header>
+  <main><section><div class="wrap two"><div class="card"><span class="eyebrow">Local confidence</span><h2>Proof before pitch.</h2><p>{c['business_name']} leads with clear services, real contact details, and trust signals customers can scan fast.</p></div><div class="services">{services}</div></div></section><section><div class="wrap reviews">{reviews}</div></section><section id="contact"><div class="wrap card"><span class="eyebrow">Call or visit</span><h2>{c['business_name']}</h2><p>{c['address']}<br>{c['hours']}</p><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_luxury_card_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a high-end dark card layout with layered photography."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#60a5fa", "retro_local": "#f59e0b", "premium": "#34d399"}.get(variant, "#34d399")
+    services = "".join(f"<article><span>{index:02d}</span><h3>{title}</h3><p>{copy}</p></article>" for index, (title, copy) in enumerate(c["services"][:4], start=1))
+    stats = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in c["stats"])
+    quote, name = c["reviews"][1]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | Premium {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#08080a;color:#f8fafc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:48px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:#08080a;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    nav{{position:sticky;top:0;z-index:50;background:#08080ade;backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.12)}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .brand span{{display:block;color:#a1a1aa;font-size:13px;font-weight:800}} .hero{{padding:56px 0}} .frame{{border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:18px;background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:0 34px 90px rgba(0,0,0,.45)}} .hero-grid{{display:grid;grid-template-columns:1fr .85fr;gap:18px}} .hero-copy{{padding:clamp(28px,5vw,58px)}} h1{{font-size:clamp(50px,8vw,104px);line-height:.84;margin:16px 0 0}} .hero-copy p{{max-width:620px;color:#cbd5e1;font-size:20px;line-height:1.7}} .photo{{min-height:650px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.42)),url("{c['hero_image']}") center/cover}} .stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}} .stats div{{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:18px}} .stats strong{{font-size:32px}} .stats span{{display:block;color:#a1a1aa;margin-top:6px;font-weight:750}}
+    section{{padding:68px 0}} .services{{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}} .services article{{background:#111114;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;min-height:300px}} .services span{{color:{accent};font-weight:950}} .services h3{{font-size:27px;line-height:1;margin:22px 0}} .services p{{color:#a1a1aa;line-height:1.65}} .split{{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}} .texture{{min-height:460px;border-radius:8px;background:url("{c['texture_image']}") center/cover}} .panel{{border-radius:8px;background:#f8fafc;color:#111827;padding:clamp(30px,5vw,58px)}} .panel h2{{font-size:clamp(34px,5vw,62px);line-height:.94;margin:12px 0}} .panel p{{color:#475569;line-height:1.75}} footer{{padding:34px 0 94px;text-align:center;color:#a1a1aa}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:940px){{.hero-grid,.split{{grid-template-columns:1fr}}.services,.stats{{grid-template-columns:repeat(2,1fr)}}.photo{{min-height:440px}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:48px}}.services,.stats{{grid-template-columns:1fr}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong><span>{c['category']} in {c['city']}</span></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav>
+  <header class="hero"><div class="wrap frame"><div class="hero-grid"><div class="hero-copy"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#contact">Start now</a><div class="stats">{stats}</div></div><div class="photo"></div></div></div></header>
+  <main><section><div class="wrap services">{services}</div></section><section><div class="wrap split"><div class="texture"></div><div class="panel"><span class="eyebrow">Customer voice</span><h2>"{quote}"</h2><p>- {name}</p><p>{c['business_name']} turns a local service page into a premium brand moment with focused services, credible proof, and a direct call path.</p></div></div></section><section id="contact"><div class="wrap panel"><span class="eyebrow">Schedule service</span><h2>Call {c['business_name']}</h2><p>{c['address']}<br>{c['hours']}</p><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - Premium {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
+</body>
+</html>"""
+
+
+def _client_service_menu_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a crisp service-menu layout built for scanning and mobile action."""
+
+    c = _client_bits(lead)
+    accent = {"clean_modern": "#0891b2", "retro_local": "#b91c1c", "premium": "#16a34a"}.get(variant, "#0891b2")
+    services = "".join(f"<article><h3>{title}</h3><p>{copy}</p><a href='tel:{c['phone']}'>Ask about {title}</a></article>" for title, copy in c["services"][:4])
+    stats = "".join(f"<li><strong>{value}</strong><span>{label}</span></li>" for value, label in c["stats"])
+    review, reviewer = c["reviews"][2]
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{c['business_name']} | {c['category'].title()}</title>
+  <style>
+    *{{box-sizing:border-box}} body{{margin:0;background:#f8fafc;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}} a{{color:inherit}} .wrap{{width:min(1180px,calc(100% - 34px));margin:0 auto}} .btn{{display:inline-flex;min-height:46px;align-items:center;justify-content:center;border-radius:8px;padding:0 20px;background:{accent};color:white;text-decoration:none;font-weight:950}} .eyebrow{{color:{accent};font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.08em}}
+    .top{{background:#0f172a;color:white}} nav .wrap{{height:76px;display:flex;align-items:center;justify-content:space-between}} .brand strong{{font-size:22px}} .hero{{padding:58px 0}} .hero-grid{{display:grid;grid-template-columns:.95fr 1.05fr;gap:22px;align-items:stretch}} .hero-copy{{display:flex;flex-direction:column;justify-content:center}} h1{{font-size:clamp(50px,8vw,104px);line-height:.86;margin:16px 0 0}} .hero-copy p{{color:#cbd5e1;font-size:20px;line-height:1.7;max-width:620px}} .hero-photo{{min-height:560px;border-radius:8px;background:url("{c['detail_image']}") center/cover}} .proof{{display:grid;grid-template-columns:repeat(4,1fr);gap:0;list-style:none;padding:0;margin:0;border-top:1px solid rgba(255,255,255,.14)}} .proof li{{padding:24px;border-right:1px solid rgba(255,255,255,.14)}} .proof strong{{display:block;font-size:32px}} .proof span{{display:block;color:#cbd5e1;margin-top:6px;font-weight:750}}
+    section{{padding:70px 0}} .head{{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:26px}} .head h2{{font-size:clamp(36px,5vw,68px);line-height:.92;margin:10px 0 0;max-width:720px}} .head p{{max-width:420px;color:#64748b;line-height:1.7}} .menu{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}} .menu article{{background:white;border:1px solid #dbe3ef;border-radius:8px;padding:26px;min-height:250px;box-shadow:0 16px 44px rgba(15,23,42,.07)}} .menu h3{{font-size:30px;margin:0}} .menu p{{color:#64748b;line-height:1.65}} .menu a{{display:inline-flex;margin-top:10px;color:{accent};font-weight:950;text-decoration:none}} .banner{{border-radius:8px;background:white;border:1px solid #dbe3ef;padding:34px;display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:center}} .banner blockquote{{font-size:clamp(28px,4vw,52px);line-height:1.05;margin:0}} .banner p{{color:#64748b;line-height:1.7}} .banner-img{{min-height:320px;border-radius:8px;background:url("{c['portrait_image']}") center/cover}} footer{{padding:34px 0 94px;text-align:center;color:#64748b}} .mobile{{display:none;position:fixed;left:14px;right:14px;bottom:14px;z-index:60}}
+    @media(max-width:900px){{.hero-grid,.banner{{grid-template-columns:1fr}}.proof{{grid-template-columns:repeat(2,1fr)}}}} @media(max-width:640px){{nav .btn{{display:none}}h1{{font-size:48px}}.proof,.menu{{grid-template-columns:1fr}}.hero-photo{{min-height:380px}}.mobile{{display:flex}}}}
+  </style>
+</head>
+<body>
+  <div class="top"><nav><div class="wrap"><div class="brand"><strong>{c['business_name']}</strong></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></nav><header class="hero"><div class="wrap hero-grid"><div class="hero-copy"><span class="eyebrow">{c['eyebrow']}</span><h1>{c['hero']}</h1><p>{c['sub']}</p><a class="btn" href="#menu">See services</a></div><div class="hero-photo"></div></div></header><ul class="wrap proof">{stats}</ul></div>
+  <main><section id="menu"><div class="wrap"><div class="head"><div><span class="eyebrow">Service menu</span><h2>Everything is easy to scan and easy to book.</h2></div><p>{c['business_name']} gives customers direct language, useful categories, and a strong mobile call path.</p></div><div class="menu">{services}</div></div></section><section><div class="wrap banner"><div><span class="eyebrow">Review highlight</span><blockquote>"{review}"</blockquote><p>- {reviewer}</p></div><div class="banner-img"></div></div></section><section id="contact"><div class="wrap banner"><div><span class="eyebrow">Contact</span><h2>{c['business_name']}</h2><p>{c['address']}<br>{c['hours']}<br>{c['rating']} rating from {c['review_count']} reviews</p></div><a class="btn" href="tel:{c['phone']}">Call {c['phone']}</a></div></section></main>
+  <footer class="wrap">{c['business_name']} - {c['category'].title()} in {c['city']}</footer><a class="btn mobile" href="tel:{c['phone']}">Call {c['phone']}</a>
 </body>
 </html>"""
 

@@ -369,3 +369,25 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Added a Scout-focused `.env` template with required Nemotron, Supabase, and Apify fields plus optional Scout heartbeat tuning.
 - Fixed Scout Apify location targeting so the scraper sends `Santa Cruz, CA, United States` instead of bare `Santa Cruz`, preventing Santa Cruz, Spain matches while preserving `leads.city = Santa Cruz`.
 - Added an SMTP email provider path for Pitcher so approved outreach can send through a personal Gmail, Outlook, or custom mailbox without Resend domain verification.
+
+## 2026-05-16 14:47 PDT — Industry-Aware Designer Templates
+
+- Added Designer industry profiles for automotive, dental, plumbing, electrical, roofing, landscaping, HVAC, and pet grooming leads.
+- Wired the three polished client-facing website layouts to use industry-specific hero copy, services, stats, reviews, process language, and image assets.
+- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
+- Validation: generated local smoke HTML for dentist, plumber, and electrician leads; each produced complete HTML with the right business name and industry title.
+
+## 2026-05-16 14:49 PDT — Scout Balancing Schema Fix
+
+- Fixed Scout niche balancing to count leads by `city` and `niche` only because the live `leads` table does not have a `state` column.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: local query-shape smoke check confirmed `_lead_count` filters on `city` and `niche`, not `state`.
+
+## 2026-05-16 14:59 PDT — Expanded Designer Template Library
+
+- Expanded client-facing Designer mockups from 3 to 8 layouts by adding editorial, booking-first, local-proof, luxury-card, and service-menu templates.
+- Added industry-tailored stock photo selection slots for hero, detail, portrait, and texture images so each layout can use different visual assets.
+- Kept every new template wired to industry profiles for services, stats, reviews, hero copy, and contact flows.
+- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
+- Validation: generated smoke HTML for all 8 template functions using a dental lead; each returned complete HTML with business and industry text.
+- Validation: generated smoke HTML across dentist, plumber, electrician, landscaper, pet groomer, roofing, HVAC, and auto detailing leads.
