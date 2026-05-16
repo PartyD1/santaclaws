@@ -79,7 +79,7 @@ def _plain_text_to_html(text: str, lead: dict[str, Any], mockup_url: str | None 
         escaped_url = html.escape(mockup_url, quote=True)
         cta = f"""
           <tr>
-            <td style="padding:8px 0 24px;">
+            <td style="padding:8px 28px 24px;">
               <a href="{escaped_url}" style="display:inline-block; background:#0f172a; color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:13px 18px; border-radius:8px;">
                 View the mockup
               </a>

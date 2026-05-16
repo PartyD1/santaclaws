@@ -500,3 +500,13 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
 - Validation: local salutation smoke checks rewrote guessed names while preserving the email body.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:45 PDT — Pitcher Email Polish Fixes
+
+- Added deterministic Pitcher cleanup for malformed Vercel links, missing business-name greetings, and lowercase paragraph starts.
+- Updated Pitcher prompts to require exact mockup URL copying with no spaces or line breaks inside links.
+- Fixed sent-email CTA padding so the button aligns with the main email content.
+- Validation: `python -m compileall agents/pitcher/tools/generate_email.py agents/pitcher/tools/send_email.py` passed.
+- Validation: local smoke check repaired a broken `vercel. app` URL and capitalized/prepended the business greeting.
+- Validation: local HTML smoke check confirmed the CTA uses aligned side padding.
+- Validation: `git diff --check` passed.

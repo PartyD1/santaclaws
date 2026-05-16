@@ -60,13 +60,55 @@ def _business_salutation(body: str, business_name: str) -> str:
 
     business_name = business_name.strip() or "there"
     greeting = f"Hi {business_name},"
-    return re.sub(
+    cleaned = body.strip()
+    replaced = re.sub(
         r"^\s*(hi|hello|hey|dear)\s+[^,\n.!?-]{1,60}\s*[,!?.-]?\s*",
         f"{greeting}\n\n",
-        body.strip(),
+        cleaned,
         count=1,
         flags=re.IGNORECASE,
     )
+    if replaced == cleaned:
+        return f"{greeting}\n\n{cleaned}"
+    return replaced
+
+
+def _repair_mockup_urls(body: str, mockup_url: str) -> str:
+    """Repair model-added spaces in Vercel links and restore the exact mockup URL."""
+
+    repaired = re.sub(
+        r"https://([A-Za-z0-9-]+)\s*\.\s*vercel\s*\.\s*app",
+        r"https://\1.vercel.app",
+        body,
+        flags=re.IGNORECASE,
+    )
+    if mockup_url and "vercel.app" in mockup_url:
+        repaired = re.sub(r"https://[A-Za-z0-9-]+\.vercel\.app", mockup_url, repaired, flags=re.IGNORECASE)
+    return repaired
+
+
+def _capitalize_paragraph_starts(body: str) -> str:
+    """Capitalize the first letter of each paragraph for cleaner outreach."""
+
+    paragraphs = body.split("\n\n")
+    cleaned: list[str] = []
+    for paragraph in paragraphs:
+        match = re.search(r"[A-Za-z]", paragraph)
+        if not match:
+            cleaned.append(paragraph)
+            continue
+        index = match.start()
+        cleaned.append(paragraph[:index] + paragraph[index].upper() + paragraph[index + 1 :])
+    return "\n\n".join(cleaned)
+
+
+def _polish_body(body: str, business_name: str, mockup_url: str) -> str:
+    """Apply deterministic cleanup to model email copy before saving it."""
+
+    polished = _repair_mockup_urls(body, mockup_url)
+    polished = _business_salutation(polished, business_name)
+    polished = _capitalize_paragraph_starts(polished)
+    return polished
 
 
 def _validate(payload: dict[str, Any]) -> dict[str, str]:
@@ -140,7 +182,7 @@ def run(lead: dict[str, Any], mockup_url: str, angle: str) -> dict[str, Any]:
                 retries=1,
             )
             draft = _validate(payload)
-            draft["body"] = _business_salutation(draft["body"], business_name)
+            draft["body"] = _polish_body(draft["body"], business_name, mockup_url)
             result: dict[str, Any] = {"angle": angle, **draft}
             _safe_log(
                 "generate_email",

@@ -17,6 +17,8 @@ Rules:
 - Subject must be 50 characters or fewer.
 - Body must be 5 sentences or fewer.
 - Address the email to the business name, not an owner, founder, manager, or guessed person name.
+- Start the body exactly with: Hi {business_name},
+- Copy the mockup URL exactly as provided. Do not add spaces, line breaks, or punctuation inside the URL.
 - Mention one concrete pain point if available.
 - Mention the mockup URL naturally.
 - Do not sound spammy, exaggerated, or corporate.
