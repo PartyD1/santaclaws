@@ -142,6 +142,17 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd run typecheck` passed.
 - `npm.cmd run build` passed.
 - `python -m compileall agents/shared/nemotron_client.py` passed.
+- `rg "nemotron-3-super|Super 120B|super-120b"` returned no remaining old model references after switching to Nano Omni 30B reasoning.
+- Supabase timestamp parser validated against `2026-05-16T09:13:49.04514+00:00`, normalizing it to Python-compatible microseconds.
+- `python -m compileall agents/shared/memory_updater.py agents/shared/supabase_client.py` passed after adding durable memory helpers.
+- Fallback Scout memory pattern generation validated with a 5-lead heartbeat summary.
+- `python -m compileall agents/scripts/preflight_check.py` passed.
+- `python -m agents.scripts.preflight_check --skip-live` produced clear FAIL/WARN diagnostics in the local non-venv shell.
+- `npm run typecheck` passed after adding per-claw dashboard pages.
+- `npm run build` passed after adding per-claw dashboard pages.
+- `python -m compileall agents/shared/openclaw_runtime.py agents/scripts/openclaw_run.py agents/scout/claw.py` passed after adding the OpenClaw-compatible runner.
+- `python -m agents.scripts.openclaw_run scout --once` loaded Scout's OpenClaw-compatible context and exited cleanly in the local missing-credential path.
+- `bash -n agents/scripts/start_all_claws.sh` passed after moving start-all onto the OpenClaw-compatible runner.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.
@@ -182,6 +193,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/pitcher/claw.py workers/discord_bridge.py` passed.
 - Pitcher heartbeat and Discord approval worker imports passed.
 - Discord approval parser validated `APPROVE`, `SKIP`, and one-line `EDIT`.
+- Discord approval worker now recognizes `PING` and `HELP` health checks in the configured approval channel.
 - `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `python -m workers.discord_bridge` printed fallback approval instructions because bot credentials are not configured.
 - Discord approval worker `EDIT` update/approval insert path was validated with a fake client.
@@ -238,7 +250,7 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need working NemoClaw/OpenShell inference route or direct NVIDIA fallback URL.
 - Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and either routed credentials or `NVIDIA_API_KEY`.
 - Need confirmation whether the NemoClaw gateway accepts placeholder API key `openshell`.
-- Need to verify whether `nvidia/nemotron-3-super-120b-a12b` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
+- Need to verify whether `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
 
 ## TASK 9 Runtime Blockers
 
