@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { ActionRow, DashboardMetrics, Database, LeadRow } from "./types";
+import type { ActionRow, DashboardMetrics, Database, LeadDetailData, LeadRow } from "./types";
 
 let browserClient: SupabaseClient<Database> | null = null;
 
@@ -88,17 +88,27 @@ export async function fetchMetrics(): Promise<DashboardMetrics> {
       totalLeads: 0,
       qualifiedLeads: 0,
       sitesGenerated: 0,
+      emailsDrafted: 0,
       outreachSent: 0,
       repliesReceived: 0,
       meetingsBooked: 0,
     };
   }
 
-  const [totalLeads, qualifiedLeads, sitesGenerated, outreachSent, repliesReceived, meetingsBooked] =
+  const [
+    totalLeads,
+    qualifiedLeads,
+    sitesGenerated,
+    emailsDrafted,
+    outreachSent,
+    repliesReceived,
+    meetingsBooked,
+  ] =
     await Promise.all([
       countRows("leads"),
       countRows("leads", (query) => query.not("qualification_status", "in", "(pending,skip)")),
       countRows("generated_sites"),
+      countRows("outreach"),
       countRows("outreach", (query) => query.eq("status", "sent")),
       countRows("inbound"),
       countRows("meetings"),
@@ -108,8 +118,49 @@ export async function fetchMetrics(): Promise<DashboardMetrics> {
     totalLeads,
     qualifiedLeads,
     sitesGenerated,
+    emailsDrafted,
     outreachSent,
     repliesReceived,
     meetingsBooked,
+  };
+}
+
+export async function fetchLeadDetail(leadId: string): Promise<LeadDetailData> {
+  const empty: LeadDetailData = {
+    lead: null,
+    generatedSites: [],
+    outreach: [],
+    inbound: [],
+    meetings: [],
+    actions: [],
+  };
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return empty;
+  }
+
+  const [lead, generatedSites, outreach, inbound, meetings, actions] = await Promise.all([
+    supabase.from("leads").select("*").eq("id", leadId).limit(1),
+    supabase.from("generated_sites").select("*").eq("lead_id", leadId).order("generated_at", { ascending: false }),
+    supabase.from("outreach").select("*").eq("lead_id", leadId).order("drafted_at", { ascending: false }),
+    supabase.from("inbound").select("*").eq("lead_id", leadId).order("received_at", { ascending: false }),
+    supabase.from("meetings").select("*").eq("lead_id", leadId).order("scheduled_for", { ascending: false }),
+    supabase.from("actions").select("*").eq("lead_id", leadId).order("started_at", { ascending: false }).limit(100),
+  ]);
+
+  const errors = [lead.error, generatedSites.error, outreach.error, inbound.error, meetings.error, actions.error].filter(
+    Boolean,
+  );
+  if (errors.length > 0) {
+    throw new Error(`Could not load lead detail: ${errors[0]?.message}`);
+  }
+
+  return {
+    lead: lead.data?.[0] ?? null,
+    generatedSites: generatedSites.data ?? [],
+    outreach: outreach.data ?? [],
+    inbound: inbound.data ?? [],
+    meetings: meetings.data ?? [],
+    actions: actions.data ?? [],
   };
 }

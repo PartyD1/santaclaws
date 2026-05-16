@@ -60,13 +60,65 @@ export type GeneratedSiteRow = {
   generated_at: string | null;
 };
 
+export type OutreachRow = {
+  id: string;
+  lead_id: string;
+  to_address: string | null;
+  angle: string;
+  subject: string;
+  body: string;
+  critique_score: number | null;
+  runner_up_variants: Record<string, unknown> | null;
+  status: string;
+  drafted_at: string | null;
+  approved_at: string | null;
+  sent_at: string | null;
+  resend_message_id: string | null;
+};
+
+export type InboundRow = {
+  id: string;
+  lead_id: string | null;
+  channel: string;
+  raw_content: string;
+  transcript: string | null;
+  from_address: string | null;
+  classification: string | null;
+  classification_confidence: number | null;
+  classification_key_phrase: string | null;
+  received_at: string | null;
+  handled_at: string | null;
+  handled_by: string | null;
+};
+
+export type MeetingRow = {
+  id: string;
+  lead_id: string;
+  inbound_id: string | null;
+  scheduled_for: string;
+  google_event_id: string | null;
+  status: string;
+  attendee_email: string | null;
+  booked_at: string | null;
+};
+
 export type DashboardMetrics = {
   totalLeads: number;
   qualifiedLeads: number;
   sitesGenerated: number;
+  emailsDrafted: number;
   outreachSent: number;
   repliesReceived: number;
   meetingsBooked: number;
+};
+
+export type LeadDetailData = {
+  lead: LeadRow | null;
+  generatedSites: GeneratedSiteRow[];
+  outreach: OutreachRow[];
+  inbound: InboundRow[];
+  meetings: MeetingRow[];
+  actions: ActionRow[];
 };
 
 export type Database = {
@@ -88,19 +140,19 @@ export type Database = {
         Update: Partial<GeneratedSiteRow>;
       };
       outreach: {
-        Row: { id: string; status: string; sent_at: string | null };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Row: OutreachRow;
+        Insert: Partial<OutreachRow>;
+        Update: Partial<OutreachRow>;
       };
       inbound: {
-        Row: { id: string; received_at: string | null };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Row: InboundRow;
+        Insert: Partial<InboundRow>;
+        Update: Partial<InboundRow>;
       };
       meetings: {
-        Row: { id: string; status: string; booked_at: string | null };
-        Insert: Record<string, unknown>;
-        Update: Record<string, unknown>;
+        Row: MeetingRow;
+        Insert: Partial<MeetingRow>;
+        Update: Partial<MeetingRow>;
       };
     };
   };

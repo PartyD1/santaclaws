@@ -20,6 +20,7 @@
 - Implemented Tasks 27-28 Pitcher claw heartbeat and minimal Discord approval worker.
 - Implemented Tasks 29-31 Closer tools: reply classification, Google Calendar fallback slots, meeting booking, and reply drafting.
 - Implemented Tasks 32-33 Closer claw heartbeat and Resend inbound email webhook.
+- Implemented Tasks 34-35 lead detail page and expanded live metrics polling.
 
 ## Spec Consistency Check
 
@@ -80,8 +81,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 31: Closer meeting/reply tools.
 - [x] Task 32: Closer claw integration.
 - [x] Task 33: Resend inbound webhook.
-- [ ] Task 34: Lead detail page.
-- [ ] Task 35: Live metrics bar.
+- [x] Task 34: Lead detail page.
+- [x] Task 35: Live metrics bar.
 - [ ] Task 36: Designer self-critique loop upgrade.
 - [ ] Task 37: Designer 3-variant winner upgrade.
 - [ ] Task 38: Pitcher 4-angle critique upgrade.
@@ -175,6 +176,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Closer heartbeat interested branch was validated with fake clients.
 - `npm.cmd run typecheck` passed for the dashboard inbound webhook route.
 - `npm.cmd run build` passed for the dashboard after the inbound webhook route. Next.js emitted non-fatal webpack cache snapshot warnings.
+- `npm.cmd run typecheck` passed for the lead detail page and expanded metrics.
+- `npm.cmd run build` passed for the dashboard after Tasks 34-35. Next.js emitted non-fatal webpack cache snapshot warnings.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -277,3 +280,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need representative lead-related rows (`generated_sites`, `outreach`, `inbound`, `meetings`, `actions`) to make the lead detail page useful.
 - Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
 - Need dashboard Supabase env values available at build/runtime for live detail reads.
+
+## TASK 36 Blockers
+
+- Need stable Designer live generation before tightening the self-critique loop.
+- Need enough Nemotron rate-limit headroom for multiple critique/regenerate iterations per lead.
+- Need decide whether low-score variants should update the same `generated_sites` row or only persist the final shipped HTML.

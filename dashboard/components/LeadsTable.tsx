@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchRecentLeads } from "@/lib/supabase";
 import type { LeadRow } from "@/lib/types";
@@ -62,7 +63,9 @@ export function LeadsTable() {
             {leads.map((lead) => (
               <tr key={lead.id} className="bg-white">
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-950">{lead.business_name}</div>
+                  <Link className="font-medium text-sky-700 underline-offset-2 hover:underline" href={`/leads/${lead.id}`}>
+                    {lead.business_name}
+                  </Link>
                   <div className="mt-1 max-w-72 truncate text-xs text-slate-500">{lead.address ?? "No address"}</div>
                 </td>
                 <td className="px-4 py-3 text-slate-700">{lead.city}</td>
