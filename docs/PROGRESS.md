@@ -7,6 +7,10 @@
 - Created the Task 4 monorepo skeleton.
 - Added corrected schema columns to the spec and `agents/scripts/setup_supabase.sql`.
 - Dashboard dependencies were resolved and installed locally for validation.
+- Implemented Task 8 Nemotron client in `agents/shared/nemotron_client.py`.
+- Implemented Task 9 Supabase dataclasses and helper functions.
+- Implemented Task 10 action logger in `agents/shared/logger.py`.
+- Implemented Task 11 outbound Discord webhook bridge in `agents/shared/discord_bridge.py`.
 
 ## Spec Consistency Check
 
@@ -41,10 +45,10 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [ ] Task 5: Vercel project.
 - [ ] Task 6: Apify test scrape.
 - [ ] Task 7: Discord setup.
-- [ ] Task 8: Nemotron client.
-- [ ] Task 9: Supabase client and helpers.
-- [ ] Task 10: Action logger.
-- [ ] Task 11: Discord outbound bridge.
+- [x] Task 8: Nemotron client.
+- [x] Task 9: Supabase client and helpers.
+- [x] Task 10: Action logger.
+- [x] Task 11: Discord outbound bridge.
 - [ ] Task 12: Scout `scrape_leads`.
 - [ ] Task 13: Scout `score_website`.
 - [ ] Task 14: Scout `extract_pain_points`.
@@ -108,12 +112,52 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd install --ignore-scripts` passed.
 - `npm.cmd run typecheck` passed.
 - `npm.cmd run build` passed.
+- `python -m compileall agents/shared/nemotron_client.py` passed.
+- `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
+- `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
+- `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.
+- Helper signatures for Task 9 were validated with `inspect.signature`.
+- `Lead.from_row(...)` sample conversion passed.
+- `python -m compileall agents/shared/logger.py` passed.
+- Logger signatures were validated with `inspect.signature`.
+- Logger direct call and context manager behavior were validated with a fake `insert_action`.
+- `python -m compileall agents/shared/discord_bridge.py` passed.
+- `python -m agents.shared.discord_bridge` skipped the live webhook smoke test because `DISCORD_WEBHOOK_URL` is not set.
+- Discord payload truncation and embed formatting were validated locally.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
-## TASK 8 Blockers
+## TASK 8 Runtime Blockers
 
+- Install Python dependencies with `pip install -r agents/requirements.txt` before live smoke testing.
 - Need working NemoClaw/OpenShell inference route or direct NVIDIA fallback URL.
 - Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and either routed credentials or `NVIDIA_API_KEY`.
-- Need confirmation whether the NemoClaw gateway accepts a placeholder API key such as `openshell`.
-- Need to know whether `nvidia/nemotron-3-super-120b-a12b` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
+- Need confirmation whether the NemoClaw gateway accepts placeholder API key `openshell`.
+- Need to verify whether `nvidia/nemotron-3-super-120b-a12b` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
+
+## TASK 9 Runtime Blockers
+
+- Install Python dependencies with `pip install -r agents/requirements.txt` before live Supabase calls.
+- Need Supabase project URL, anon key, and service role key in `.env`.
+- Need Task 3 schema applied successfully, including `leads.email`, `leads.review_texts`, and `outreach.to_address`.
+- Need confirmation that Supabase Realtime publication includes the required tables.
+- Need at least one test lead row to validate claim helpers like `claim_lead_for_designer`.
+
+## TASK 10 Runtime Blockers
+
+- Live logger validation still needs Supabase credentials and applied schema.
+- Local console output needed UTF-8 when printing emoji logs from PowerShell.
+- Context-manager failures now write `failed` actions and re-raise the original exception.
+- Emoji/log-prefix mapping is Scout `🔍`, Designer `🎨`, Pitcher `✉️`, Closer `📞`.
+
+## TASK 11 Runtime Blockers
+
+- Need `DISCORD_WEBHOOK_URL` in `.env` to validate outbound posts.
+- Need Discord webhook/channel created from Task 7.
+- Discord failures currently print readable console logs and raise to the calling claw.
+
+## TASK 12 Blockers
+
+- Need `APIFY_TOKEN` in `.env`.
+- Need the Apify actor name and input shape verified against the live account.
+- Need Supabase credentials/schema ready so scraped leads can be inserted and deduped.
