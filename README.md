@@ -1,17 +1,17 @@
-# Mainstreet
+# Santa Claws
 
-Mainstreet is a 24-hour hackathon build for a four-claw autonomous sales team powered by NemoClaw, Nemotron, Supabase, and a live Next.js dashboard.
+Santa Claws is a 24-hour hackathon build for a four-claw autonomous sales workshop powered by NemoClaw, Nemotron, Supabase, and a live Next.js dashboard.
 
-The demo target is auto repair shops in Santa Cruz County. The system finds local businesses with weak or missing websites, generates redesign mockups, drafts personalized outreach, routes approvals through Discord, and handles interested replies through the Closer claw.
+The demo target is auto repair shops in Santa Cruz County. The system finds local businesses with weak or missing websites, generates redesign mockups, drafts personalized outreach, routes approvals through Discord, and handles interested replies through the Santa Claws closer agent.
 
 ## Current State
 
 The repo has the core demo pipeline implemented through Section 10 Task 41 of the execution spec:
 
-- Scout tools and heartbeat for scraping, website scoring, and review pain extraction.
-- Designer tools and heartbeat for generating three mockup variants, self-critiquing, picking a winner, and deploying via Vercel or Supabase Storage fallback.
-- Pitcher tools and heartbeat for generating four email angles, self-critiquing, queuing approval, and sending through Resend.
-- Closer tools and heartbeat for classifying inbound replies, proposing meeting times, drafting replies, and booking Google Calendar meetings or demo fallback meetings.
+- Rudolph Scout tools and heartbeat for scraping, website scoring, and review pain extraction.
+- Workshop Elves tools and heartbeat for generating mockup variants, self-critiquing, picking a winner, and deploying via Vercel or Supabase Storage fallback.
+- Snowball Pitcher tools and heartbeat for generating email angles, self-critiquing, queuing approval, and sending through Resend.
+- Cookie Closer tools and heartbeat for classifying inbound replies, proposing meeting times, drafting replies, and booking Google Calendar meetings or demo fallback meetings.
 - Supabase schema, shared client helpers, action logger, dataclasses, memory updater, and demo data seeder.
 - Next.js dashboard with metrics, leads table, activity feed, lead detail pages, and inbound email webhook.
 - Start/stop scripts for running all claws locally.
@@ -28,13 +28,13 @@ The claws do not call each other directly. Supabase is the queue, the shared mem
 
 Happy path for one lead:
 
-1. Scout finds and qualifies an auto repair lead.
-2. Designer creates mockup variants and picks the best redesign.
-3. Pitcher drafts and critiques outreach, then queues it for approval.
+1. Rudolph Scout finds and qualifies an auto repair lead.
+2. The Workshop Elves create mockup variants and pick the best redesign.
+3. Snowball Pitcher drafts and critiques outreach, then queues it for approval.
 4. A human approves in Discord, or `AUTONOMOUS_MODE=true` auto-approves.
-5. Pitcher sends the email through Resend.
+5. Snowball Pitcher sends the email through Resend.
 6. Inbound replies land in Supabase.
-7. Closer classifies the reply, proposes times, drafts a response, and books a meeting.
+7. Cookie Closer classifies the reply, proposes times, drafts a response, and books a meeting.
 
 ## Repository Layout
 
@@ -63,10 +63,10 @@ Important docs:
 
 ```text
 NemoClaw / OpenShell sandbox
-  |-- Scout claw
-  |-- Designer claw
-  |-- Pitcher claw
-  `-- Closer claw
+  |-- Rudolph Scout
+  |-- Workshop Elves
+  |-- Snowball Pitcher
+  `-- Cookie Closer
         |
         v
 Python tool layer

@@ -43,9 +43,9 @@ export function LeadsTable() {
   }, []);
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold tracking-normal text-slate-950">Leads</h2>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold tracking-normal text-slate-950">Nice List Leads</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-left text-sm">
@@ -56,7 +56,7 @@ export function LeadsTable() {
               <th className="px-4 py-3 font-semibold">Website</th>
               <th className="px-4 py-3 font-semibold">Score</th>
               <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Pipeline</th>
+              <th className="px-4 py-3 font-semibold">Workshop</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -90,7 +90,7 @@ export function LeadsTable() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-700">
-                  <span>{lead.worked_by_designer ? "Designer done" : "Designer waiting"}</span>
+                  <span>{lead.worked_by_designer ? "Elves done" : "Elves waiting"}</span>
                   <span className="mx-2 text-slate-300">/</span>
                   <span>{lead.worked_by_pitcher ? "Pitcher done" : "Pitcher waiting"}</span>
                 </td>
@@ -99,7 +99,7 @@ export function LeadsTable() {
             {leads.length === 0 && (
               <tr>
                 <td className="px-4 py-10 text-center text-sm text-slate-500" colSpan={6}>
-                  {error ?? "No leads yet."}
+                  {error ?? "No shops on the nice list yet."}
                 </td>
               </tr>
             )}

@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { mergeActions, subscribeToActions, unsubscribeFromActions } from "@/lib/realtime";
 import { fetchRecentActions } from "@/lib/supabase";
+import { santaAgent } from "@/lib/santa-branding";
 import type { ActionRow, ClawName } from "@/lib/types";
 
 const clawDotClasses: Record<string, string> = {
-  scout: "bg-teal-500",
-  designer: "bg-amber-500",
-  pitcher: "bg-rose-500",
-  closer: "bg-violet-500",
+  scout: "bg-red-500",
+  designer: "bg-emerald-500",
+  pitcher: "bg-sky-400",
+  closer: "bg-amber-500",
 };
 
 const statusClasses: Record<string, string> = {
@@ -73,10 +74,10 @@ export function ActivityFeed() {
   }, []);
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold tracking-normal text-slate-950">Live Activity</h2>
-        <span className="text-xs font-medium text-slate-500">{actions.length} rows</span>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold tracking-normal text-slate-950">Workshop Activity</h2>
+        <span className="text-xs font-medium text-slate-500">{actions.length} logs</span>
       </div>
       <div className="max-h-[560px] overflow-y-auto">
         {actions.map((action) => (
@@ -85,7 +86,7 @@ export function ActivityFeed() {
               <div className="flex min-w-0 items-center gap-2">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(action.claw_name)}`} />
                 <span className="truncate text-xs font-semibold uppercase tracking-normal text-slate-500">
-                  {action.claw_name}
+                  {santaAgent(action.claw_name).shortName}
                 </span>
               </div>
               <time className="shrink-0 text-xs text-slate-400">{formatTime(action.started_at)}</time>
@@ -103,7 +104,7 @@ export function ActivityFeed() {
         ))}
         {actions.length === 0 && (
           <div className="px-4 py-10 text-center text-sm text-slate-500">
-            {error ?? "No actions yet."}
+            {error ?? "The workshop is quiet for now."}
           </div>
         )}
       </div>

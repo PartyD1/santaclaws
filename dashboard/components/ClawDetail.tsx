@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { fetchClawDetail, hasSupabaseConfig, supabaseConfigMessage } from "@/lib/supabase";
+import { santaAgent } from "@/lib/santa-branding";
 import type {
   ActionRow,
   AgentMemoryRow,
@@ -17,33 +18,6 @@ import type {
 
 type ClawDetailProps = {
   clawName: ClawName;
-};
-
-const clawMeta: Record<string, { title: string; cadenceSeconds: number; focus: string; accent: string }> = {
-  scout: {
-    title: "Scout Claw",
-    cadenceSeconds: 60,
-    focus: "Finds businesses, scores websites, extracts pain points, and qualifies leads.",
-    accent: "bg-teal-500",
-  },
-  designer: {
-    title: "Designer Claw",
-    cadenceSeconds: 60,
-    focus: "Builds mockup variants, critiques them, picks a winner, and publishes it.",
-    accent: "bg-amber-500",
-  },
-  pitcher: {
-    title: "Pitcher Claw",
-    cadenceSeconds: 60,
-    focus: "Drafts outreach angles, critiques them, and queues the best email.",
-    accent: "bg-rose-500",
-  },
-  closer: {
-    title: "Closer Claw",
-    cadenceSeconds: 30,
-    focus: "Classifies replies, proposes times, drafts responses, and books meetings.",
-    accent: "bg-violet-500",
-  },
 };
 
 const emptyDetail = (clawName: ClawName): ClawDetailData => ({
@@ -117,9 +91,9 @@ function EmptyState({ label }: { label: string }) {
 
 function ActionTimeline({ actions }: { actions: ActionRow[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-slate-950">Live Action Log</h2>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold text-slate-950">Workshop Log</h2>
         <span className="text-xs font-medium text-slate-500">{actions.length} rows</span>
       </div>
       <div className="max-h-[620px] overflow-y-auto">
@@ -142,7 +116,7 @@ function ActionTimeline({ actions }: { actions: ActionRow[] }) {
             </div>
           </article>
         ))}
-        {actions.length === 0 && <EmptyState label="No actions for this claw yet." />}
+        {actions.length === 0 && <EmptyState label="No workshop logs for this agent yet." />}
       </div>
     </section>
   );
@@ -150,9 +124,9 @@ function ActionTimeline({ actions }: { actions: ActionRow[] }) {
 
 function MemoryPanel({ memory, warnings }: { memory: AgentMemoryRow[]; warnings: string[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-slate-950">Persistent Memory</h2>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold text-slate-950">North Pole Memory</h2>
       </div>
       <div className="space-y-3 p-4">
         {warnings.map((warning) => (
@@ -176,8 +150,8 @@ function MemoryPanel({ memory, warnings }: { memory: AgentMemoryRow[]; warnings:
 
 function LeadsPanel({ leads, title }: { leads: LeadRow[]; title: string }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="border-b border-red-100 px-4 py-3">
         <h2 className="text-base font-semibold text-slate-950">{title}</h2>
       </div>
       <div className="divide-y divide-slate-100">
@@ -192,7 +166,7 @@ function LeadsPanel({ leads, title }: { leads: LeadRow[]; title: string }) {
               </span>
             </div>
             <p className="mt-1 text-sm text-slate-600">
-              Score {lead.website_score ?? "-"} / Designer {lead.worked_by_designer ? "done" : "waiting"} / Pitcher{" "}
+              Score {lead.website_score ?? "-"} / Elves {lead.worked_by_designer ? "done" : "waiting"} / Pitcher{" "}
               {lead.worked_by_pitcher ? "done" : "waiting"}
             </p>
           </article>
@@ -205,9 +179,9 @@ function LeadsPanel({ leads, title }: { leads: LeadRow[]; title: string }) {
 
 function GeneratedSitesPanel({ sites }: { sites: GeneratedSiteRow[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-slate-950">Generated Mockups</h2>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold text-slate-950">Wrapped Website Gifts</h2>
       </div>
       <div className="divide-y divide-slate-100">
         {sites.map((site) => (
@@ -224,12 +198,12 @@ function GeneratedSitesPanel({ sites }: { sites: GeneratedSiteRow[] }) {
             </p>
             {(site.vercel_url || site.storage_url) && (
               <a className="mt-2 inline-block text-sm font-medium text-sky-700 hover:underline" href={site.vercel_url ?? site.storage_url ?? "#"} target="_blank" rel="noreferrer">
-                open mockup
+                open website
               </a>
             )}
           </article>
         ))}
-        {sites.length === 0 && <EmptyState label="No generated mockups yet." />}
+        {sites.length === 0 && <EmptyState label="No website gifts wrapped yet." />}
       </div>
     </section>
   );
@@ -237,9 +211,9 @@ function GeneratedSitesPanel({ sites }: { sites: GeneratedSiteRow[] }) {
 
 function OutreachPanel({ outreach }: { outreach: OutreachRow[] }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-slate-950">Outreach Drafts</h2>
+    <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+      <div className="border-b border-red-100 px-4 py-3">
+        <h2 className="text-base font-semibold text-slate-950">Letters To Deliver</h2>
       </div>
       <div className="divide-y divide-slate-100">
         {outreach.map((item) => (
@@ -255,7 +229,7 @@ function OutreachPanel({ outreach }: { outreach: OutreachRow[] }) {
             </p>
           </article>
         ))}
-        {outreach.length === 0 && <EmptyState label="No outreach drafts yet." />}
+        {outreach.length === 0 && <EmptyState label="No letters drafted yet." />}
       </div>
     </section>
   );
@@ -264,9 +238,9 @@ function OutreachPanel({ outreach }: { outreach: OutreachRow[] }) {
 function CloserPanel({ inbound, meetings }: { inbound: InboundRow[]; meetings: MeetingRow[] }) {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
-      <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-950">Inbound Replies</h2>
+      <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+        <div className="border-b border-red-100 px-4 py-3">
+          <h2 className="text-base font-semibold text-slate-950">Warm Replies</h2>
         </div>
         <div className="divide-y divide-slate-100">
           {inbound.map((item) => (
@@ -283,9 +257,9 @@ function CloserPanel({ inbound, meetings }: { inbound: InboundRow[]; meetings: M
           {inbound.length === 0 && <EmptyState label="No inbound replies yet." />}
         </div>
       </section>
-      <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-950">Meetings</h2>
+      <section className="rounded-lg border border-red-100 bg-white shadow-sm">
+        <div className="border-b border-red-100 px-4 py-3">
+          <h2 className="text-base font-semibold text-slate-950">Sleigh Stops</h2>
         </div>
         <div className="divide-y divide-slate-100">
           {meetings.map((meeting) => (
@@ -310,7 +284,7 @@ function WorkPanel({ detail }: { detail: ClawDetailData }) {
   if (detail.clawName === "designer") {
     return (
       <div className="grid gap-5 xl:grid-cols-2">
-        <LeadsPanel leads={detail.leads} title="Designer Queue" />
+        <LeadsPanel leads={detail.leads} title="Elf Workshop Queue" />
         <GeneratedSitesPanel sites={detail.generatedSites} />
       </div>
     );
@@ -318,7 +292,7 @@ function WorkPanel({ detail }: { detail: ClawDetailData }) {
   if (detail.clawName === "pitcher") {
     return (
       <div className="grid gap-5 xl:grid-cols-2">
-        <LeadsPanel leads={detail.leads} title="Pitcher Queue" />
+        <LeadsPanel leads={detail.leads} title="Snowball Pitch Queue" />
         <OutreachPanel outreach={detail.outreach} />
       </div>
     );
@@ -358,12 +332,7 @@ export function ClawDetail({ clawName }: ClawDetailProps) {
     };
   }, [clawName]);
 
-  const meta = clawMeta[String(clawName)] ?? {
-    title: `${String(clawName)} Claw`,
-    cadenceSeconds: 60,
-    focus: "NemoClaw runtime worker.",
-    accent: "bg-slate-500",
-  };
+  const meta = santaAgent(clawName);
   const latest = detail.actions[0];
   const status = useMemo(() => deriveStatus(latest, meta.cadenceSeconds), [latest, meta.cadenceSeconds]);
 
@@ -377,15 +346,15 @@ export function ClawDetail({ clawName }: ClawDetailProps) {
 
   return (
     <div className="space-y-5">
-      <header className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        <Link className="text-sm font-medium text-sky-700 hover:underline" href="/">
-          Back to dashboard
+      <header className="rounded-lg border border-red-100 bg-white p-5 shadow-sm">
+        <Link className="text-sm font-medium text-red-700 hover:underline" href="/">
+          Back to Santa Claws
         </Link>
         <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-start">
           <div>
             <div className="flex items-center gap-2">
               <span className={`h-3 w-3 rounded-full ${meta.accent}`} />
-              <p className="text-xs font-semibold uppercase text-slate-500">{clawName}</p>
+              <p className="text-xs font-semibold uppercase text-slate-500">{meta.role}</p>
             </div>
             <h1 className="mt-1 text-3xl font-semibold tracking-normal text-slate-950">{meta.title}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{meta.focus}</p>
@@ -399,7 +368,7 @@ export function ClawDetail({ clawName }: ClawDetailProps) {
           </div>
           <div>
             <p className="text-xs text-slate-500">Cadence</p>
-            <p className="mt-1 text-lg font-semibold text-slate-950">{meta.cadenceSeconds}s</p>
+            <p className="mt-1 text-lg font-semibold text-slate-950">{meta.cadence}</p>
           </div>
           <div>
             <p className="text-xs text-slate-500">Recent Actions</p>

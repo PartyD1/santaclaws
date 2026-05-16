@@ -44,6 +44,7 @@
 - Updated Designer one-variant MVP mode to rotate between `clean_modern`, `retro_local`, and `premium` per business instead of always generating `clean_modern`; fallback winner now avoids clean-modern tie bias.
 - Restored Vercel-first mockup URL storage so Designer keeps Vercel deployment links instead of rejecting protected links and falling back to Supabase Storage.
 - Updated Vercel mockup deployment to use one stable project via `VERCEL_PROJECT_ID` or `VERCEL_PROJECT_NAME` instead of creating one project per generated website.
+- Rebranded the visible product and dashboard UI from Mainstreet to Santa Claws, with festive agent names: Rudolph Scout, Workshop Elves, Snowball Pitcher, and Cookie Closer.
 
 ## Spec Consistency Check
 
