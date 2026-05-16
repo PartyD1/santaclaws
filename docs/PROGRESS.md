@@ -517,3 +517,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
 - Validation: local smoke checks confirmed normal and spaced Vercel links preserve the full `https://santa-claws-leq3l8zo2-varad-patwas-projects.vercel.app` format.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:59 PDT — Truncated Vercel Link Repair
+
+- Extended Pitcher cleanup to replace links truncated at `.vercel.` with the exact stored mockup URL.
+- Added cleanup for spaced decimal ratings such as `4. 9-star`.
+- Removed punctuation immediately after mockup URLs so mail clients do not include it in the link.
+- Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
+- Validation: local smoke check repaired the exact truncated `https://santa-claws-8k1c1migm-varad-patwas-projects. vercel.` body into the full `.vercel.app` URL.
+- Validation: `git diff --check` passed.
