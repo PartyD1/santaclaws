@@ -57,7 +57,12 @@ def _safe_discord(content: str) -> None:
 def _finish(summary: dict[str, Any]) -> dict[str, Any]:
     """Run best-effort end-of-heartbeat memory update."""
 
-    memory_updater.maybe_update_memory("closer", summary)
+    try:
+        memory_result = memory_updater.maybe_update_memory("closer", summary)
+        summary["memory_update"] = memory_result.get("status")
+    except Exception as exc:  # pragma: no cover - defensive demo guard.
+        summary["memory_update"] = "failed"
+        print(f"Closer memory update skipped: {exc}")
     return summary
 
 
@@ -79,14 +84,39 @@ def _lead_id(inbound: dict[str, Any]) -> str | None:
     return None if value is None else str(value)
 
 
-def _mark_handled(inbound_id: str, classification: str, summary: dict[str, Any]) -> None:
+def _mark_handled(inbound_id: str, classification: str, summary: dict[str, Any]) -> bool:
     """Mark an inbound row handled and record any failure in the summary."""
 
     try:
-        mark_inbound_handled(inbound_id, classification, "closer")
+        handled = mark_inbound_handled(inbound_id, classification, "closer")
+        summary["handled"] = handled
+        if not handled:
+            _safe_log(
+                "mark_inbound_handled",
+                "skipped",
+                "inbound was already handled before Closer could claim it.",
+                {"inbound_id": inbound_id, "classification": classification},
+            )
+        return handled
     except Exception as exc:
         summary["errors"].append(f"mark handled failed: {exc}")
         _safe_log("mark_inbound_handled", "failed", f"could not mark inbound handled: {exc}", {"error": str(exc)})
+        return False
+
+
+def _update_classification_fields(inbound_id: str, result: dict[str, Any], summary: dict[str, Any]) -> None:
+    """Write classification fields when Closer uses a heartbeat-level fallback."""
+
+    payload = {
+        "classification": result.get("classification") or "uncertain",
+        "classification_confidence": int(result.get("confidence") or 0),
+        "classification_key_phrase": str(result.get("key_phrase") or "")[:200],
+    }
+    try:
+        get_client().table("inbound").update(payload).eq("id", inbound_id).is_("handled_at", "null").execute()
+    except Exception as exc:
+        summary["errors"].append(f"classification update failed: {exc}")
+        _safe_log("classify_reply", "failed", f"could not update inbound classification: {exc}", {"error": str(exc)})
 
 
 def _set_do_not_contact(lead_id: str | None, summary: dict[str, Any]) -> None:
@@ -165,6 +195,7 @@ def heartbeat() -> dict[str, Any]:
         "lead_id": None,
         "classification": None,
         "branch_result": None,
+        "handled": None,
         "errors": [],
     }
     _safe_log("heartbeat", "started", "heartbeat started.", summary)
@@ -189,6 +220,11 @@ def heartbeat() -> dict[str, Any]:
     summary["lead_id"] = lead_id
 
     if inbound.get("channel") not in {"email", "voice"}:
+        _update_classification_fields(
+            inbound_id,
+            {"classification": "spam", "confidence": 90, "key_phrase": "unsupported inbound channel"},
+            summary,
+        )
         _mark_handled(inbound_id, "spam", summary)
         summary["classification"] = "spam"
         summary["branch_result"] = {"next_step": "unsupported inbound channel ignored"}
@@ -197,32 +233,46 @@ def heartbeat() -> dict[str, Any]:
 
     classification_result = classify_reply.run(inbound_id)
     if classification_result.get("_status") == "failed" or classification_result.get("error"):
-        summary["errors"].append(str(classification_result.get("error")))
-        summary["classification"] = "uncertain"
-        branch_result = _handle_uncertain(inbound, "uncertain", summary)
+        summary["classification_fallback_reason"] = str(
+            classification_result.get("error") or "classification tool failed"
+        )
+        reply_text = str(inbound.get("raw_content") or inbound.get("transcript") or "")
+        classification_result = classify_reply.fallback_classification(
+            reply_text,
+            str(summary["classification_fallback_reason"]),
+        )
+        _update_classification_fields(inbound_id, classification_result, summary)
+
+    classification = str(classification_result.get("classification") or "uncertain")
+    summary["classification"] = classification
+    if classification == "interested":
+        branch_result = _handle_interested(inbound, classification, summary)
+    elif classification in {"has_question", "has_objection"}:
+        branch_result = _handle_question_or_objection(inbound, classification, summary)
+    elif classification in {"not_interested", "spam"}:
+        branch_result = _handle_terminal(inbound, classification, summary)
     else:
-        classification = str(classification_result.get("classification") or "uncertain")
-        summary["classification"] = classification
-        if classification == "interested":
-            branch_result = _handle_interested(inbound, classification, summary)
-        elif classification in {"has_question", "has_objection"}:
-            branch_result = _handle_question_or_objection(inbound, classification, summary)
-        elif classification in {"not_interested", "spam"}:
-            branch_result = _handle_terminal(inbound, classification, summary)
-        else:
-            branch_result = _handle_uncertain(inbound, "uncertain", summary)
+        branch_result = _handle_uncertain(inbound, "uncertain", summary)
 
     summary["branch_result"] = branch_result
-    _surface_summary(inbound, str(summary["classification"]), branch_result)
+    if summary.get("handled") is not False:
+        _surface_summary(inbound, str(summary["classification"]), branch_result)
     final_status = "succeeded" if not summary["errors"] else "failed"
+    final_message = f"handled inbound reply as {summary['classification']}."
+    if summary.get("handled") is False:
+        final_status = "skipped"
+        final_message = "skipped inbound reply because it was already handled."
     _safe_log(
         "heartbeat",
         final_status,
-        f"handled inbound reply as {summary['classification']}.",
+        final_message,
         summary,
         lead_id,
     )
-    print(f"Closer heartbeat handled inbound {inbound_id} as {summary['classification']}.")
+    if summary.get("handled") is False:
+        print(f"Closer heartbeat skipped inbound {inbound_id}; it was already handled.")
+    else:
+        print(f"Closer heartbeat handled inbound {inbound_id} as {summary['classification']}.")
     return _finish(summary)
 
 

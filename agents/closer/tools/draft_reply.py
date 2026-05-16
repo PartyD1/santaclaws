@@ -114,7 +114,7 @@ def run(inbound_id: UUID | str, branch: str, meeting_times: list[str] | None = N
                 retries=1,
             )
             result: dict[str, Any] = _normalize(payload)
-        except (nemotron_client.NemotronClientError, ValueError) as exc:
+        except Exception as exc:
             result = _fallback_reply(branch, lead, meeting_times, str(exc))
 
         _safe_log("draft_reply", "succeeded", f"drafted {branch} reply.", lead_id, result)

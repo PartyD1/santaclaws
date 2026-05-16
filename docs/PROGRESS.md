@@ -354,6 +354,38 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.
 - Need run the rate-limit check in an environment with installed Python dependencies and real Nemotron/Apify credentials.
 
+## Full Local Validation - 2026-05-16
+
+- Git status was clean at validation start on `main` tracking `origin/main`; recent commits included placeholder replacement, Vapi stretch, demo runbook polish, memory/demo scripts, and quality upgrades.
+- Python import sweep passed for `agents`, `integrations`, and `workers`.
+- `python -m compileall agents integrations workers` passed.
+- Claw one-shot checks passed without crashing:
+  - `python -m agents.scout.claw --once`
+  - `python -m agents.designer.claw --once`
+  - `python -m agents.pitcher.claw --once`
+  - `python -m agents.closer.claw --once`
+- The claws failed gracefully because local runtime dependencies and live credentials are not configured.
+- `python -m agents.scripts.rate_limit_check --nemotron-rounds 1 --skip-apify` failed clearly because the local `openai` package is missing.
+- `python -m agents.scripts.seed_demo_data --clear` failed clearly because the local `supabase` package is missing.
+- `python -m agents.integrations.vapi_client` skipped clearly because `VAPI_WEBHOOK_URL` is not configured.
+- Dashboard validation passed:
+  - `npm.cmd install --ignore-scripts`
+  - `npm.cmd run typecheck`
+  - `npm.cmd run build`
+- Dashboard build emitted non-fatal webpack cache snapshot warnings.
+- npm still reports 2 audit findings: 1 moderate and 1 high. No package upgrades were applied during validation.
+
+## Full Local Validation Blockers - 2026-05-16
+
+- Install Python dependencies with `pip install -r agents/requirements.txt`. Missing locally: `openai`, `supabase`, `httpx`, `playwright`, Discord, Google API, and dotenv packages.
+- Configure Supabase env values: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Apply the Supabase schema and seed demo rows before rehearsal.
+- Configure Nemotron/NemoClaw env values: `NVIDIA_API_KEY`, `NEMOTRON_BASE_URL`, and `NEMOTRON_MODEL`.
+- Configure live integration keys as needed for the demo path: `APIFY_TOKEN`, `RESEND_API_KEY`, `OUTREACH_FROM_ADDRESS`, `VERCEL_TOKEN`, `DISCORD_WEBHOOK_URL`, and Google Calendar OAuth values.
+- Run `playwright install chromium` before screenshot-based Designer validation.
+- Use Git Bash, WSL, or NemoClaw shell for `agents/scripts/start_all_claws.sh` and `agents/scripts/stop_all_claws.sh`.
+- Configure Vapi stretch values only if voice is included: `VAPI_API_KEY`, `VAPI_PHONE_NUMBER`, and `VAPI_WEBHOOK_URL`.
+
 ## Repo Audit Findings - 2026-05-16
 
 - Section 10 Tasks 0-3 and 5-7 remain manual/live-environment incomplete: NemoClaw onboarding, rate-limit run with real credentials, Resend DNS/domain verification, Supabase cloud schema/bucket application, Vercel project, Apify live scrape, and Discord setup.
