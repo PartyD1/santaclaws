@@ -99,11 +99,11 @@ def _lead_to_dict(lead: Lead) -> dict[str, Any]:
 
 
 def _mockup_url(mockup: dict[str, Any] | None) -> str | None:
-    """Return the public URL for a generated mockup row."""
+    """Return the exact Vercel URL for a generated mockup row."""
 
     if not mockup:
         return None
-    return mockup.get("vercel_url") or mockup.get("storage_url")
+    return mockup.get("vercel_url")
 
 
 def _select_best(candidates: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -262,8 +262,8 @@ def heartbeat() -> dict[str, Any]:
     summary["business_name"] = lead.get("business_name")
     mockup_url = _mockup_url(work.get("mockup"))
     if not mockup_url:
-        summary["errors"].append("missing mockup URL")
-        _safe_log("fetch_mockup", "skipped", f"{lead.get('business_name')} has no public mockup URL.", summary, lead_id)
+        summary["errors"].append("missing Vercel mockup URL")
+        _safe_log("fetch_mockup", "skipped", f"{lead.get('business_name')} has no Vercel mockup URL.", summary, lead_id)
         return _finish(summary)
 
     try:

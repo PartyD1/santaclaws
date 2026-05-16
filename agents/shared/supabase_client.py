@@ -258,7 +258,7 @@ def next_pitcher_lead() -> dict[str, Any] | None:
             )
             site_row = _first(fallback_response)
 
-        if site_row:
+        if site_row and str(site_row.get("vercel_url") or "").strip():
             return {"lead": Lead.from_row(lead_row), "mockup": site_row}
 
     return None

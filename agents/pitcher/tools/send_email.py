@@ -40,12 +40,12 @@ def _first_row(response: Any) -> dict[str, Any] | None:
 
 
 def _fetch_mockup_url(lead_id: str) -> str | None:
-    """Return the latest public mockup URL for a lead when available."""
+    """Return the latest exact Vercel mockup URL for a lead when available."""
 
     response = (
         get_client()
         .table("generated_sites")
-        .select("vercel_url, storage_url")
+        .select("vercel_url")
         .eq("lead_id", lead_id)
         .order("generated_at", desc=True)
         .limit(1)
@@ -54,7 +54,7 @@ def _fetch_mockup_url(lead_id: str) -> str | None:
     row = _first_row(response)
     if not row:
         return None
-    return row.get("vercel_url") or row.get("storage_url")
+    return row.get("vercel_url")
 
 
 def _plain_text_to_html(text: str, lead: dict[str, Any], mockup_url: str | None = None) -> str:

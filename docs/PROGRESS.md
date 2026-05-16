@@ -535,3 +535,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
 - Validation: local smoke checks confirmed the real URL is absent from prompts and exact in saved bodies.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:13 PDT — Vercel-Only Email Links
+
+- Updated Pitcher to use only the `generated_sites.vercel_url` cell for outreach mockup links.
+- Removed email fallback to `storage_url` / HTML storage links.
+- Updated Pitcher lead selection to skip generated-site rows unless `vercel_url` is present.
+- Validation: `python -m compileall agents/pitcher/claw.py agents/pitcher/tools/send_email.py agents/shared/supabase_client.py agents/pitcher/tools/generate_email.py` passed.
+- Validation: local smoke check confirmed Pitcher ignores `storage_url` when `vercel_url` is missing and pastes the exact Vercel URL when present.
+- Validation: `git diff --check` passed.
