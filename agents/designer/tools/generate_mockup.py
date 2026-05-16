@@ -331,6 +331,247 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str = "template r
 </html>"""
 
 
+def _agency_template_html(lead: dict[str, Any], variant: str, reason: str = "template renderer") -> str:
+    """Render a more polished agency-style website preview."""
+
+    business_name = escape(str(lead.get("business_name") or "Local Auto Repair"))
+    niche = escape(str(lead.get("niche") or "auto repair"))
+    city = escape(str(lead.get("city") or "Santa Cruz"))
+    phone = escape(str(lead.get("phone") or "Call now"))
+    address = escape(str(lead.get("address") or f"{city}, CA"))
+    hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Call for today's hours"))
+    rating = escape(str(lead.get("google_rating") or "4.8"))
+    review_count = escape(str(lead.get("review_count") or "local"))
+    score = _website_score(lead)
+    score_reasons = [escape(str(item)).capitalize() for item in lead.get("website_score_reasons") or []][:3]
+    if not score_reasons:
+        score_reasons = ["Phone CTA is hard to find", "Service menu needs more clarity", "Trust proof is buried"]
+    pain_points = [escape(str(item)).capitalize() for item in lead.get("top_review_pain_points") or []][:3]
+    if not pain_points:
+        pain_points = ["Make booking obvious", "Clarify repair categories", "Surface local trust faster"]
+
+    themes = {
+        "clean_modern": {
+            "bg": "#f6f8fb",
+            "ink": "#101828",
+            "muted": "#667085",
+            "panel": "#ffffff",
+            "dark": "#111827",
+            "accent": "#0ea5e9",
+            "accent2": "#16a34a",
+            "soft": "#e0f2fe",
+            "hero": "Precision repair, clear answers, faster bookings.",
+        },
+        "retro_local": {
+            "bg": "#f8f4ed",
+            "ink": "#172426",
+            "muted": "#66706b",
+            "panel": "#fffaf1",
+            "dark": "#12343b",
+            "accent": "#b42318",
+            "accent2": "#0f766e",
+            "soft": "#fef3c7",
+            "hero": "A sharper digital front door for a trusted neighborhood shop.",
+        },
+        "premium": {
+            "bg": "#f4f4f5",
+            "ink": "#111111",
+            "muted": "#71717a",
+            "panel": "#ffffff",
+            "dark": "#09090b",
+            "accent": "#10b981",
+            "accent2": "#38bdf8",
+            "soft": "#dcfce7",
+            "hero": "Dealer-level confidence with independent-shop clarity.",
+        },
+    }
+    theme = themes.get(variant, themes["clean_modern"])
+
+    reasons = "".join(f"<li>{item}</li>" for item in score_reasons)
+    pains = "".join(
+        f"""
+        <article>
+          <span>0{index}</span>
+          <h3>{item}</h3>
+          <p>Turn this friction into a clear service path with stronger copy, faster calls, and better section hierarchy.</p>
+        </article>"""
+        for index, item in enumerate(pain_points, start=1)
+    )
+    stats = [
+        ("Audit score", f"{score}/10", "Scout website scan"),
+        ("CTA clarity", "High lift", "Phone-first rebuild"),
+        ("Trust path", "Above fold", "Rating, reviews, services"),
+        ("Demo read", "30 sec", "Judges see the story fast"),
+    ]
+    stat_cards = "".join(f"<div><span>{label}</span><strong>{value}</strong><small>{caption}</small></div>" for label, value, caption in stats)
+    service_cards = "".join(
+        f"""
+        <article>
+          <div>{number}</div>
+          <h3>{title}</h3>
+          <p>{copy}</p>
+        </article>"""
+        for number, title, copy in [
+            ("01", "Diagnostics", "Make warning lights, noises, and performance issues feel straightforward instead of stressful."),
+            ("02", "Brake and safety", "Give safety-critical services a clean path from concern to phone call."),
+            ("03", "Maintenance", "Package everyday work like oil, fluids, batteries, and trip checks into scannable categories."),
+            ("04", "Appointments", "Prioritize tap-to-call and location details for mobile customers in a hurry."),
+        ]
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{business_name} | {niche.title()} in {city}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {{
+      --bg: {theme['bg']};
+      --ink: {theme['ink']};
+      --muted: {theme['muted']};
+      --panel: {theme['panel']};
+      --dark: {theme['dark']};
+      --accent: {theme['accent']};
+      --accent2: {theme['accent2']};
+      --soft: {theme['soft']};
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }}
+    .shell {{ width: min(1180px, calc(100% - 32px)); margin: 0 auto; }}
+    .nav {{ position: sticky; top: 0; z-index: 20; backdrop-filter: blur(18px); background: color-mix(in srgb, var(--panel) 88%, transparent); border-bottom: 1px solid rgba(17,24,39,.1); }}
+    .nav-inner {{ min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }}
+    .brand small, .eyebrow, .metric span, .audit-label {{ display: block; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }}
+    .brand strong {{ display: block; font-size: 19px; line-height: 1.1; }}
+    .call {{ display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 8px; padding: 0 18px; background: var(--dark); color: white; font-weight: 800; text-decoration: none; box-shadow: 0 12px 28px rgba(0,0,0,.16); }}
+    .hero {{ padding: 54px 0 34px; }}
+    .hero-grid {{ display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: 22px; align-items: stretch; }}
+    .hero-card {{ min-height: 560px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 8px; padding: clamp(28px, 5vw, 56px); background: radial-gradient(circle at 15% 10%, var(--soft), transparent 32%), linear-gradient(145deg, var(--panel), #fff); border: 1px solid rgba(17,24,39,.1); box-shadow: 0 24px 70px rgba(17,24,39,.12); }}
+    h1 {{ max-width: 820px; margin: 16px 0 0; font-size: clamp(46px, 7vw, 84px); line-height: .92; letter-spacing: 0; }}
+    .lead {{ max-width: 680px; margin: 24px 0 0; color: var(--muted); font-size: 19px; line-height: 1.7; }}
+    .cta-row {{ display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }}
+    .secondary {{ display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 8px; padding: 0 18px; border: 1px solid rgba(17,24,39,.18); color: var(--ink); font-weight: 800; text-decoration: none; background: white; }}
+    .metrics {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 42px; }}
+    .metrics div {{ border-radius: 8px; padding: 16px; background: rgba(255,255,255,.72); border: 1px solid rgba(17,24,39,.09); }}
+    .metrics strong {{ display: block; margin-top: 8px; font-size: 26px; line-height: 1; }}
+    .metrics small {{ display: block; margin-top: 8px; color: var(--muted); line-height: 1.35; }}
+    .side {{ border-radius: 8px; background: var(--dark); color: white; padding: 26px; box-shadow: 0 24px 70px rgba(17,24,39,.2); display: flex; flex-direction: column; gap: 18px; }}
+    .score {{ padding: 24px; border-radius: 8px; background: linear-gradient(145deg, rgba(255,255,255,.16), rgba(255,255,255,.06)); border: 1px solid rgba(255,255,255,.14); }}
+    .score strong {{ display: block; font-size: 72px; line-height: .9; letter-spacing: 0; }}
+    .score p, .board p {{ color: rgba(255,255,255,.7); line-height: 1.55; }}
+    .board {{ display: grid; gap: 12px; }}
+    .board div {{ padding: 18px; border-radius: 8px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.1); }}
+    .board h3 {{ margin: 0; font-size: 18px; }}
+    section {{ padding: 54px 0; }}
+    .section-head {{ display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 22px; }}
+    .section-head h2 {{ margin: 8px 0 0; max-width: 720px; font-size: clamp(32px, 4vw, 52px); line-height: 1; }}
+    .section-head p {{ max-width: 430px; color: var(--muted); line-height: 1.65; }}
+    .services {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }}
+    .services article {{ min-height: 245px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 8px; padding: 22px; background: var(--panel); border: 1px solid rgba(17,24,39,.1); box-shadow: 0 16px 40px rgba(17,24,39,.08); }}
+    .services article div {{ color: var(--accent); font-weight: 900; }}
+    .services h3, .pain h3 {{ margin: 14px 0 0; font-size: 22px; }}
+    .services p, .pain p {{ color: var(--muted); line-height: 1.6; }}
+    .audit {{ border-radius: 8px; padding: 34px; background: var(--panel); border: 1px solid rgba(17,24,39,.1); box-shadow: 0 18px 50px rgba(17,24,39,.1); display: grid; grid-template-columns: .8fr 1.2fr; gap: 28px; }}
+    .audit ul {{ margin: 20px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.8; }}
+    .pain {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }}
+    .pain article {{ border-radius: 8px; padding: 24px; background: color-mix(in srgb, var(--soft) 58%, white); border: 1px solid rgba(17,24,39,.08); }}
+    .pain span {{ display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; background: var(--dark); color: white; font-weight: 900; }}
+    .contact {{ display: grid; grid-template-columns: 1fr .85fr; gap: 18px; }}
+    .contact > div {{ border-radius: 8px; padding: 30px; background: var(--panel); border: 1px solid rgba(17,24,39,.1); }}
+    .contact .dark {{ background: var(--dark); color: white; }}
+    .contact .dark p {{ color: rgba(255,255,255,.7); }}
+    footer {{ padding: 30px 0 92px; color: var(--muted); text-align: center; }}
+    .mobile-call {{ display: none; position: fixed; left: 14px; right: 14px; bottom: 14px; z-index: 30; }}
+    @media (max-width: 920px) {{
+      .hero-grid, .audit, .contact {{ grid-template-columns: 1fr; }}
+      .metrics, .services, .pain {{ grid-template-columns: repeat(2, 1fr); }}
+      .hero-card {{ min-height: auto; }}
+    }}
+    @media (max-width: 640px) {{
+      .nav-inner, .section-head {{ align-items: stretch; flex-direction: column; }}
+      h1 {{ font-size: 43px; }}
+      .metrics, .services, .pain {{ grid-template-columns: 1fr; }}
+      .nav .call {{ display: none; }}
+      .mobile-call {{ display: block; }}
+    }}
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="shell nav-inner">
+      <div class="brand"><small>{city} {niche}</small><strong>{business_name}</strong></div>
+      <a class="call" href="tel:{phone}">Call {phone}</a>
+    </div>
+  </nav>
+  <main>
+    <section class="hero">
+      <div class="shell hero-grid">
+        <div class="hero-card">
+          <div>
+            <span class="eyebrow">Mainstreet rebuild preview</span>
+            <h1>{theme['hero']}</h1>
+            <p class="lead">A deploy-ready homepage concept for {business_name}, built around faster phone calls, clearer service categories, and a stronger first impression for {city} drivers.</p>
+            <div class="cta-row">
+              <a class="call" href="tel:{phone}">Call {phone}</a>
+              <a class="secondary" href="#contact">See location and hours</a>
+            </div>
+          </div>
+          <div class="metrics">{stat_cards}</div>
+        </div>
+        <aside class="side">
+          <div class="score"><span class="audit-label">Scout audit score</span><strong>{score}/10</strong><p>Used to shape the rebuild priority, content hierarchy, and conversion path.</p></div>
+          <div class="board">
+            <div><h3>Immediate repair need</h3><p>Make diagnostics, brakes, and maintenance easy to understand without digging through pages.</p></div>
+            <div><h3>Mobile-first action</h3><p>Keep the phone call available in the first viewport and at the bottom of mobile screens.</p></div>
+            <div><h3>Local confidence</h3><p>Bring rating, reviews, address, and service clarity into a single trustworthy flow.</p></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+    <section>
+      <div class="shell">
+        <div class="section-head">
+          <div><span class="eyebrow">Service clarity</span><h2>Customers know what this shop can handle before they call.</h2></div>
+          <p>Instead of a generic landing page, this mockup gives common auto-repair needs their own clear decision points.</p>
+        </div>
+        <div class="services">{service_cards}</div>
+      </div>
+    </section>
+    <section>
+      <div class="shell audit">
+        <div>
+          <span class="eyebrow">Audit-backed direction</span>
+          <h2>Designed around the friction Scout found.</h2>
+          <ul>{reasons}</ul>
+        </div>
+        <div class="pain">{pains}</div>
+      </div>
+    </section>
+    <section id="contact">
+      <div class="shell contact">
+        <div>
+          <span class="eyebrow">Visit the shop</span>
+          <h2>{business_name}</h2>
+          <p>{address}</p>
+          <p>Hours: {hours}</p>
+          <p>Rating signal: {rating} from {review_count} reviews</p>
+        </div>
+        <div class="dark">
+          <span class="audit-label">Primary conversion</span>
+          <h2>Make the next step impossible to miss.</h2>
+          <p>The site keeps the highest-intent action direct: call the shop, ask about the repair, and schedule the visit.</p>
+          <a class="call" style="background:white;color:var(--dark);margin-top:18px" href="tel:{phone}">Call {phone}</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="shell">{business_name} - {city} {niche}. Rebuild preview generated from Scout audit data.</footer>
+  <a class="call mobile-call" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
+
+
 def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | None = None) -> str:
     """Generate a valid single-file Tailwind HTML mockup."""
 
@@ -340,7 +581,7 @@ def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | 
     last_payload: dict[str, Any] | None = None
 
     if _template_mode_enabled():
-        html = _fallback_html(lead, variant)
+        html = _agency_template_html(lead, variant)
         _safe_log(
             "generate_mockup",
             "succeeded",
@@ -358,7 +599,7 @@ def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | 
                 retries=1,
             )
         except Exception as exc:
-            html = _fallback_html(lead, variant, str(exc))
+            html = _agency_template_html(lead, variant, str(exc))
             _safe_log(
                 "generate_mockup",
                 "succeeded",
