@@ -22,6 +22,16 @@ from agents.shared.supabase_client import DEFAULT_SCOUT_NICHES, DEFAULT_TARGET, 
 
 DEFAULT_SCRAPE_LIMIT = 20
 DEFAULT_PROCESS_LIMIT = 5
+LEGACY_SCOUT_NICHES = {
+    "auto detailing",
+    "dentist",
+    "electrician",
+    "hvac contractor",
+    "landscaper",
+    "pet groomer",
+    "plumber",
+    "roofing contractor",
+}
 
 
 def _load_env() -> None:
@@ -101,15 +111,23 @@ def _niches_from_target(target: dict[str, Any]) -> list[str]:
     if env_niches:
         return env_niches
 
+    def _fresh_niches(values: list[str]) -> list[str]:
+        """Replace the old narrow service list with broader demo categories."""
+
+        normalized = {value.lower() for value in values}
+        if normalized and normalized.issubset(LEGACY_SCOUT_NICHES):
+            return list(DEFAULT_SCOUT_NICHES)
+        return [value for value in values if value.lower() != "auto detailing"]
+
     raw_niches = target.get("niches")
     if isinstance(raw_niches, list):
         niches = [str(niche).strip() for niche in raw_niches if str(niche).strip()]
         if niches:
-            return niches
+            return _fresh_niches(niches)
     if isinstance(raw_niches, str):
         niches = [part.strip() for part in raw_niches.split(",") if part.strip()]
         if niches:
-            return niches
+            return _fresh_niches(niches)
 
     niche = str(target.get("niche") or "").strip()
     if niche and niche.lower() != "auto repair":

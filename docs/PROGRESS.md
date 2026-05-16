@@ -391,3 +391,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
 - Validation: generated smoke HTML for all 8 template functions using a dental lead; each returned complete HTML with business and industry text.
 - Validation: generated smoke HTML across dentist, plumber, electrician, landscaper, pet groomer, roofing, HVAC, and auto detailing leads.
+
+## 2026-05-16 15:12 PDT — Broader Scout Niches
+
+- Replaced narrow trade-service Scout defaults with broader high-volume local categories: restaurant, coffee shop, hair salon, barber shop, gym, day spa, cleaning service, and home services.
+- Removed `auto detailing` from Scout defaults and from legacy Supabase target-list handling.
+- Added a generic local-business Designer profile so broad Scout categories do not inherit plumbing copy.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py agents/designer/tools/generate_mockup.py` passed.
+- Validation: legacy target niche lists now normalize to the broader default list and custom lists drop `auto detailing`.
+- Validation: generated smoke HTML for a coffee shop lead; output was complete and did not contain plumbing copy.

@@ -226,8 +226,31 @@ def _profile(lead: dict[str, Any]) -> dict[str, Any]:
             ],
             "process": ["Welcome gently", "Groom carefully", "Send them home fresh"],
         },
+        "local_service": {
+            "category": "local business",
+            "hero": "A sharper local website that makes the next step obvious.",
+            "sub": "Clear services, stronger photos, visible reviews, and fast contact paths for customers deciding where to go next.",
+            "concierge_hero": "Local service that feels easy from the first click.",
+            "performance_hero": "Built for customers ready to act.",
+            "eyebrow": "Neighborhood favorite",
+            "image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=85",
+            "detail": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85",
+            "services": [
+                ("Services", "Make the core offer easy to scan with plain-language categories and quick answers."),
+                ("Appointments", "Give high-intent customers a clear call path, booking prompt, and location details."),
+                ("Reviews", "Surface local credibility with rating, review count, testimonials, and recognizable proof."),
+                ("Visit Info", "Show hours, address, service area, and mobile-friendly contact options before customers bounce."),
+            ],
+            "stats": [("4.8", "local rating"), ("1k+", "customers served"), ("Same day", "response goal"), ("30 sec", "decision path")],
+            "reviews": [
+                ("Easy to understand, easy to contact, and exactly what I needed.", "Local Customer"),
+                ("The service was clear from the first call.", "Santa Cruz Resident"),
+                ("Professional, fast, and simple to book.", "Verified Review"),
+            ],
+            "process": ["Scan quickly", "Choose confidently", "Contact easily"],
+        },
     }
-    return profiles.get(_industry_key(lead), profiles["plumbing"])
+    return profiles.get(_industry_key(lead), profiles["local_service"])
 
 
 def _safe_log(action_type: str, status: str, message: str, lead_id: str | None, result: dict[str, Any]) -> None:

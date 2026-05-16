@@ -31,14 +31,14 @@ from agents.shared.types import (
 VALID_CLAWS = {"scout", "designer", "pitcher", "closer"}
 DESIGNER_QUAL_STATUSES = ["qualified_for_mockup", "qualified_for_rebuild"]
 DEFAULT_SCOUT_NICHES = [
-    "dentist",
-    "plumber",
-    "electrician",
-    "landscaper",
-    "roofing contractor",
-    "HVAC contractor",
-    "pet groomer",
-    "auto detailing",
+    "restaurant",
+    "coffee shop",
+    "hair salon",
+    "barber shop",
+    "gym",
+    "day spa",
+    "cleaning service",
+    "home services",
 ]
 DEFAULT_TARGET = {
     "niche": DEFAULT_SCOUT_NICHES[0],
