@@ -17,7 +17,7 @@ from agents.scout.tools import extract_pain_points, score_website, scrape_leads
 from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.openclaw_runtime import load_openclaw_context
-from agents.shared.supabase_client import DEFAULT_TARGET, get_client, next_scout_target, read_memory
+from agents.shared.supabase_client import DEFAULT_SCOUT_NICHES, DEFAULT_TARGET, get_client, next_scout_target, read_memory
 
 
 DEFAULT_SCRAPE_LIMIT = 20
@@ -47,6 +47,13 @@ def _int_env(name: str, default: int) -> int:
         return max(1, int(value))
     except ValueError:
         return default
+
+
+def _list_env(name: str) -> list[str]:
+    """Read a comma-separated env var as clean string values."""
+
+    raw = os.environ.get(name, "")
+    return [part.strip() for part in raw.split(",") if part.strip()]
 
 
 def _safe_log(
@@ -82,17 +89,79 @@ def _finish(summary: dict[str, Any]) -> dict[str, Any]:
     return summary
 
 
+def _niches_from_target(target: dict[str, Any]) -> list[str]:
+    """Normalize Scout target config to one or more niches.
+
+    `SCOUT_NICHES` is the fastest demo override. Supabase can also provide a
+    `niches` JSON array. Legacy single-niche `auto repair` configs are treated
+    as the old seed value and upgraded to the broader Santa Claws default.
+    """
+
+    env_niches = _list_env("SCOUT_NICHES")
+    if env_niches:
+        return env_niches
+
+    raw_niches = target.get("niches")
+    if isinstance(raw_niches, list):
+        niches = [str(niche).strip() for niche in raw_niches if str(niche).strip()]
+        if niches:
+            return niches
+    if isinstance(raw_niches, str):
+        niches = [part.strip() for part in raw_niches.split(",") if part.strip()]
+        if niches:
+            return niches
+
+    niche = str(target.get("niche") or "").strip()
+    if niche and niche.lower() != "auto repair":
+        return [niche]
+    return list(DEFAULT_SCOUT_NICHES)
+
+
+def _lead_count(city: str, state: str | None, niche: str) -> int:
+    """Return current lead count for a niche so Scout fills sparse categories."""
+
+    query = get_client().table("leads").select("id").eq("city", city).eq("niche", niche).limit(1000)
+    if state:
+        query = query.eq("state", state)
+    response = query.execute()
+    rows = getattr(response, "data", None)
+    if not isinstance(rows, list):
+        raise RuntimeError("Supabase lead-count query did not return a list.")
+    return len(rows)
+
+
+def _choose_niche(city: str, state: str | None, niches: list[str]) -> str:
+    """Pick the niche with the fewest existing leads, with a time fallback."""
+
+    if not niches:
+        return str(DEFAULT_TARGET["niche"])
+    if len(niches) == 1:
+        return niches[0]
+    try:
+        return min(niches, key=lambda niche: (_lead_count(city, state, niche), niches.index(niche)))
+    except Exception as exc:
+        print(f"Scout niche balancing unavailable; rotating by time. Reason: {exc}")
+        index = int(datetime.now(timezone.utc).timestamp() // 60) % len(niches)
+        return niches[index]
+
+
 def _target() -> dict[str, Any]:
-    """Read Scout target config, falling back to the demo default."""
+    """Read Scout target config, falling back to broad local-service targets."""
 
     try:
         target = next_scout_target()
-        if not target.get("niche") or not target.get("city"):
-            raise ValueError("config.target must include niche and city")
-        return target
+        if not target.get("city"):
+            raise ValueError("config.target must include city")
     except Exception as exc:
         print(f"Scout target config unavailable; using default target. Reason: {exc}")
-        return dict(DEFAULT_TARGET)
+        target = dict(DEFAULT_TARGET)
+    city = str(target.get("city", DEFAULT_TARGET["city"]))
+    state = target.get("state")
+    niches = _niches_from_target(target)
+    chosen = dict(target)
+    chosen["niches"] = niches
+    chosen["niche"] = _choose_niche(city, str(state) if state else None, niches)
+    return chosen
 
 
 def _pending_leads(city: str, niche: str, limit: int) -> list[dict[str, Any]]:
@@ -203,7 +272,7 @@ def heartbeat() -> dict[str, Any]:
     process_limit = _int_env("SCOUT_PROCESS_LIMIT", DEFAULT_PROCESS_LIMIT)
 
     summary: dict[str, Any] = {
-        "target": {"city": city, "state": state, "niche": niche},
+        "target": {"city": city, "state": state, "niche": niche, "niches": target.get("niches", [niche])},
         "memory_loaded": bool(memory.strip()),
         "openclaw_context": openclaw_context.summary(),
         "scraped_inserted": 0,

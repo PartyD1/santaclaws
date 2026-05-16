@@ -30,7 +30,22 @@ from agents.shared.types import (
 
 VALID_CLAWS = {"scout", "designer", "pitcher", "closer"}
 DESIGNER_QUAL_STATUSES = ["qualified_for_mockup", "qualified_for_rebuild"]
-DEFAULT_TARGET = {"niche": "auto repair", "city": "Santa Cruz", "state": "CA"}
+DEFAULT_SCOUT_NICHES = [
+    "dentist",
+    "plumber",
+    "electrician",
+    "landscaper",
+    "roofing contractor",
+    "HVAC contractor",
+    "pet groomer",
+    "auto detailing",
+]
+DEFAULT_TARGET = {
+    "niche": DEFAULT_SCOUT_NICHES[0],
+    "niches": DEFAULT_SCOUT_NICHES,
+    "city": "Santa Cruz",
+    "state": "CA",
+}
 
 
 class SupabaseClientError(RuntimeError):
@@ -128,8 +143,8 @@ def _uuid_string(value: UUID | str) -> str:
 def next_scout_target() -> dict[str, Any]:
     """Read the current Scout target from the `config` table.
 
-    Returns the default Santa Cruz auto-repair target if the row has not been
-    seeded yet, keeping the demo path recoverable.
+    Returns the default Santa Cruz local-services target if the row has not
+    been seeded yet, keeping the demo path recoverable.
     """
 
     response = get_client().table("config").select("value").eq("key", "target").limit(1).execute()

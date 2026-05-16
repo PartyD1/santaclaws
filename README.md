@@ -2,7 +2,7 @@
 
 Santa Claws is a 24-hour hackathon build for a four-claw autonomous sales workshop powered by NemoClaw, Nemotron, Supabase, and a live Next.js dashboard.
 
-The demo target is auto repair shops in Santa Cruz County. The system finds local businesses with weak or missing websites, generates redesign mockups, drafts personalized outreach, routes approvals through Discord, and handles interested replies through the Santa Claws closer agent.
+The demo target is local service businesses in Santa Cruz County. The system finds businesses with weak or missing websites, generates redesign mockups, drafts personalized outreach, routes approvals through Discord, and handles interested replies through the Santa Claws closer agent.
 
 ## Current State
 
@@ -28,7 +28,7 @@ The claws do not call each other directly. Supabase is the queue, the shared mem
 
 Happy path for one lead:
 
-1. Rudolph Scout finds and qualifies an auto repair lead.
+1. Rudolph Scout finds and qualifies a local service lead.
 2. The Workshop Elves create mockup variants and pick the best redesign.
 3. Snowball Pitcher drafts and critiques outreach, then queues it for approval.
 4. A human approves in Discord, or `AUTONOMOUS_MODE=true` auto-approves.
@@ -128,6 +128,7 @@ SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_KEY=
 
 APIFY_TOKEN=
+SCOUT_NICHES=dentist,plumber,electrician,landscaper,roofing contractor,HVAC contractor,pet groomer,auto detailing
 RESEND_API_KEY=
 OUTREACH_FROM_ADDRESS=
 VERCEL_TOKEN=

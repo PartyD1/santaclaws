@@ -363,3 +363,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for live `start_all_claws.sh` and `stop_all_claws.sh` use.
 - Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.
 - Need run the rate-limit check in an environment with installed Python dependencies and real Nemotron/Apify credentials.
+
+## 2026-05-16 14:41 PDT — Scout Niche Rotation
+
+- Updated Scout target resolution so the legacy single `auto repair` config rotates through a broader Santa Cruz local-services niche list.
+- Added `SCOUT_NICHES` as the fastest demo override for comma-separated Scout categories.
+- Seeded new Supabase installs with a `config.target.niches` list instead of one fixed niche.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
+- Validation: local target parsing smoke check confirmed `SCOUT_NICHES`, legacy single-target upgrade, and Supabase `niches` list handling.
