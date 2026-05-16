@@ -422,3 +422,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Updated Pitcher lead selection to scan the Designer-completed queue and skip leads without an email address.
 - Pitcher now returns the first eligible lead that has both a recipient email and a generated mockup instead of burning the heartbeat on an unsendable lead.
 - Validation: `python -m compileall agents/shared/supabase_client.py` passed.
+
+## 2026-05-16 15:55 PDT — Email-Gated Pipeline
+
+- Updated Scout qualification to skip leads with no email address before they enter the Designer queue.
+- Updated Designer lead selection to scan past any qualified but no-email lead and only build websites for leads that Pitcher can contact.
+- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
+- Validation: local Scout qualification smoke check skips no-email leads and qualifies email-ready missing-website leads.

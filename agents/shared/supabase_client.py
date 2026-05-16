@@ -172,7 +172,7 @@ def insert_leads(rows: list[dict[str, Any]]) -> int:
 
 
 def next_designer_lead() -> Lead | None:
-    """Return the oldest lead ready for the Designer claw."""
+    """Return the oldest email-ready lead for the Designer claw."""
 
     response = (
         get_client()
@@ -182,11 +182,13 @@ def next_designer_lead() -> Lead | None:
         .eq("worked_by_designer", False)
         .eq("do_not_contact", False)
         .order("scraped_at")
-        .limit(1)
+        .limit(25)
         .execute()
     )
-    row = _first(response)
-    return Lead.from_row(row) if row else None
+    for row in _data(response):
+        if str(row.get("email") or "").strip():
+            return Lead.from_row(row)
+    return None
 
 
 def claim_lead_for_designer(lead_id: UUID | str) -> bool:

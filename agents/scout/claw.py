@@ -238,6 +238,8 @@ def _qualification(lead: dict[str, Any], website_score: int, reasons: list[str])
 
     if not lead.get("business_name") or not (lead.get("address") or lead.get("phone") or lead.get("website")):
         return "skip", "bad or incomplete lead data"
+    if not str(lead.get("email") or "").strip():
+        return "skip", "missing email address"
     if not lead.get("website") or "no website" in reasons:
         return "qualified_for_mockup", "missing website"
     if website_score <= 3:
