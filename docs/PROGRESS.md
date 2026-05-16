@@ -17,6 +17,7 @@
 - Implemented Task 21 Designer claw heartbeat and `--once` CLI mode.
 - Implemented Tasks 22-23 dashboard skeleton, leads table, metrics bar, and realtime activity feed with polling fallback.
 - Implemented Tasks 24-26 Pitcher tools: email generation, email critique, and Resend send helper.
+- Implemented Tasks 27-28 Pitcher claw heartbeat and minimal Discord approval worker.
 
 ## Spec Consistency Check
 
@@ -70,8 +71,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 24: Pitcher `generate_email`.
 - [x] Task 25: Pitcher `critique_email`.
 - [x] Task 26: Pitcher `send_email`.
-- [ ] Task 27: Pitcher claw integration.
-- [ ] Task 28: Discord inbound approval worker.
+- [x] Task 27: Pitcher claw integration.
+- [x] Task 28: Discord inbound approval worker.
 - [ ] Task 29: Closer `classify_reply`.
 - [ ] Task 30: Google Calendar integration.
 - [ ] Task 31: Closer meeting/reply tools.
@@ -153,6 +154,12 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `generate_email.run(...)` missing-Nemotron path returns a skipped result clearly.
 - `critique_email.run(...)` fallback scored a known bad email below 5.
 - `send_email.run(...)` approval guard and fallback from `outreach.to_address` to `leads.email` were validated with fake clients.
+- `python -m compileall agents/pitcher/claw.py workers/discord_bridge.py` passed.
+- Pitcher heartbeat and Discord approval worker imports passed.
+- Discord approval parser validated `APPROVE`, `SKIP`, and one-line `EDIT`.
+- `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
+- `python -m workers.discord_bridge` printed fallback approval instructions because bot credentials are not configured.
+- Discord approval worker `EDIT` update/approval insert path was validated with a fake client.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -235,3 +242,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need live Nemotron route for generating and critiquing real outreach variants.
 - Need Discord webhook if approval summaries should post.
 - Need `RESEND_API_KEY`, verified sender/domain, and `OUTREACH_FROM_ADDRESS` before approved emails can send.
+
+## TASK 29 Blockers
+
+- Need seeded or real `inbound` rows before Closer classification is meaningful.
+- Need live Nemotron JSON route for reply classification.
+- Need Supabase credentials/schema for updating inbound classification fields.
+- Need Pitcher/Resend inbound webhook path ready if testing with real replies instead of seeded rows.
