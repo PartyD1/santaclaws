@@ -74,17 +74,16 @@ def _business_salutation(body: str, business_name: str) -> str:
 
 
 def _repair_mockup_urls(body: str, mockup_url: str) -> str:
-    """Repair model-added spaces in Vercel links and restore the exact mockup URL."""
+    """Replace Vercel-looking links with the exact stored mockup URL."""
 
-    repaired = re.sub(
-        r"https://([A-Za-z0-9-]+)\s*\.\s*vercel\s*\.\s*app",
-        r"https://\1.vercel.app",
+    if not mockup_url or "vercel.app" not in mockup_url:
+        return body
+    return re.sub(
+        r"https://[-A-Za-z0-9.\s]+?vercel\s*\.\s*app",
+        mockup_url,
         body,
         flags=re.IGNORECASE,
     )
-    if mockup_url and "vercel.app" in mockup_url:
-        repaired = re.sub(r"https://[A-Za-z0-9-]+\.vercel\.app", mockup_url, repaired, flags=re.IGNORECASE)
-    return repaired
 
 
 def _capitalize_paragraph_starts(body: str) -> str:

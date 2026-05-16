@@ -510,3 +510,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: local smoke check repaired a broken `vercel. app` URL and capitalized/prepended the business greeting.
 - Validation: local HTML smoke check confirmed the CTA uses aligned side padding.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:52 PDT — Exact Vercel Link Preservation
+
+- Simplified Pitcher URL cleanup so Vercel-looking links are replaced with the exact stored mockup URL instead of being rebuilt from regex pieces.
+- Validation: `python -m compileall agents/pitcher/tools/generate_email.py` passed.
+- Validation: local smoke checks confirmed normal and spaced Vercel links preserve the full `https://santa-claws-leq3l8zo2-varad-patwas-projects.vercel.app` format.
+- Validation: `git diff --check` passed.
