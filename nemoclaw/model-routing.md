@@ -3,7 +3,7 @@
 Default route inside NemoClaw/OpenShell:
 
 - `NEMOTRON_BASE_URL=https://inference.local/v1`
-- `NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b`
+- `NEMOTRON_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`
 
 Local fallback outside the sandbox:
 

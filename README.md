@@ -120,7 +120,7 @@ Python claws read these main variables:
 ```bash
 NEMOCLAW_SANDBOX_NAME=mainstreet
 NEMOTRON_BASE_URL=https://inference.local/v1
-NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b
+NEMOTRON_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
 NVIDIA_API_KEY=
 
 SUPABASE_URL=

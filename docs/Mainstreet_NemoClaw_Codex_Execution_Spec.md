@@ -1,7 +1,7 @@
 
 # Mainstreet — Codex Execution Spec
 
-**A four-agent autonomous sales team built on NemoClaw + Nemotron 3 Super 120B, designed to ship in 24 hours.**
+**A four-agent autonomous sales team built on NemoClaw + Nemotron 3 Nano Omni 30B reasoning, designed to ship in 24 hours.**
 
 This document is the single source of truth for implementation. Codex should
 execute Section 10 tasks in order. Sections 1–9 and 11–12 are reference for
@@ -1582,7 +1582,7 @@ NEMOCLAW_WORKSPACE=/workspace/mainstreet/agents
 # Inside NemoClaw/OpenShell, prefer https://inference.local/v1.
 # Outside the sandbox for local dev, use https://integrate.api.nvidia.com/v1.
 NVIDIA_API_KEY=
-NEMOTRON_MODEL=nvidia/nemotron-3-super-120b-a12b
+NEMOTRON_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
 NEMOTRON_BASE_URL=https://inference.local/v1
 
 # Supabase
@@ -1851,7 +1851,7 @@ name.
    - Return dict
 **Acceptance:** for a known-bad HTML (e.g., just `<h1>Test</h1>`), returns
 score < 5.
-**Complexity:** moderate. **Risk:** Nemotron 3 Super 120B may not be
+**Complexity:** moderate. **Risk:** Nemotron 3 Nano Omni 30B reasoning may not be
 vision-capable — if so, fall back to scoring based on raw HTML inspection
 (check for required sections, count `<img>` tags, etc.) without vision. The
 prompt becomes "based on this HTML structure..." instead of "based on this

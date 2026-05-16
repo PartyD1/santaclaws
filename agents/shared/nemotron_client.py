@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
     load_dotenv = None  # type: ignore[assignment]
 
 
-DEFAULT_MODEL: Final[str] = "nvidia/nemotron-3-super-120b-a12b"
+DEFAULT_MODEL: Final[str] = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
 DEFAULT_BASE_URL: Final[str] = "https://inference.local/v1"
 JSON_SYSTEM_PREFIX: Final[str] = "Return only valid JSON. Do not include markdown fences."
 

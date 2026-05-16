@@ -26,6 +26,7 @@
 - Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
 - Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
 - Replaced remaining demo-risk placeholders and documented the placeholder audit in `docs/PLACEHOLDER_AUDIT.md`.
+- Updated the default NemoClaw/Nemotron model configuration to `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`.
 
 ## Spec Consistency Check
 
@@ -128,6 +129,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd run typecheck` passed.
 - `npm.cmd run build` passed.
 - `python -m compileall agents/shared/nemotron_client.py` passed.
+- `rg "nemotron-3-super|Super 120B|super-120b"` returned no remaining old model references after switching to Nano Omni 30B reasoning.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.
@@ -221,7 +223,7 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need working NemoClaw/OpenShell inference route or direct NVIDIA fallback URL.
 - Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and either routed credentials or `NVIDIA_API_KEY`.
 - Need confirmation whether the NemoClaw gateway accepts placeholder API key `openshell`.
-- Need to verify whether `nvidia/nemotron-3-super-120b-a12b` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
+- Need to verify whether `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
 
 ## TASK 9 Runtime Blockers
 

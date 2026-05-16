@@ -3,7 +3,7 @@
   "runtime": "nemoclaw",
   "workspace": "/workspace/mainstreet/agents",
   "provider": "nvidia",
-  "model": "nvidia/nemotron-3-super-120b-a12b",
+  "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
   "inference_base_url": "https://inference.local/v1",
   "notes": "Verify these values against the live NemoClaw/OpenShell route before the demo."
 }
