@@ -12,6 +12,7 @@
 - Implemented Task 10 action logger in `agents/shared/logger.py`.
 - Implemented Task 11 outbound Discord webhook bridge in `agents/shared/discord_bridge.py`.
 - Implemented Tasks 12-14 Scout tools: Apify scraping, website scoring, and review pain extraction.
+- Implemented Task 15 Scout claw heartbeat and `--once` CLI mode.
 
 ## Spec Consistency Check
 
@@ -53,7 +54,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 12: Scout `scrape_leads`.
 - [x] Task 13: Scout `score_website`.
 - [x] Task 14: Scout `extract_pain_points`.
-- [ ] Task 15: Scout claw integration.
+- [x] Task 15: Scout claw integration.
 - [ ] Task 16: Designer `generate_mockup`.
 - [ ] Task 17: Designer `screenshot_html`.
 - [ ] Task 18: Designer `critique_mockup`.
@@ -130,6 +131,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `score_website.run(None)` returned score 0 with `no website`.
 - `extract_pain_points.run(...)` with no reviews returned an empty list gracefully.
 - Scout tool signatures were validated with `inspect.signature`.
+- `python -m compileall agents/scout/claw.py` passed.
+- `python -m agents.scout.claw --once` ran and exited cleanly with default target fallback because local Supabase/Python dependencies are not installed.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -170,9 +173,15 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and Nemotron credentials or NemoClaw/OpenShell route for live pain extraction.
 - Need Python dependencies installed locally for live `httpx`, `supabase`, and `openai` calls.
 
-## TASK 15 Blockers
+## TASK 15 Runtime Blockers
 
 - Need live Supabase credentials and schema for Scout heartbeat integration.
 - Need a working Apify scrape from Task 12 against Santa Cruz auto repair.
 - Need a working Nemotron JSON call from Task 8 for `extract_pain_points`.
 - Need Discord webhook URL if Scout heartbeat summaries should post during validation.
+
+## TASK 16 Blockers
+
+- Need a working Nemotron JSON call from Task 8.
+- Need at least one qualified lead from Scout or seeded sample lead data.
+- Need final prompt content for `designer_generate.txt` and variant prompt files beyond current placeholders.
