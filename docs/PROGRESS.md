@@ -19,6 +19,7 @@
 - Implemented Tasks 24-26 Pitcher tools: email generation, email critique, and Resend send helper.
 - Implemented Tasks 27-28 Pitcher claw heartbeat and minimal Discord approval worker.
 - Implemented Tasks 29-31 Closer tools: reply classification, Google Calendar fallback slots, meeting booking, and reply drafting.
+- Implemented Tasks 32-33 Closer claw heartbeat and Resend inbound email webhook.
 
 ## Spec Consistency Check
 
@@ -77,8 +78,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 29: Closer `classify_reply`.
 - [x] Task 30: Google Calendar integration.
 - [x] Task 31: Closer meeting/reply tools.
-- [ ] Task 32: Closer claw integration.
-- [ ] Task 33: Resend inbound webhook.
+- [x] Task 32: Closer claw integration.
+- [x] Task 33: Resend inbound webhook.
 - [ ] Task 34: Lead detail page.
 - [ ] Task 35: Live metrics bar.
 - [ ] Task 36: Designer self-critique loop upgrade.
@@ -169,6 +170,11 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `book_meeting.run(...)` inserted a fake meeting row and returned a demo Google event id with fake clients.
 - `draft_reply.run(...)` produced a concise fallback interested reply with fake clients.
 - `python -m pip install --dry-run -r agents/requirements.txt` passed after adding Google Calendar dependencies.
+- `python -m compileall agents/closer/claw.py` passed.
+- `python -m agents.closer.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
+- Closer heartbeat interested branch was validated with fake clients.
+- `npm.cmd run typecheck` passed for the dashboard inbound webhook route.
+- `npm.cmd run build` passed for the dashboard after the inbound webhook route. Next.js emitted non-fatal webpack cache snapshot warnings.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -265,3 +271,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need live Supabase credentials/schema for inbound and meetings writes.
 - Need live Nemotron route for classification and reply drafting, or accept fallback drafts for demo.
 - Need Google Calendar OAuth credentials for live booking; otherwise `demo-gcal-*` event ids will be used.
+
+## TASK 34 Blockers
+
+- Need representative lead-related rows (`generated_sites`, `outreach`, `inbound`, `meetings`, `actions`) to make the lead detail page useful.
+- Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
+- Need dashboard Supabase env values available at build/runtime for live detail reads.
