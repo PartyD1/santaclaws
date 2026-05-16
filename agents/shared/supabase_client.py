@@ -207,7 +207,12 @@ def claim_lead_for_designer(lead_id: UUID | str) -> bool:
 
 
 def next_pitcher_lead() -> dict[str, Any] | None:
-    """Return the next Pitcher lead plus its chosen mockup when available."""
+    """Return the next Pitcher lead plus its chosen mockup when available.
+
+    Pitcher can only create useful outreach for leads that have a recipient,
+    so scan a small queue window and skip Designer-completed rows without an
+    email address.
+    """
 
     lead_response = (
         get_client()
@@ -217,37 +222,44 @@ def next_pitcher_lead() -> dict[str, Any] | None:
         .eq("worked_by_pitcher", False)
         .eq("do_not_contact", False)
         .order("scraped_at")
-        .limit(1)
+        .limit(25)
         .execute()
     )
-    lead_row = _first(lead_response)
-    if not lead_row:
+    lead_rows = _data(lead_response)
+    if not lead_rows:
         return None
 
-    site_response = (
-        get_client()
-        .table("generated_sites")
-        .select("*")
-        .eq("lead_id", lead_row["id"])
-        .eq("is_chosen_winner", True)
-        .order("generated_at", desc=True)
-        .limit(1)
-        .execute()
-    )
-    site_row = _first(site_response)
-    if not site_row:
-        fallback_response = (
+    for lead_row in lead_rows:
+        if not str(lead_row.get("email") or "").strip():
+            continue
+
+        site_response = (
             get_client()
             .table("generated_sites")
             .select("*")
             .eq("lead_id", lead_row["id"])
+            .eq("is_chosen_winner", True)
             .order("generated_at", desc=True)
             .limit(1)
             .execute()
         )
-        site_row = _first(fallback_response)
+        site_row = _first(site_response)
+        if not site_row:
+            fallback_response = (
+                get_client()
+                .table("generated_sites")
+                .select("*")
+                .eq("lead_id", lead_row["id"])
+                .order("generated_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            site_row = _first(fallback_response)
 
-    return {"lead": Lead.from_row(lead_row), "mockup": site_row}
+        if site_row:
+            return {"lead": Lead.from_row(lead_row), "mockup": site_row}
+
+    return None
 
 
 def claim_lead_for_pitcher(lead_id: UUID | str) -> bool:

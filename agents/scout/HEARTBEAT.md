@@ -1,6 +1,6 @@
 # Scout Heartbeat
 
-interval: 60s
+interval: 1200s
 entrypoint: claw.py:heartbeat
 
 Manual test:

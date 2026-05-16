@@ -416,3 +416,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Fallback leads are realistic pending rows with missing websites, review text, rating, phone, and address so Scout can immediately qualify them for Designer.
 - Validation: `python -m compileall agents/scout/claw.py` passed.
 - Validation: fake insert smoke test confirmed fallback rows are clearly labeled, have `website = null`, and carry `SCOUT_TEST_EMAIL` when set.
+
+## 2026-05-16 15:45 PDT — Pitcher Email-Aware Queue
+
+- Updated Pitcher lead selection to scan the Designer-completed queue and skip leads without an email address.
+- Pitcher now returns the first eligible lead that has both a recipient email and a generated mockup instead of burning the heartbeat on an unsendable lead.
+- Validation: `python -m compileall agents/shared/supabase_client.py` passed.
