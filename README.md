@@ -143,6 +143,7 @@ GCAL_REFRESH_TOKEN=
 
 AUTONOMOUS_MODE=false
 IGNORE_QUIET_HOURS=true
+DESIGNER_USE_NEMOTRON_HTML=false
 ```
 
 The dashboard needs browser-safe Supabase variables in `dashboard/.env.local`:

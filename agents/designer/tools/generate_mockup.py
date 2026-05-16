@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -82,8 +83,38 @@ def _valid_html(html: str, business_name: str | None = None) -> bool:
     return True
 
 
-def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
-    """Build a deterministic demo mockup when Nemotron is unavailable."""
+def _template_mode_enabled() -> bool:
+    """Return True when Designer should render through local premium templates."""
+
+    return os.environ.get("DESIGNER_USE_NEMOTRON_HTML", "").strip().lower() not in {"1", "true", "yes"}
+
+
+def _website_score(lead: dict[str, Any]) -> int:
+    """Return the Scout website score when available."""
+
+    try:
+        return max(0, min(10, int(lead.get("website_score") or 0)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _audit_stats(lead: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Build demo-safe opportunity stats from Scout's audit fields."""
+
+    score = _website_score(lead)
+    phone_score = 2 if score <= 3 else 3 if score <= 6 else 4
+    trust_score = 2 if score <= 4 else 3 if score <= 7 else 4
+    mobile_score = 1 if score <= 3 else 3 if score <= 6 else 4
+    return [
+        ("Current site score", f"{score}/10", "Scout audit"),
+        ("Mobile CTA clarity", f"{phone_score}/5", "Estimated from page scan"),
+        ("Trust signal coverage", f"{trust_score}/5", "Estimated rebuild opportunity"),
+        ("Local SEO readiness", f"{mobile_score}/5", "Estimated visibility lift"),
+    ]
+
+
+def _fallback_html(lead: dict[str, Any], variant: str, reason: str = "template renderer") -> str:
+    """Build a deterministic professional mockup template."""
 
     business_name = escape(str(lead.get("business_name") or "Local Auto Repair"))
     niche = escape(str(lead.get("niche") or "auto repair"))
@@ -93,6 +124,10 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
     hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Call for today's hours"))
     rating = escape(str(lead.get("google_rating") or "local favorite"))
     review_count = escape(str(lead.get("review_count") or ""))
+    website_score = _website_score(lead)
+    score_reasons = [escape(str(item)) for item in lead.get("website_score_reasons") or []][:4]
+    if not score_reasons:
+        score_reasons = ["mobile call path can be clearer", "services should be easier to scan", "trust cues need stronger placement"]
     pain_points = [escape(str(item)) for item in lead.get("top_review_pain_points") or []][:3]
     if not pain_points:
         pain_points = ["clear service menu", "faster appointment booking", "mobile-friendly contact flow"]
@@ -104,6 +139,8 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
             "accent": "bg-sky-600 text-white",
             "soft": "bg-sky-50 border-sky-100",
             "label": "text-sky-700",
+            "ring": "ring-sky-200",
+            "gradient": "from-sky-50 via-white to-emerald-50",
             "headline": f"Reliable {niche} in {city}, made easy to book",
         },
         "retro_local": {
@@ -113,6 +150,8 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
             "accent": "bg-red-700 text-white",
             "soft": "bg-teal-50 border-teal-100",
             "label": "text-red-700",
+            "ring": "ring-red-200",
+            "gradient": "from-[#f7f1e7] via-white to-teal-50",
             "headline": f"Straightforward repairs from a local {city} shop",
         },
         "premium": {
@@ -122,6 +161,8 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
             "accent": "bg-emerald-500 text-zinc-950",
             "soft": "bg-zinc-100 border-zinc-200",
             "label": "text-emerald-600",
+            "ring": "ring-emerald-200",
+            "gradient": "from-zinc-950 via-zinc-900 to-emerald-950",
             "headline": f"Confident diagnostics and service for {city} drivers",
         },
     }.get(variant, {})
@@ -133,6 +174,8 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
             "accent": "bg-sky-600 text-white",
             "soft": "bg-sky-50 border-sky-100",
             "label": "text-sky-700",
+            "ring": "ring-sky-200",
+            "gradient": "from-sky-50 via-white to-emerald-50",
             "headline": f"Reliable {niche} in {city}, made easy to book",
         }
 
@@ -158,6 +201,19 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
         </li>"""
         for item in pain_points
     )
+    audit_cards = "\n".join(
+        f"""
+        <div class="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-normal text-slate-500">{label}</p>
+          <p class="mt-2 text-3xl font-bold tracking-normal text-slate-950">{value}</p>
+          <p class="mt-2 text-sm text-slate-500">{caption}</p>
+        </div>"""
+        for label, value, caption in _audit_stats(lead)
+    )
+    reason_items = "\n".join(
+        f"""<li class="flex gap-3"><span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-slate-950"></span><span>{item.capitalize()}</span></li>"""
+        for item in score_reasons
+    )
     rating_text = f"{rating} rating" if not review_count else f"{rating} rating from {review_count} reviews"
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -168,7 +224,7 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="{palette['body']}">
-  <header class="border-b border-slate-200 bg-white">
+  <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
     <div class="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p class="text-xs font-semibold uppercase tracking-normal text-slate-500">{city} {niche}</p>
@@ -178,12 +234,12 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
     </div>
   </header>
   <main>
-    <section class="{palette['hero']} px-5 py-10 sm:py-14">
+    <section class="{palette['hero']} bg-gradient-to-br {palette['gradient']} px-5 py-10 sm:py-14">
       <div class="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
-        <div class="flex flex-col justify-center rounded-md border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">{city} drivers</p>
+        <div class="flex flex-col justify-center rounded-md border border-slate-200 bg-white p-6 shadow-sm ring-1 {palette['ring']} sm:p-8">
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">Mainstreet rebuild preview for {city} drivers</p>
           <h1 class="mt-3 max-w-3xl text-4xl font-bold tracking-normal sm:text-5xl">{palette['headline']}</h1>
-          <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-600">A clearer website for {business_name}: practical service information, fast phone access, and a calmer path from problem to appointment.</p>
+          <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-600">A sharper front door for {business_name}: practical service information, fast phone access, trust cues above the fold, and a calmer path from problem to appointment.</p>
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
             <a class="{palette['accent']} rounded-md px-5 py-3 text-center font-semibold shadow-sm" href="tel:{phone}">Call {phone}</a>
             <a class="rounded-md border border-slate-300 bg-white px-5 py-3 text-center font-semibold text-slate-950" href="#contact">Hours and location</a>
@@ -201,11 +257,33 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
             <div class="rounded-md bg-white/10 p-4"><p class="font-semibold">Brake inspection</p><p class="mt-1 text-sm opacity-75">Noise, vibration, and safety checks.</p></div>
             <div class="rounded-md bg-white/10 p-4"><p class="font-semibold">Maintenance visit</p><p class="mt-1 text-sm opacity-75">Oil, fluids, battery, and road-trip readiness.</p></div>
           </div>
+          <div class="mt-6 rounded-md bg-white/10 p-4">
+            <p class="text-sm font-semibold opacity-80">Scout audit score</p>
+            <p class="mt-1 text-4xl font-bold tracking-normal">{website_score}/10</p>
+            <p class="mt-1 text-sm opacity-70">Used to guide this rebuild preview.</p>
+          </div>
         </aside>
       </div>
     </section>
     <section class="px-5 py-10">
       <div class="mx-auto max-w-6xl">
+        <div class="mb-5 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+          <div>
+            <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">Opportunity snapshot</p>
+            <h2 class="mt-2 text-3xl font-bold tracking-normal">A page built around measurable customer friction.</h2>
+          </div>
+          <p class="max-w-xl text-sm leading-6 text-slate-600">These are demo-safe estimates derived from Scout's website audit, not claims about shop revenue or operations.</p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{audit_cards}
+        </div>
+      </div>
+    </section>
+    <section class="px-5 py-10">
+      <div class="mx-auto max-w-6xl">
+        <div class="mb-5">
+          <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">Service clarity</p>
+          <h2 class="mt-2 text-3xl font-bold tracking-normal">Customers can understand the shop in seconds.</h2>
+        </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{service_cards}
         </div>
       </div>
@@ -216,6 +294,8 @@ def _fallback_html(lead: dict[str, Any], variant: str, reason: str) -> str:
           <p class="{palette['label']} text-sm font-semibold uppercase tracking-normal">What the new site fixes</p>
           <h2 class="mt-2 text-3xl font-bold tracking-normal">Less hunting around. More confident calls.</h2>
           <p class="mt-4 leading-7 text-slate-600">The page puts the shop's phone number, services, trust signals, and location in a simple flow built for repeat local customers.</p>
+          <ul class="mt-5 space-y-3 text-sm leading-6 text-slate-700">{reason_items}
+          </ul>
         </div>
         <ul class="grid gap-3 sm:grid-cols-3">{pain_cards}
         </ul>
@@ -258,6 +338,17 @@ def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | 
     business_name = str(lead.get("business_name") or "")
     user_prompt = _prompt(lead, variant, previous_critique)
     last_payload: dict[str, Any] | None = None
+
+    if _template_mode_enabled():
+        html = _fallback_html(lead, variant)
+        _safe_log(
+            "generate_mockup",
+            "succeeded",
+            f"rendered template-first {variant} mockup for {business_name}.",
+            lead_id,
+            {"variant": variant, "renderer": "premium_template"},
+        )
+        return html
 
     for attempt in range(2):
         try:
