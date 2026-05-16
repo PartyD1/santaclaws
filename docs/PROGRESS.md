@@ -14,6 +14,7 @@
 - Implemented Tasks 12-14 Scout tools: Apify scraping, website scoring, and review pain extraction.
 - Implemented Task 15 Scout claw heartbeat and `--once` CLI mode.
 - Implemented Tasks 16-20 Designer tools: mockup generation, screenshotting, critique, deploy fallback, and winner selection.
+- Implemented Task 21 Designer claw heartbeat and `--once` CLI mode.
 
 ## Spec Consistency Check
 
@@ -61,7 +62,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 18: Designer `critique_mockup`.
 - [x] Task 19: Designer deploy with Supabase Storage fallback.
 - [x] Task 20: Designer `pick_winner`.
-- [ ] Task 21: Designer claw integration.
+- [x] Task 21: Designer claw integration.
 - [ ] Task 22: Dashboard skeleton.
 - [ ] Task 23: Dashboard realtime activity feed.
 - [ ] Task 24: Pitcher `generate_email`.
@@ -140,6 +141,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
+- `python -m compileall agents/designer/claw.py` passed.
+- `python -m agents.designer.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -201,3 +204,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need live Nemotron route for actual mockup generation.
 - Need Playwright browser install or accept HTML-structure critique fallback.
 - Need Vercel or Supabase Storage deploy credentials for hosted mockup URLs.
+
+## TASK 22 Blockers
+
+- Need Supabase URL and anon key for dashboard data reads.
+- Need real or seeded leads/actions/generated_sites rows to make the dashboard meaningful.
+- Need to decide whether Task 22 should stay read-only or include demo trigger buttons later.
