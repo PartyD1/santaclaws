@@ -96,7 +96,18 @@ def _to_lead_row(item: dict[str, Any], city: str, niche: str) -> dict[str, Any] 
     }
 
 
-def run(city: str, niche: str, limit: int = 20) -> int:
+def _location_query(city: str, state: str | None = None, country: str | None = "United States") -> str:
+    """Build an unambiguous place query for Apify without changing stored city."""
+
+    parts = [city.strip()]
+    if state and state.strip():
+        parts.append(state.strip())
+    if country and country.strip():
+        parts.append(country.strip())
+    return ", ".join(parts)
+
+
+def run(city: str, niche: str, limit: int = 20, state: str | None = None, country: str | None = "United States") -> int:
     """Scrape Google Places through Apify, dedupe, and insert new leads."""
 
     if not city.strip():
@@ -104,7 +115,8 @@ def run(city: str, niche: str, limit: int = 20) -> int:
     if not niche.strip():
         raise ValueError("niche is required for scrape_leads.")
 
-    raw_items = scrape_google_places(search_query=niche, location=city, max_results=limit)
+    location = _location_query(city, state=state, country=country)
+    raw_items = scrape_google_places(search_query=niche, location=location, max_results=limit)
     candidate_rows = [
         row for item in raw_items if (row := _to_lead_row(item, city=city, niche=niche)) is not None
     ]
@@ -127,8 +139,13 @@ def run(city: str, niche: str, limit: int = 20) -> int:
     _safe_log(
         "scrape_batch",
         "succeeded",
-        f"scraped {len(raw_items)} {niche} leads in {city}. Inserted {inserted}, skipped {skipped_existing}.",
-        {"raw_count": len(raw_items), "inserted": inserted, "skipped_existing": skipped_existing},
+        f"scraped {len(raw_items)} {niche} leads in {location}. Inserted {inserted}, skipped {skipped_existing}.",
+        {
+            "raw_count": len(raw_items),
+            "inserted": inserted,
+            "skipped_existing": skipped_existing,
+            "location_query": location,
+        },
     )
 
     for row in new_rows:
