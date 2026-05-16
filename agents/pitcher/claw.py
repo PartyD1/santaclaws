@@ -15,7 +15,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
     load_dotenv = None  # type: ignore[assignment]
 
 from agents.pitcher.tools import critique_email, generate_email, send_email
-from agents.shared import discord_bridge
+from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.supabase_client import (
     claim_lead_for_pitcher,
@@ -79,6 +79,13 @@ def _safe_discord(content: str, embed: dict[str, Any] | None = None) -> None:
         discord_bridge.post(content, embed=embed)
     except Exception as exc:  # pragma: no cover - local/no-webhook path.
         print(f"Pitcher Discord post skipped: {exc}\n{content}")
+
+
+def _finish(summary: dict[str, Any]) -> dict[str, Any]:
+    """Run best-effort end-of-heartbeat memory update."""
+
+    memory_updater.maybe_update_memory("pitcher", summary)
+    return summary
 
 
 def _lead_to_dict(lead: Lead) -> dict[str, Any]:
@@ -241,12 +248,12 @@ def heartbeat() -> dict[str, Any]:
         summary["errors"].append(f"lead fetch failed: {exc}")
         _safe_log("fetch_lead", "failed", f"could not fetch Pitcher lead: {exc}", {"error": str(exc)})
         print(f"Pitcher heartbeat skipped: {exc}")
-        return summary
+        return _finish(summary)
 
     if not work:
         _safe_log("fetch_lead", "skipped", "found no completed mockup lead for Pitcher.", summary)
         print("Pitcher heartbeat found no completed mockup lead.")
-        return summary
+        return _finish(summary)
 
     lead_obj = work["lead"]
     lead = _lead_to_dict(lead_obj)
@@ -257,30 +264,30 @@ def heartbeat() -> dict[str, Any]:
     if not mockup_url:
         summary["errors"].append("missing mockup URL")
         _safe_log("fetch_mockup", "skipped", f"{lead.get('business_name')} has no public mockup URL.", summary, lead_id)
-        return summary
+        return _finish(summary)
 
     try:
         if not claim_lead_for_pitcher(lead_id):
             _safe_log("claim_lead", "skipped", f"lead {lead_id} was already claimed by Pitcher.", {"lead_id": lead_id}, lead_id)
             print(f"Pitcher heartbeat skipped already-claimed lead {lead_id}.")
-            return summary
+            return _finish(summary)
         _safe_log("claim_lead", "succeeded", f"claimed {lead.get('business_name')} for Pitcher.", {"lead_id": lead_id}, lead_id)
     except Exception as exc:
         summary["errors"].append(f"claim failed: {exc}")
         _safe_log("claim_lead", "failed", f"could not claim Pitcher lead: {exc}", {"error": str(exc)}, lead_id)
-        return summary
+        return _finish(summary)
 
     candidates = _draft_candidates(lead, mockup_url)
     if not candidates:
         summary["errors"].append("no valid email candidates")
         _safe_log("heartbeat", "failed", f"Pitcher produced no valid email drafts for {lead.get('business_name')}.", summary, lead_id)
-        return summary
+        return _finish(summary)
 
     winner = _select_best(candidates)
     if not winner:
         summary["errors"].append("winner selection failed")
         _safe_log("heartbeat", "failed", f"Pitcher could not select an email for {lead.get('business_name')}.", summary, lead_id)
-        return summary
+        return _finish(summary)
 
     autonomous = _autonomous_mode()
     status = "approved" if autonomous else "pending_approval"
@@ -308,7 +315,7 @@ def heartbeat() -> dict[str, Any]:
     final_status = "succeeded" if not summary["errors"] else "failed"
     _safe_log("heartbeat", final_status, f"heartbeat finished for {lead.get('business_name')}.", summary, lead_id)
     print(f"Pitcher heartbeat finished for {lead.get('business_name')}.")
-    return summary
+    return _finish(summary)
 
 
 def _run_loop() -> None:

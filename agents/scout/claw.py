@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
     load_dotenv = None  # type: ignore[assignment]
 
 from agents.scout.tools import extract_pain_points, score_website, scrape_leads
-from agents.shared import discord_bridge
+from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.supabase_client import DEFAULT_TARGET, get_client, next_scout_target, read_memory
 
@@ -72,6 +72,13 @@ def _safe_discord(content: str) -> None:
         discord_bridge.post(content)
     except Exception as exc:  # pragma: no cover - local/no-webhook path.
         print(f"Scout Discord summary skipped: {exc}")
+
+
+def _finish(summary: dict[str, Any]) -> dict[str, Any]:
+    """Run best-effort end-of-heartbeat memory update."""
+
+    memory_updater.maybe_update_memory("scout", summary)
+    return summary
 
 
 def _target() -> dict[str, Any]:
@@ -257,7 +264,7 @@ def heartbeat() -> dict[str, Any]:
     _safe_log("heartbeat", final_status, final_text, summary)
     _safe_discord(f"Scout: {final_text}")
     print(final_text)
-    return summary
+    return _finish(summary)
 
 
 def _run_loop() -> None:

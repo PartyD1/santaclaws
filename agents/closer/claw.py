@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
     load_dotenv = None  # type: ignore[assignment]
 
 from agents.closer.tools import classify_reply, draft_reply, propose_meeting_times
-from agents.shared import discord_bridge
+from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.supabase_client import get_client, mark_inbound_handled, next_inbound, read_memory
 from agents.shared.types import Inbound
@@ -52,6 +52,13 @@ def _safe_discord(content: str) -> None:
         discord_bridge.post(content)
     except Exception as exc:  # pragma: no cover - local/no-webhook path.
         print(f"Closer Discord summary skipped: {exc}\n{content}")
+
+
+def _finish(summary: dict[str, Any]) -> dict[str, Any]:
+    """Run best-effort end-of-heartbeat memory update."""
+
+    memory_updater.maybe_update_memory("closer", summary)
+    return summary
 
 
 def _inbound_to_dict(inbound: Inbound) -> dict[str, Any]:
@@ -168,12 +175,12 @@ def heartbeat() -> dict[str, Any]:
         summary["errors"].append(f"inbound fetch failed: {exc}")
         _safe_log("fetch_inbound", "failed", f"could not fetch inbound reply: {exc}", {"error": str(exc)})
         print(f"Closer heartbeat skipped: {exc}")
-        return summary
+        return _finish(summary)
 
     if inbound_obj is None:
         _safe_log("fetch_inbound", "skipped", "found no unhandled inbound email.", summary)
         print("Closer heartbeat found no unhandled inbound email.")
-        return summary
+        return _finish(summary)
 
     inbound = _inbound_to_dict(inbound_obj)
     inbound_id = str(inbound["id"])
@@ -186,7 +193,7 @@ def heartbeat() -> dict[str, Any]:
         summary["classification"] = "spam"
         summary["branch_result"] = {"next_step": "non-email inbound ignored until Vapi stretch"}
         _safe_log("heartbeat", "skipped", "ignored non-email inbound until Vapi stretch.", summary, lead_id)
-        return summary
+        return _finish(summary)
 
     classification_result = classify_reply.run(inbound_id)
     if classification_result.get("_status") == "failed" or classification_result.get("error"):
@@ -216,7 +223,7 @@ def heartbeat() -> dict[str, Any]:
         lead_id,
     )
     print(f"Closer heartbeat handled inbound {inbound_id} as {summary['classification']}.")
-    return summary
+    return _finish(summary)
 
 
 def _run_loop() -> None:

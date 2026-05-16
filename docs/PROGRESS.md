@@ -22,6 +22,7 @@
 - Implemented Tasks 32-33 Closer claw heartbeat and Resend inbound email webhook.
 - Implemented Tasks 34-35 lead detail page and expanded live metrics polling.
 - Implemented Tasks 36-38 Designer self-critique, three-variant winner selection, and Pitcher four-angle quality path.
+- Implemented Tasks 39-41 MEMORY.md updater, demo data seeder, and claw start/stop scripts.
 
 ## Spec Consistency Check
 
@@ -87,9 +88,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 36: Designer self-critique loop upgrade.
 - [x] Task 37: Designer 3-variant winner upgrade.
 - [x] Task 38: Pitcher 4-angle critique upgrade.
-- [ ] Task 39: MEMORY.md self-update.
-- [ ] Task 40: Demo data seeder.
-- [ ] Task 41: Start/stop all claws scripts.
+- [x] Task 39: MEMORY.md self-update.
+- [x] Task 40: Demo data seeder.
+- [x] Task 41: Start/stop all claws scripts.
 - [ ] Task 42-46: Polish, monitor, rehearse, and fix.
 - [ ] Task 47: Vapi inbound stretch.
 
@@ -184,6 +185,12 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Pitcher four-angle smoke validated all 4 angles are generated/critiqued and the highest score wins.
 - `python -m agents.designer.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
+- `python -m compileall agents/shared/memory_updater.py agents/scripts/seed_demo_data.py agents/scout/claw.py agents/designer/claw.py agents/pitcher/claw.py agents/closer/claw.py` passed.
+- Task 39-41 import/signature smoke passed.
+- Memory updater smoke returned a clean skipped result because the local Python environment does not have the `openai` package installed.
+- `python -m agents.scripts.seed_demo_data --clear` failed clearly because the local Python environment does not have the `supabase` package installed.
+- `python -m agents.scout.claw --once`, `python -m agents.designer.claw --once`, `python -m agents.pitcher.claw --once`, and `python -m agents.closer.claw --once` ran and exited cleanly with missing local Supabase/OpenAI dependencies.
+- Bash syntax checks for `start_all_claws.sh` and `stop_all_claws.sh` could not run because `bash`/`sh` is unavailable in this Windows session.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -287,9 +294,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
 - Need dashboard Supabase env values available at build/runtime for live detail reads.
 
-## TASK 39 Blockers
+## TASK 42 Blockers
 
-- Need live Nemotron route for memory summarization/updating.
-- Need decide whether `MEMORY.md` self-updates write local files, Supabase memory rows, or both.
-- Need a pruning policy so demo memory stays short and does not rewrite useful hand-authored claw instructions.
-- Need enough rate-limit headroom to avoid memory maintenance slowing the live demo heartbeat.
+- Need install local Python dependencies before live seed/start validation.
+- Need Supabase credentials and applied schema before `seed_demo_data.py` can populate the dashboard.
+- Need live Nemotron route before MEMORY.md updates produce real observations.
+- Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for `start_all_claws.sh` and `stop_all_claws.sh`.
+- Need monitor/rehearsal pass to tune heartbeat intervals and logs before demo.

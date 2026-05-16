@@ -15,7 +15,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
     load_dotenv = None  # type: ignore[assignment]
 
 from agents.designer.tools import critique_mockup, deploy_to_vercel, generate_mockup, pick_winner
-from agents.shared import discord_bridge
+from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.supabase_client import (
     claim_lead_for_designer,
@@ -95,6 +95,13 @@ def _safe_discord(content: str) -> None:
         discord_bridge.post(content)
     except Exception as exc:  # pragma: no cover - local/no-webhook path.
         print(f"Designer Discord summary skipped: {exc}")
+
+
+def _finish(summary: dict[str, Any]) -> dict[str, Any]:
+    """Run best-effort end-of-heartbeat memory update."""
+
+    memory_updater.maybe_update_memory("designer", summary)
+    return summary
 
 
 def _lead_to_dict(lead: Lead) -> dict[str, Any]:
@@ -241,12 +248,12 @@ def heartbeat() -> dict[str, Any]:
         summary["errors"].append(f"lead fetch failed: {exc}")
         _safe_log("fetch_lead", "failed", f"could not fetch Designer lead: {exc}", {"error": str(exc)})
         print(f"Designer heartbeat skipped: {exc}")
-        return summary
+        return _finish(summary)
 
     if lead_obj is None:
         _safe_log("fetch_lead", "skipped", "found no qualified lead for Designer.", summary)
         print("Designer heartbeat found no qualified lead.")
-        return summary
+        return _finish(summary)
 
     lead = _lead_to_dict(lead_obj)
     lead_id = str(lead["id"])
@@ -257,13 +264,13 @@ def heartbeat() -> dict[str, Any]:
         if not claim_lead_for_designer(lead_id):
             _safe_log("claim_lead", "skipped", f"lead {lead_id} was already claimed.", {"lead_id": lead_id}, lead_id)
             print(f"Designer heartbeat skipped already-claimed lead {lead_id}.")
-            return summary
+            return _finish(summary)
         _safe_log("claim_lead", "succeeded", f"claimed {lead.get('business_name')} for Designer.", {"lead_id": lead_id}, lead_id)
     except Exception as exc:
         summary["errors"].append(f"claim failed: {exc}")
         _safe_log("claim_lead", "failed", f"could not claim Designer lead: {exc}", {"lead_id": lead_id, "error": str(exc)}, lead_id)
         print(f"Designer heartbeat claim failed: {exc}")
-        return summary
+        return _finish(summary)
 
     variants = VARIANT_ORDER[: _variant_count()]
     variant_results: list[dict[str, Any]] = []
@@ -302,7 +309,7 @@ def heartbeat() -> dict[str, Any]:
         _safe_log("heartbeat", "failed", final_text, summary, lead_id)
         _safe_discord(f"Designer: {final_text}")
         print(final_text)
-        return summary
+        return _finish(summary)
 
     winner = pick_winner.run(lead, variant_results)
     winner_variant = winner.get("winner")
@@ -324,7 +331,7 @@ def heartbeat() -> dict[str, Any]:
     _safe_log("heartbeat", final_status, final_text, summary, lead_id)
     _safe_discord(f"Designer: {final_text}")
     print(final_text)
-    return summary
+    return _finish(summary)
 
 
 def _run_loop() -> None:
