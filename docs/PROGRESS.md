@@ -483,3 +483,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Scout still skips rows that are missing an email or are too incomplete to personalize.
 - Validation: `python -m compileall agents/scout/claw.py` passed.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:30 PDT — Professional Sender Template
+
+- Upgraded Pitcher sent-email HTML from plain paragraph tags to a polished Santa Claws email layout.
+- Added a branded header, cleaner typography, footer, and a mockup CTA button when a generated-site URL exists.
+- Kept the plain-text email body unchanged for deliverability and fallback clients.
+- Validation: `python -m compileall agents/pitcher/tools/send_email.py` passed.
+- Validation: local HTML smoke check confirmed the brand, business name, CTA text, and mockup URL render in the outgoing template.
+- Validation: `git diff --check` passed.

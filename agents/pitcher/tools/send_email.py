@@ -39,8 +39,26 @@ def _first_row(response: Any) -> dict[str, Any] | None:
     return None
 
 
-def _plain_text_to_html(text: str) -> str:
-    """Convert plain-text outreach into small, safe HTML."""
+def _fetch_mockup_url(lead_id: str) -> str | None:
+    """Return the latest public mockup URL for a lead when available."""
+
+    response = (
+        get_client()
+        .table("generated_sites")
+        .select("vercel_url, storage_url")
+        .eq("lead_id", lead_id)
+        .order("generated_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    row = _first_row(response)
+    if not row:
+        return None
+    return row.get("vercel_url") or row.get("storage_url")
+
+
+def _plain_text_to_html(text: str, lead: dict[str, Any], mockup_url: str | None = None) -> str:
+    """Convert plain-text outreach into polished, safe email HTML."""
 
     paragraphs = [part.strip() for part in text.split("\n\n") if part.strip()]
     if not paragraphs:
@@ -48,8 +66,61 @@ def _plain_text_to_html(text: str) -> str:
     rendered = []
     for paragraph in paragraphs:
         escaped = html.escape(paragraph).replace("\n", "<br>")
-        rendered.append(f"<p>{escaped}</p>")
-    return "\n".join(rendered)
+        rendered.append(
+            "<p style=\"margin:0 0 16px; color:#273142; font-size:16px; line-height:1.62;\">"
+            f"{escaped}"
+            "</p>"
+        )
+
+    business_name = html.escape(str(lead.get("business_name") or "your business"))
+    city = html.escape(str(lead.get("city") or "your area"))
+    cta = ""
+    if mockup_url:
+        escaped_url = html.escape(mockup_url, quote=True)
+        cta = f"""
+          <tr>
+            <td style="padding:8px 0 24px;">
+              <a href="{escaped_url}" style="display:inline-block; background:#0f172a; color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:13px 18px; border-radius:8px;">
+                View the mockup
+              </a>
+            </td>
+          </tr>
+        """
+
+    body_html = "\n".join(rendered)
+    return f"""<!doctype html>
+<html>
+  <body style="margin:0; padding:0; background:#f4f6f8; font-family:Arial, Helvetica, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f6f8; padding:28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; background:#ffffff; border:1px solid #dde3ea; border-radius:12px; overflow:hidden;">
+            <tr>
+              <td style="background:#0f172a; padding:22px 28px;">
+                <div style="color:#ffffff; font-size:19px; font-weight:800; letter-spacing:0;">Santa Claws</div>
+                <div style="color:#cbd5e1; font-size:13px; line-height:1.5; margin-top:4px;">Website mockup for {business_name} in {city}</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 28px 10px;">
+                {body_html}
+              </td>
+            </tr>
+            {cta}
+            <tr>
+              <td style="padding:0 28px 30px;">
+                <div style="height:1px; background:#e5eaf0; margin:8px 0 18px;"></div>
+                <p style="margin:0; color:#64748b; font-size:13px; line-height:1.55;">
+                  Sent by Santa Claws, a NemoClaw-powered demo team building quick website mockups for local businesses.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>"""
 
 
 def _provider() -> str:
@@ -89,10 +160,10 @@ def _mark_outreach(outreach_id: UUID | str, payload: dict[str, Any]) -> None:
     get_client().table("outreach").update(payload).eq("id", str(outreach_id)).execute()
 
 
-def _send_via_provider(to_address: str, subject: str, body: str) -> dict[str, Any]:
+def _send_via_provider(to_address: str, subject: str, body: str, lead: dict[str, Any], mockup_url: str | None) -> dict[str, Any]:
     """Send through SMTP or Resend based on env configuration."""
 
-    html_body = _plain_text_to_html(body)
+    html_body = _plain_text_to_html(body, lead, mockup_url)
     provider = _provider()
     if provider == "smtp":
         return smtp_client.send_email(
@@ -141,6 +212,8 @@ def run(outreach_id: UUID | str) -> dict[str, Any]:
             to_address=to_address,
             subject=str(outreach["subject"]),
             body=str(outreach["body"]),
+            lead=lead,
+            mockup_url=_fetch_mockup_url(lead_id),
         )
         message_id = str(response["id"])
         _mark_outreach(
