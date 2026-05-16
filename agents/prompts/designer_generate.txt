@@ -17,11 +17,16 @@ Variant style guide:
 Requirements:
 - Output ONE complete HTML file with Tailwind via CDN.
 - Mobile-responsive, especially around iPhone 12 width.
-- One clear above-the-fold CTA: "Call {phone}" as a tel: link.
+- Above the fold must show business name, service type, city, trust cue, and one dominant CTA: "Call {phone}" as a tel: link.
+- Include a secondary appointment/contact CTA only if it does not compete with the phone CTA.
 - Sections in order: hero, services, about, hours and location, contact.
 - Use the actual business name, phone, city, and address when present.
+- Make the page feel like a real local business, not a SaaS landing page: practical service copy, neighborhood trust language, and clear repair/service categories.
+- Use restrained spacing, readable type, strong contrast, and polished cards or bands. Avoid giant empty hero areas.
 - No lorem ipsum.
-- No stock-image URLs. Use Tailwind colors, gradients, panels, and typography.
+- No stock-image URLs. Use Tailwind colors, simple texture via CSS classes, panels, and typography.
+- Avoid generic phrases like "solutions", "elevate", "experience excellence", and "unlock your potential".
+- Do not invent certifications, awards, warranties, staff names, prices, or hours not provided.
 - No JavaScript required.
 
 {previous_critique_block}

@@ -12,6 +12,13 @@ const clawDotClasses: Record<string, string> = {
   closer: "bg-violet-500",
 };
 
+const statusClasses: Record<string, string> = {
+  succeeded: "bg-emerald-50 text-emerald-700",
+  failed: "bg-rose-50 text-rose-700",
+  skipped: "bg-slate-100 text-slate-600",
+  started: "bg-sky-50 text-sky-700",
+};
+
 function formatTime(value: string | null) {
   if (!value) {
     return "-";
@@ -25,6 +32,10 @@ function formatTime(value: string | null) {
 
 function dotClass(claw: ClawName) {
   return clawDotClasses[String(claw).toLowerCase()] ?? "bg-slate-400";
+}
+
+function statusClass(status: string) {
+  return statusClasses[status.toLowerCase()] ?? "bg-slate-100 text-slate-600";
 }
 
 export function ActivityFeed() {
@@ -63,12 +74,13 @@ export function ActivityFeed() {
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
         <h2 className="text-base font-semibold tracking-normal text-slate-950">Live Activity</h2>
+        <span className="text-xs font-medium text-slate-500">{actions.length} rows</span>
       </div>
       <div className="max-h-[560px] overflow-y-auto">
         {actions.map((action) => (
-          <article key={action.id} className="border-b border-slate-100 px-4 py-3 last:border-b-0">
+          <article key={action.id} className="border-b border-slate-100 px-4 py-3.5 last:border-b-0">
             <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-2">
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(action.claw_name)}`} />
@@ -78,10 +90,15 @@ export function ActivityFeed() {
               </div>
               <time className="shrink-0 text-xs text-slate-400">{formatTime(action.started_at)}</time>
             </div>
-            <p className="mt-2 text-sm leading-5 text-slate-800">{action.human_readable_log}</p>
-            <p className="mt-1 text-xs text-slate-500">
-              {action.action_type} / {action.status}
-            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-800">{action.human_readable_log}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                {action.action_type}
+              </span>
+              <span className={`rounded-md px-2 py-1 text-xs font-semibold ${statusClass(action.status)}`}>
+                {action.status}
+              </span>
+            </div>
           </article>
         ))}
         {actions.length === 0 && (

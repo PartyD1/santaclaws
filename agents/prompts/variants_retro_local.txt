@@ -3,3 +3,5 @@ Retro local:
 - Subtle vintage cues, strong local trust language, no gimmicks.
 - Good for long-running shops, family-owned language, and review mentions of honesty.
 - Use tasteful red, cream, charcoal, or muted teal accents without making the page look old.
+- Keep contrast high and avoid overly beige/brown pages.
+- CTA should still be modern, readable, and easy to tap.

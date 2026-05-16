@@ -23,6 +23,7 @@
 - Implemented Tasks 34-35 lead detail page and expanded live metrics polling.
 - Implemented Tasks 36-38 Designer self-critique, three-variant winner selection, and Pitcher four-angle quality path.
 - Implemented Tasks 39-41 MEMORY.md updater, demo data seeder, and claw start/stop scripts.
+- Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
 
 ## Spec Consistency Check
 
@@ -91,7 +92,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 39: MEMORY.md self-update.
 - [x] Task 40: Demo data seeder.
 - [x] Task 41: Start/stop all claws scripts.
-- [ ] Task 42-46: Polish, monitor, rehearse, and fix.
+- [x] Task 42-46: Polish, monitor, rehearse, and fix.
 - [ ] Task 47: Vapi inbound stretch.
 
 ## First 5 Tasks To Implement
@@ -191,6 +192,8 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m agents.scripts.seed_demo_data --clear` failed clearly because the local Python environment does not have the `supabase` package installed.
 - `python -m agents.scout.claw --once`, `python -m agents.designer.claw --once`, `python -m agents.pitcher.claw --once`, and `python -m agents.closer.claw --once` ran and exited cleanly with missing local Supabase/OpenAI dependencies.
 - Bash syntax checks for `start_all_claws.sh` and `stop_all_claws.sh` could not run because `bash`/`sh` is unavailable in this Windows session.
+- `npm.cmd run typecheck` passed after Tasks 42-46 dashboard polish.
+- `npm.cmd run build` passed after Tasks 42-46 dashboard polish. Next.js emitted non-fatal webpack cache snapshot warnings.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -294,10 +297,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
 - Need dashboard Supabase env values available at build/runtime for live detail reads.
 
-## TASK 42 Blockers
+## TASK 47 Blockers
 
-- Need install local Python dependencies before live seed/start validation.
-- Need Supabase credentials and applied schema before `seed_demo_data.py` can populate the dashboard.
-- Need live Nemotron route before MEMORY.md updates produce real observations.
-- Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for `start_all_claws.sh` and `stop_all_claws.sh`.
-- Need monitor/rehearsal pass to tune heartbeat intervals and logs before demo.
+- Need run the rehearsal checklist with real credentials and seeded data.
+- Need record the backup demo video before presentation time.
+- Need final live monitor pass to tune heartbeat intervals and verify logs.
+- Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for live `start_all_claws.sh` and `stop_all_claws.sh` use.
+- Need Vapi API key, phone number, webhook URL, and call-flow decision before attempting the stretch.
