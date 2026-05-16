@@ -223,7 +223,7 @@ def heartbeat() -> dict[str, Any]:
     )
 
     try:
-        inserted = scrape_leads.run(city=city, niche=niche, limit=scrape_limit)
+        inserted = scrape_leads.run(city=city, niche=niche, limit=scrape_limit, state=state, country="United States")
         summary["scraped_inserted"] = inserted
         if inserted == 0:
             _safe_log(
