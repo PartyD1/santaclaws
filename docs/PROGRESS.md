@@ -408,3 +408,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Updated pending-lead processing to pull from all attempted niches in the heartbeat.
 - Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
 - Validation: local smoke check confirmed selected niche ordering and legacy singular target normalization.
+
+## 2026-05-16 15:21 PDT — Scout Demo Lead Safety Net
+
+- Added `SCOUT_DEMO_FALLBACK=true` behavior so Scout seeds one clearly labeled `DEMO - ...` lead when all live scrape attempts insert 0 rows.
+- Added optional `SCOUT_TEST_EMAIL` / `OUTREACH_TEST_EMAIL` support so fallback leads can route Pitcher email to a safe test inbox.
+- Fallback leads are realistic pending rows with missing websites, review text, rating, phone, and address so Scout can immediately qualify them for Designer.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: fake insert smoke test confirmed fallback rows are clearly labeled, have `website = null`, and carry `SCOUT_TEST_EMAIL` when set.

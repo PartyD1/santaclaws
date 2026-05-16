@@ -17,7 +17,14 @@ from agents.scout.tools import extract_pain_points, score_website, scrape_leads
 from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
 from agents.shared.openclaw_runtime import load_openclaw_context
-from agents.shared.supabase_client import DEFAULT_SCOUT_NICHES, DEFAULT_TARGET, get_client, next_scout_target, read_memory
+from agents.shared.supabase_client import (
+    DEFAULT_SCOUT_NICHES,
+    DEFAULT_TARGET,
+    get_client,
+    insert_leads,
+    next_scout_target,
+    read_memory,
+)
 
 
 DEFAULT_SCRAPE_LIMIT = 20
@@ -66,6 +73,15 @@ def _int_env(name: str, default: int) -> int:
         return max(1, int(value))
     except ValueError:
         return default
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    """Read a boolean env flag."""
+
+    value = os.environ.get(name, "").strip().lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
 
 
 def _list_env(name: str) -> list[str]:
@@ -289,6 +305,43 @@ def _process_lead(lead: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _seed_demo_lead(city: str, niche: str) -> int:
+    """Insert one realistic demo lead when live scraping returns nothing."""
+
+    timestamp = datetime.now(timezone.utc).strftime("%H%M%S")
+    display_niche = niche.rstrip("s") if niche.endswith("s") else niche
+    email = (
+        os.environ.get("SCOUT_TEST_EMAIL", "").strip()
+        or os.environ.get("OUTREACH_TEST_EMAIL", "").strip()
+        or None
+    )
+    row = {
+        "business_name": f"DEMO - {city} {display_niche.title()} Studio {timestamp}",
+        "address": f"100 Pacific Ave, {city}, CA",
+        "phone": "(831) 555-0198",
+        "email": email,
+        "website": None,
+        "niche": niche,
+        "city": city,
+        "google_rating": 4.7,
+        "review_count": 86,
+        "review_texts": [
+            "Great service, but I had to call twice to understand availability.",
+            "Friendly local team. I wish their website made booking easier.",
+            "The staff was helpful once I reached them by phone.",
+        ],
+        "qualification_status": "pending",
+    }
+    inserted = insert_leads([row])
+    _safe_log(
+        "seed_demo_lead",
+        "succeeded",
+        f"seeded fallback demo lead for {niche} in {city} after live scraping returned no new rows.",
+        {"business_name": row["business_name"], "niche": niche, "city": city, "has_test_email": bool(email)},
+    )
+    return inserted
+
+
 def heartbeat() -> dict[str, Any]:
     """Run one Scout heartbeat."""
 
@@ -305,6 +358,7 @@ def heartbeat() -> dict[str, Any]:
     process_limit = _int_env("SCOUT_PROCESS_LIMIT", DEFAULT_PROCESS_LIMIT)
     niche_attempts = min(len(niches) or 1, _int_env("SCOUT_NICHE_ATTEMPTS", DEFAULT_NICHE_ATTEMPTS))
     scrape_niches = _ordered_niches(niches, niche)[:niche_attempts]
+    demo_fallback = _bool_env("SCOUT_DEMO_FALLBACK", True)
 
     summary: dict[str, Any] = {
         "target": {"city": city, "state": state, "niche": niche, "niches": niches, "attempted_niches": scrape_niches},
@@ -315,6 +369,7 @@ def heartbeat() -> dict[str, Any]:
         "qualified_for_mockup": 0,
         "qualified_for_rebuild": 0,
         "skipped": 0,
+        "demo_fallback_seeded": False,
         "errors": [],
     }
 
@@ -353,6 +408,20 @@ def heartbeat() -> dict[str, Any]:
                 "failed",
                 f"scrape failed for {scrape_niche} in {location}: {exc}",
                 {"error": str(exc), "niche": scrape_niche},
+            )
+
+    if summary["scraped_inserted"] == 0 and demo_fallback and scrape_niches:
+        try:
+            seeded = _seed_demo_lead(city=city, niche=scrape_niches[0])
+            summary["scraped_inserted"] += seeded
+            summary["demo_fallback_seeded"] = bool(seeded)
+        except Exception as exc:
+            summary["errors"].append(f"demo fallback seed failed: {exc}")
+            _safe_log(
+                "seed_demo_lead",
+                "failed",
+                f"could not seed fallback demo lead for {scrape_niches[0]} in {location}: {exc}",
+                {"error": str(exc), "niche": scrape_niches[0]},
             )
 
     leads = []

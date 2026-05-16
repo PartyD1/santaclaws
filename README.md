@@ -129,6 +129,9 @@ SUPABASE_SERVICE_KEY=
 
 APIFY_TOKEN=
 SCOUT_NICHES=restaurants,cafes,hair salons,barbers,fitness centers,spas,house cleaners,contractors
+SCOUT_NICHE_ATTEMPTS=4
+SCOUT_DEMO_FALLBACK=true
+SCOUT_TEST_EMAIL=
 RESEND_API_KEY=
 OUTREACH_FROM_ADDRESS=
 VERCEL_TOKEN=
