@@ -572,6 +572,255 @@ def _agency_template_html(lead: dict[str, Any], variant: str, reason: str = "tem
 </html>"""
 
 
+def _client_website_html(lead: dict[str, Any], variant: str, reason: str = "client website template") -> str:
+    """Render a finished premium client website, with no demo/audit language."""
+
+    business_name = escape(str(lead.get("business_name") or "Apex Motor Works"))
+    niche = escape(str(lead.get("niche") or "auto repair"))
+    city = escape(str(lead.get("city") or "Santa Cruz"))
+    phone = escape(str(lead.get("phone") or "(831) 555-0198"))
+    address = escape(str(lead.get("address") or f"{city}, CA"))
+    hours = escape(str(lead.get("hours") or lead.get("opening_hours") or "Mon-Fri 8:00 AM - 6:00 PM"))
+    rating = escape(str(lead.get("google_rating") or "4.9"))
+    review_count = escape(str(lead.get("review_count") or "240"))
+
+    theme = {
+        "clean_modern": {
+            "accent": "#2563eb",
+            "accent2": "#14b8a6",
+            "dark": "#0f172a",
+            "cream": "#f8fafc",
+            "hero": "Precision service without the dealership wait.",
+            "sub": "Factory-level diagnostics, transparent recommendations, and a calmer service experience for drivers who expect the details done right.",
+            "image": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1600&q=85",
+            "bay": "https://images.unsplash.com/photo-1625047509168-a7026f36de04?auto=format&fit=crop&w=1200&q=85",
+        },
+        "retro_local": {
+            "accent": "#b91c1c",
+            "accent2": "#0f766e",
+            "dark": "#111827",
+            "cream": "#fff7ed",
+            "hero": "Independent repair with premium attention to detail.",
+            "sub": "A modern shop experience rooted in local trust: clear answers, careful inspections, and service that respects your schedule.",
+            "image": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=85",
+            "bay": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=1200&q=85",
+        },
+        "premium": {
+            "accent": "#10b981",
+            "accent2": "#38bdf8",
+            "dark": "#09090b",
+            "cream": "#f4f4f5",
+            "hero": "Dealership-grade care. Independent-shop clarity.",
+            "sub": "Advanced diagnostics, clean communication, and high-confidence repairs for European, performance, and everyday vehicles.",
+            "image": "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1600&q=85",
+            "bay": "https://images.unsplash.com/photo-1599256872237-5dcc0fbe9668?auto=format&fit=crop&w=1200&q=85",
+        },
+    }.get(variant)
+    if theme is None:
+        theme = {
+            "accent": "#2563eb",
+            "accent2": "#14b8a6",
+            "dark": "#0f172a",
+            "cream": "#f8fafc",
+            "hero": "Precision service without the dealership wait.",
+            "sub": "Factory-level diagnostics, transparent recommendations, and a calmer service experience for drivers who expect the details done right.",
+            "image": "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1600&q=85",
+            "bay": "https://images.unsplash.com/photo-1625047509168-a7026f36de04?auto=format&fit=crop&w=1200&q=85",
+        }
+
+    stats = [
+        ("4.9", "average customer rating"),
+        ("18+", "years of combined expertise"),
+        ("24 hr", "diagnostic turnaround goal"),
+        ("3,200+", "vehicles serviced"),
+    ]
+    stat_html = "".join(f"<div><strong>{value}</strong><span>{label}</span></div>" for value, label in stats)
+    services = [
+        ("Advanced Diagnostics", "Electrical, drivability, warning lights, fluid leaks, and performance issues explained clearly before work begins."),
+        ("Brake & Suspension", "Quiet stops, confident handling, inspections, pads, rotors, shocks, struts, and safety-critical repairs."),
+        ("Factory Maintenance", "Mileage-based service, fluids, batteries, belts, filters, inspections, and preventive care for long vehicle life."),
+        ("Performance Care", "High-attention service for drivers who care about response, ride quality, reliability, and detail."),
+    ]
+    service_html = "".join(
+        f"""
+        <article>
+          <span>{index:02d}</span>
+          <h3>{title}</h3>
+          <p>{copy}</p>
+        </article>"""
+        for index, (title, copy) in enumerate(services, start=1)
+    )
+    reviews = [
+        ("Clean shop, clear quote, and no pressure. It felt like dealership quality without the dealership runaround.", "Maya R."),
+        ("They diagnosed the issue quickly and actually explained what mattered now versus what could wait.", "Jordan T."),
+        ("Best repair experience I've had in years. Easy scheduling and the car came back feeling perfect.", "Elena S."),
+    ]
+    review_html = "".join(f"<blockquote><p>{quote}</p><cite>{name}</cite></blockquote>" for quote, name in reviews)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{business_name} | Premium {niche.title()} in {city}</title>
+  <style>
+    :root {{
+      --accent: {theme['accent']};
+      --accent2: {theme['accent2']};
+      --dark: {theme['dark']};
+      --cream: {theme['cream']};
+      --ink: #111827;
+      --muted: #687083;
+      --line: rgba(17, 24, 39, .12);
+      --shadow: 0 24px 70px rgba(15, 23, 42, .14);
+    }}
+    * {{ box-sizing: border-box; }}
+    html {{ scroll-behavior: smooth; }}
+    body {{ margin: 0; background: var(--cream); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }}
+    a {{ color: inherit; }}
+    .wrap {{ width: min(1180px, calc(100% - 34px)); margin: 0 auto; }}
+    .nav {{ position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.9); backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); }}
+    .nav .wrap {{ min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }}
+    .brand strong {{ display: block; font-size: 20px; line-height: 1; }}
+    .brand span, .eyebrow {{ display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }}
+    .nav-links {{ display: flex; align-items: center; gap: 22px; color: #374151; font-size: 14px; font-weight: 700; }}
+    .nav-links a {{ text-decoration: none; }}
+    .button {{ display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 8px; padding: 0 20px; background: var(--accent); color: white; font-weight: 900; text-decoration: none; box-shadow: 0 16px 34px color-mix(in srgb, var(--accent) 35%, transparent); }}
+    .button.dark {{ background: var(--dark); box-shadow: 0 16px 34px rgba(0,0,0,.22); }}
+    .hero {{ position: relative; overflow: hidden; background: var(--dark); color: white; }}
+    .hero::before {{ content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.86), rgba(0,0,0,.55) 45%, rgba(0,0,0,.08)), url("{theme['image']}") center/cover; transform: scale(1.02); }}
+    .hero .wrap {{ position: relative; min-height: 720px; display: grid; align-items: end; padding: 88px 0 54px; }}
+    .hero-copy {{ max-width: 780px; }}
+    h1 {{ margin: 18px 0 0; font-size: clamp(52px, 8vw, 104px); line-height: .88; letter-spacing: 0; }}
+    .hero p {{ max-width: 650px; margin: 26px 0 0; color: rgba(255,255,255,.78); font-size: 20px; line-height: 1.7; }}
+    .hero-actions {{ display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }}
+    .ghost {{ display: inline-flex; align-items: center; justify-content: center; min-height: 46px; border-radius: 8px; padding: 0 20px; border: 1px solid rgba(255,255,255,.34); color: white; font-weight: 900; text-decoration: none; }}
+    .stats {{ position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }}
+    .stats div {{ background: white; padding: 30px; }}
+    .stats strong {{ display: block; font-size: 42px; line-height: 1; }}
+    .stats span {{ display: block; margin-top: 10px; color: var(--muted); font-weight: 700; }}
+    section {{ padding: 86px 0; }}
+    .section-head {{ display: flex; align-items: end; justify-content: space-between; gap: 28px; margin-bottom: 34px; }}
+    .section-head h2 {{ margin: 10px 0 0; max-width: 760px; font-size: clamp(36px, 5vw, 64px); line-height: .98; letter-spacing: 0; }}
+    .section-head p {{ max-width: 430px; color: var(--muted); font-size: 17px; line-height: 1.65; }}
+    .services {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }}
+    .services article {{ min-height: 320px; border-radius: 8px; padding: 26px; background: white; border: 1px solid var(--line); box-shadow: 0 18px 46px rgba(15,23,42,.08); display: flex; flex-direction: column; justify-content: space-between; }}
+    .services span {{ color: var(--accent); font-weight: 950; }}
+    .services h3 {{ margin: 22px 0 0; font-size: 25px; line-height: 1.08; }}
+    .services p {{ color: var(--muted); line-height: 1.62; }}
+    .split {{ display: grid; grid-template-columns: .9fr 1.1fr; gap: 22px; align-items: stretch; }}
+    .photo {{ min-height: 560px; border-radius: 8px; background: url("{theme['bay']}") center/cover; box-shadow: var(--shadow); }}
+    .panel {{ border-radius: 8px; padding: clamp(30px, 5vw, 56px); background: white; border: 1px solid var(--line); box-shadow: var(--shadow); }}
+    .panel h2 {{ margin: 12px 0 0; font-size: clamp(34px, 4vw, 58px); line-height: 1; }}
+    .panel p, .panel li {{ color: var(--muted); line-height: 1.75; font-size: 17px; }}
+    .panel ul {{ margin: 28px 0 0; padding: 0; list-style: none; display: grid; gap: 14px; }}
+    .panel li {{ display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }}
+    .panel li::before {{ content: "✓"; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--accent); color: white; font-weight: 900; }}
+    .reviews {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }}
+    blockquote {{ margin: 0; border-radius: 8px; padding: 28px; background: white; border: 1px solid var(--line); box-shadow: 0 18px 46px rgba(15,23,42,.08); }}
+    blockquote p {{ margin: 0; color: #344054; line-height: 1.7; font-size: 17px; }}
+    cite {{ display: block; margin-top: 22px; color: var(--ink); font-style: normal; font-weight: 900; }}
+    .contact {{ display: grid; grid-template-columns: 1fr .85fr; gap: 18px; }}
+    .contact-card {{ border-radius: 8px; padding: 36px; background: var(--dark); color: white; box-shadow: var(--shadow); }}
+    .contact-card p {{ color: rgba(255,255,255,.72); line-height: 1.7; }}
+    .info {{ border-radius: 8px; padding: 36px; background: white; border: 1px solid var(--line); }}
+    .info dl {{ display: grid; gap: 18px; margin: 26px 0 0; }}
+    .info dt {{ color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }}
+    .info dd {{ margin: 4px 0 0; font-size: 18px; font-weight: 800; }}
+    footer {{ padding: 34px 0 94px; color: var(--muted); text-align: center; }}
+    .mobile-call {{ display: none; position: fixed; left: 14px; right: 14px; bottom: 14px; z-index: 60; }}
+    @media (max-width: 980px) {{
+      .services, .reviews, .stats {{ grid-template-columns: repeat(2, 1fr); }}
+      .split, .contact {{ grid-template-columns: 1fr; }}
+      .photo {{ min-height: 420px; }}
+    }}
+    @media (max-width: 680px) {{
+      .nav-links {{ display: none; }}
+      .hero .wrap {{ min-height: 660px; }}
+      h1 {{ font-size: 50px; }}
+      .stats, .services, .reviews {{ grid-template-columns: 1fr; }}
+      .section-head {{ display: block; }}
+      .nav .button {{ display: none; }}
+      .mobile-call {{ display: flex; }}
+    }}
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap">
+      <div class="brand"><strong>{business_name}</strong><span>{city} premium {niche}</span></div>
+      <div class="nav-links"><a href="#services">Services</a><a href="#about">About</a><a href="#reviews">Reviews</a><a href="#contact">Contact</a></div>
+      <a class="button dark" href="tel:{phone}">Call {phone}</a>
+    </div>
+  </nav>
+  <header class="hero">
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">Premium dealership alternative</span>
+        <h1>{theme['hero']}</h1>
+        <p>{theme['sub']}</p>
+        <div class="hero-actions"><a class="button" href="tel:{phone}">Call {phone}</a><a class="ghost" href="#services">Explore services</a></div>
+      </div>
+    </div>
+  </header>
+  <div class="stats">{stat_html}</div>
+  <main>
+    <section id="services">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="eyebrow">What we service</span><h2>Everything your vehicle needs, presented with confidence.</h2></div>
+          <p>Clear categories help customers understand the shop's expertise before they ever pick up the phone.</p>
+        </div>
+        <div class="services">{service_html}</div>
+      </div>
+    </section>
+    <section id="about">
+      <div class="wrap split">
+        <div class="photo" aria-label="Premium auto repair shop"></div>
+        <div class="panel">
+          <span class="eyebrow">Why drivers choose {business_name}</span>
+          <h2>Independent service with a premium standard.</h2>
+          <p>{business_name} gives {city} drivers a cleaner way to handle repairs: strong diagnostics, thoughtful communication, and work that feels organized from the first call.</p>
+          <ul>
+            <li>Transparent recommendations before repair work begins.</li>
+            <li>Modern diagnostics for warning lights, drivability, electrical, and performance issues.</li>
+            <li>Convenient scheduling and a polished customer experience from drop-off to pickup.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <section id="reviews">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="eyebrow">Customer confidence</span><h2>{rating} stars from {review_count} reviews.</h2></div>
+          <p>A premium shop website should make trust obvious immediately, especially on mobile.</p>
+        </div>
+        <div class="reviews">{review_html}</div>
+      </div>
+    </section>
+    <section id="contact">
+      <div class="wrap contact">
+        <div class="contact-card">
+          <span class="eyebrow">Schedule service</span>
+          <h2>Ready for a better repair experience?</h2>
+          <p>Call now for diagnostics, maintenance, brake work, inspections, or a clear second opinion.</p>
+          <a class="button" href="tel:{phone}" style="margin-top:18px;background:white;color:var(--dark)">Call {phone}</a>
+        </div>
+        <div class="info">
+          <span class="eyebrow">Shop information</span>
+          <dl>
+            <div><dt>Address</dt><dd>{address}</dd></div>
+            <div><dt>Hours</dt><dd>{hours}</dd></div>
+            <div><dt>Service area</dt><dd>{city} and nearby drivers</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap">{business_name} - Premium {niche} in {city}</footer>
+  <a class="button mobile-call" href="tel:{phone}">Call {phone}</a>
+</body>
+</html>"""
 def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | None = None) -> str:
     """Generate a valid single-file Tailwind HTML mockup."""
 
@@ -581,13 +830,13 @@ def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | 
     last_payload: dict[str, Any] | None = None
 
     if _template_mode_enabled():
-        html = _agency_template_html(lead, variant)
+        html = _client_website_html(lead, variant)
         _safe_log(
             "generate_mockup",
             "succeeded",
-            f"rendered template-first {variant} mockup for {business_name}.",
+            f"rendered client website {variant} mockup for {business_name}.",
             lead_id,
-            {"variant": variant, "renderer": "premium_template"},
+            {"variant": variant, "renderer": "client_website_template"},
         )
         return html
 
@@ -599,7 +848,7 @@ def run(lead: dict[str, Any], variant: str, previous_critique: dict[str, Any] | 
                 retries=1,
             )
         except Exception as exc:
-            html = _agency_template_html(lead, variant, str(exc))
+            html = _client_website_html(lead, variant, str(exc))
             _safe_log(
                 "generate_mockup",
                 "succeeded",
