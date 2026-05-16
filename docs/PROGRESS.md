@@ -11,6 +11,7 @@
 - Implemented Task 9 Supabase dataclasses and helper functions.
 - Implemented Task 10 action logger in `agents/shared/logger.py`.
 - Implemented Task 11 outbound Discord webhook bridge in `agents/shared/discord_bridge.py`.
+- Implemented Tasks 12-14 Scout tools: Apify scraping, website scoring, and review pain extraction.
 
 ## Spec Consistency Check
 
@@ -49,9 +50,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 9: Supabase client and helpers.
 - [x] Task 10: Action logger.
 - [x] Task 11: Discord outbound bridge.
-- [ ] Task 12: Scout `scrape_leads`.
-- [ ] Task 13: Scout `score_website`.
-- [ ] Task 14: Scout `extract_pain_points`.
+- [x] Task 12: Scout `scrape_leads`.
+- [x] Task 13: Scout `score_website`.
+- [x] Task 14: Scout `extract_pain_points`.
 - [ ] Task 15: Scout claw integration.
 - [ ] Task 16: Designer `generate_mockup`.
 - [ ] Task 17: Designer `screenshot_html`.
@@ -124,6 +125,11 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/shared/discord_bridge.py` passed.
 - `python -m agents.shared.discord_bridge` skipped the live webhook smoke test because `DISCORD_WEBHOOK_URL` is not set.
 - Discord payload truncation and embed formatting were validated locally.
+- `python -m compileall agents/integrations/apify_client.py agents/scout/tools/scrape_leads.py agents/scout/tools/score_website.py agents/scout/tools/extract_pain_points.py` passed.
+- Scout tool imports passed.
+- `score_website.run(None)` returned score 0 with `no website`.
+- `extract_pain_points.run(...)` with no reviews returned an empty list gracefully.
+- Scout tool signatures were validated with `inspect.signature`.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -156,8 +162,17 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need Discord webhook/channel created from Task 7.
 - Discord failures currently print readable console logs and raise to the calling claw.
 
-## TASK 12 Blockers
+## TASKS 12-14 Runtime Blockers
 
 - Need `APIFY_TOKEN` in `.env`.
 - Need the Apify actor name and input shape verified against the live account.
 - Need Supabase credentials/schema ready so scraped leads can be inserted and deduped.
+- Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and Nemotron credentials or NemoClaw/OpenShell route for live pain extraction.
+- Need Python dependencies installed locally for live `httpx`, `supabase`, and `openai` calls.
+
+## TASK 15 Blockers
+
+- Need live Supabase credentials and schema for Scout heartbeat integration.
+- Need a working Apify scrape from Task 12 against Santa Cruz auto repair.
+- Need a working Nemotron JSON call from Task 8 for `extract_pain_points`.
+- Need Discord webhook URL if Scout heartbeat summaries should post during validation.
