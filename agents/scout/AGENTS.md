@@ -11,9 +11,8 @@ Workflow:
 5. Score each website.
 6. Extract review pain points when reviews exist.
 7. Set `qualification_status`:
-   - `qualified_for_mockup` for missing websites or very weak sites.
-   - `qualified_for_rebuild` for weak but usable sites.
-   - `skip` for strong sites, irrelevant rows, or bad data.
+   - `qualified_for_mockup` for email-ready leads with basic business data.
+   - `skip` for missing email, irrelevant rows, or bad data.
 8. Write action logs and post a short Discord summary when configured.
 
 Do not call Designer, Pitcher, or Closer directly. Supabase is the handoff.

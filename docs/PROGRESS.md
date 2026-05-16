@@ -475,3 +475,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Updated Closer classification copy, tool docs, and README table notes to describe email replies only.
 - Validation: `python -m compileall agents/closer/claw.py agents/closer/tools/classify_reply.py agents/shared/supabase_client.py` passed.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 16:18 PDT — Scout Demo Qualification
+
+- Removed website-score thresholds from Scout qualification for the demo pipeline.
+- Scout now qualifies any email-ready lead with basic business data as `qualified_for_mockup`.
+- Scout still skips rows that are missing an email or are too incomplete to personalize.
+- Validation: `python -m compileall agents/scout/claw.py` passed.
+- Validation: `git diff --check` passed.
