@@ -371,3 +371,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Seeded new Supabase installs with a `config.target.niches` list instead of one fixed niche.
 - Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
 - Validation: local target parsing smoke check confirmed `SCOUT_NICHES`, legacy single-target upgrade, and Supabase `niches` list handling.
+
+## 2026-05-16 14:47 PDT — Industry-Aware Designer Templates
+
+- Added Designer industry profiles for automotive, dental, plumbing, electrical, roofing, landscaping, HVAC, and pet grooming leads.
+- Wired the three polished client-facing website layouts to use industry-specific hero copy, services, stats, reviews, process language, and image assets.
+- Validation: `python -m compileall agents/designer/tools/generate_mockup.py` passed.
+- Validation: generated local smoke HTML for dentist, plumber, and electrician leads; each produced complete HTML with the right business name and industry title.
