@@ -26,25 +26,6 @@
 - Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
 - Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
 - Replaced remaining demo-risk placeholders and documented the placeholder audit in `docs/PLACEHOLDER_AUDIT.md`.
-- Updated the default NemoClaw/Nemotron model configuration to `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`.
-- Fixed Supabase timestamp parsing for Python 3.9 local venvs that reject five-digit fractional seconds.
-- Added Supabase-backed `agent_memory` persistence with `MEMORY.md` as a compatibility cache and deterministic fallback memory when Nemotron is unreachable.
-- Added a `agents/scripts/preflight_check.py` runtime checker for Python/package/env/Supabase table readiness.
-- Added `SETUP.md` as a teammate command reference for Brev, Ubuntu, NemoClaw, claw tests, dashboard, and full demo runs.
-- Added per-claw dashboard pages for live status, action logs, durable memory, and claw-specific work queues/outputs.
-- Added an OpenClaw-compatible runtime context loader plus `agents.scripts.openclaw_run`, and moved `start_all_claws.sh` onto that heartbeat runner.
-- Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
-- Added Discord approval worker `PING`/`HELP` health replies and startup channel-id logging for demo debugging.
-- Added a deterministic Designer fallback mockup path when Nemotron generation is unavailable, reset failed Designer claims, and restored one-variant MVP default.
-- Upgraded Designer mockup quality prompts and fallback HTML with richer local-business structure, service cards, trust cues, pain-point fixes, and stronger contact sections.
-- Switched Designer to template-first rendering by default, adding Scout audit statistics, opportunity cards, service clarity panels, and polished variant styling.
-- Replaced the visible Designer renderer with agency-grade templates using custom CSS, asymmetric hero layouts, audit dashboards, sticky mobile CTA, and stronger service/contact composition.
-- Replaced the visible Designer renderer again with finished client-facing websites: no Scout/Mainstreet/audit language, premium dealership-alternative positioning, full-site sections, real image assets, and client-facing stats.
-- Added three auto-repair website layouts with deterministic per-business rotation: showroom premium, concierge service journey, and performance garage.
-- Updated Designer one-variant MVP mode to rotate between `clean_modern`, `retro_local`, and `premium` per business instead of always generating `clean_modern`; fallback winner now avoids clean-modern tie bias.
-- Restored Vercel-first mockup URL storage so Designer keeps Vercel deployment links instead of rejecting protected links and falling back to Supabase Storage.
-- Updated Vercel mockup deployment to use one stable project via `VERCEL_PROJECT_ID` or `VERCEL_PROJECT_NAME` instead of creating one project per generated website.
-- Rebranded the visible product and dashboard UI from Mainstreet to Santa Claws, with festive agent names: Rudolph Scout, Workshop Elves, Snowball Pitcher, and Cookie Closer.
 
 ## Spec Consistency Check
 
@@ -147,17 +128,6 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd run typecheck` passed.
 - `npm.cmd run build` passed.
 - `python -m compileall agents/shared/nemotron_client.py` passed.
-- `rg "nemotron-3-super|Super 120B|super-120b"` returned no remaining old model references after switching to Nano Omni 30B reasoning.
-- Supabase timestamp parser validated against `2026-05-16T09:13:49.04514+00:00`, normalizing it to Python-compatible microseconds.
-- `python -m compileall agents/shared/memory_updater.py agents/shared/supabase_client.py` passed after adding durable memory helpers.
-- Fallback Scout memory pattern generation validated with a 5-lead heartbeat summary.
-- `python -m compileall agents/scripts/preflight_check.py` passed.
-- `python -m agents.scripts.preflight_check --skip-live` produced clear FAIL/WARN diagnostics in the local non-venv shell.
-- `npm run typecheck` passed after adding per-claw dashboard pages.
-- `npm run build` passed after adding per-claw dashboard pages.
-- `python -m compileall agents/shared/openclaw_runtime.py agents/scripts/openclaw_run.py agents/scout/claw.py` passed after adding the OpenClaw-compatible runner.
-- `python -m agents.scripts.openclaw_run scout --once` loaded Scout's OpenClaw-compatible context and exited cleanly in the local missing-credential path.
-- `bash -n agents/scripts/start_all_claws.sh` passed after moving start-all onto the OpenClaw-compatible runner.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.
@@ -179,15 +149,6 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/designer/tools agents/integrations/vercel_client.py agents/integrations/supabase_storage_client.py` passed.
 - Designer tool imports passed.
 - Designer prompt formatting and HTML validation checks passed.
-- Designer fallback mockup generation returns valid Tailwind HTML containing the business name when Nemotron is unavailable.
-- Designer fallback quality smoke confirmed generated HTML includes hero, service cards, pain-point fixes, contact CTA, and valid document structure.
-- Designer template-first smoke confirmed generated HTML includes audit stats, Scout score, service board, service cards, pain fixes, and contact CTA.
-- Agency template smoke confirmed all variants include custom CSS, audit dashboard, mobile CTA, services, contact, and valid HTML.
-- Client website template smoke confirmed all variants include real image assets, premium positioning, services, reviews, contact, and no Scout/Mainstreet/audit language.
-- Multi-template smoke confirmed different auto shops rotate across at least two finished website layouts while preserving client-facing content.
-- Designer variant selection smoke confirmed MVP mode rotates styles across sample businesses and fallback winner prefers premium/local on ties.
-- `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after restoring Vercel-first URL storage.
-- Vercel payload smoke confirmed mockups target a stable `mainstreet-mockups` project name.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.
 - `pick_winner.run(...)` falls back to highest critique score when Nemotron/OpenAI is unavailable.
 - `deploy_to_vercel.run(...)` fails clearly when both Vercel and Supabase Storage dependencies/credentials are unavailable.
@@ -204,7 +165,6 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m compileall agents/pitcher/claw.py workers/discord_bridge.py` passed.
 - Pitcher heartbeat and Discord approval worker imports passed.
 - Discord approval parser validated `APPROVE`, `SKIP`, and one-line `EDIT`.
-- Discord approval worker now recognizes `PING` and `HELP` health checks in the configured approval channel.
 - `python -m agents.pitcher.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `python -m workers.discord_bridge` printed fallback approval instructions because bot credentials are not configured.
 - Discord approval worker `EDIT` update/approval insert path was validated with a fake client.
@@ -261,7 +221,7 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need working NemoClaw/OpenShell inference route or direct NVIDIA fallback URL.
 - Need `NEMOTRON_BASE_URL`, `NEMOTRON_MODEL`, and either routed credentials or `NVIDIA_API_KEY`.
 - Need confirmation whether the NemoClaw gateway accepts placeholder API key `openshell`.
-- Need to verify whether `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
+- Need to verify whether `nvidia/nemotron-3-super-120b-a12b` supports `response_format={"type": "json_object"}` and vision calls in the selected route.
 
 ## TASK 9 Runtime Blockers
 
@@ -364,10 +324,34 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.
 - Need run the rate-limit check in an environment with installed Python dependencies and real Nemotron/Apify credentials.
 
-## 2026-05-16 14:41 PDT — Scout Niche Rotation
+## Full Local Validation - 2026-05-16
 
-- Updated Scout target resolution so the legacy single `auto repair` config rotates through a broader Santa Cruz local-services niche list.
-- Added `SCOUT_NICHES` as the fastest demo override for comma-separated Scout categories.
-- Seeded new Supabase installs with a `config.target.niches` list instead of one fixed niche.
-- Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
-- Validation: local target parsing smoke check confirmed `SCOUT_NICHES`, legacy single-target upgrade, and Supabase `niches` list handling.
+- Git status was clean at validation start on `main` tracking `origin/main`; recent commits included placeholder replacement, Vapi stretch, demo runbook polish, memory/demo scripts, and quality upgrades.
+- Python import sweep passed for `agents`, `integrations`, and `workers`.
+- `python -m compileall agents integrations workers` passed.
+- Claw one-shot checks passed without crashing:
+  - `python -m agents.scout.claw --once`
+  - `python -m agents.designer.claw --once`
+  - `python -m agents.pitcher.claw --once`
+  - `python -m agents.closer.claw --once`
+- The claws failed gracefully because local runtime dependencies and live credentials are not configured.
+- `python -m agents.scripts.rate_limit_check --nemotron-rounds 1 --skip-apify` failed clearly because the local `openai` package is missing.
+- `python -m agents.scripts.seed_demo_data --clear` failed clearly because the local `supabase` package is missing.
+- `python -m agents.integrations.vapi_client` skipped clearly because `VAPI_WEBHOOK_URL` is not configured.
+- Dashboard validation passed:
+  - `npm.cmd install --ignore-scripts`
+  - `npm.cmd run typecheck`
+  - `npm.cmd run build`
+- Dashboard build emitted non-fatal webpack cache snapshot warnings.
+- npm still reports 2 audit findings: 1 moderate and 1 high. No package upgrades were applied during validation.
+
+## Full Local Validation Blockers - 2026-05-16
+
+- Install Python dependencies with `pip install -r agents/requirements.txt`. Missing locally: `openai`, `supabase`, `httpx`, `playwright`, Discord, Google API, and dotenv packages.
+- Configure Supabase env values: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Apply the Supabase schema and seed demo rows before rehearsal.
+- Configure Nemotron/NemoClaw env values: `NVIDIA_API_KEY`, `NEMOTRON_BASE_URL`, and `NEMOTRON_MODEL`.
+- Configure live integration keys as needed for the demo path: `APIFY_TOKEN`, `RESEND_API_KEY`, `OUTREACH_FROM_ADDRESS`, `VERCEL_TOKEN`, `DISCORD_WEBHOOK_URL`, and Google Calendar OAuth values.
+- Run `playwright install chromium` before screenshot-based Designer validation.
+- Use Git Bash, WSL, or NemoClaw shell for `agents/scripts/start_all_claws.sh` and `agents/scripts/stop_all_claws.sh`.
+- Configure Vapi stretch values only if voice is included: `VAPI_API_KEY`, `VAPI_PHONE_NUMBER`, and `VAPI_WEBHOOK_URL`.
