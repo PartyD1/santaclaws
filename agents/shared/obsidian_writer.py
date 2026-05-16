@@ -19,6 +19,18 @@ _CLAW_DESCRIPTIONS = {
 
 _PIPELINE = "[[Scout Memory]] → [[Designer Memory]] → [[Pitcher Memory]] → [[Closer Memory]]"
 
+_DOC_FILES: dict[str, tuple[str, list[str]]] = {
+    "soul":      ("SOUL.md",      ["soul"]),
+    "tools":     ("TOOLS.md",     ["tools"]),
+    "agents":    ("AGENTS.md",    ["workflow"]),
+    "heartbeat": ("HEARTBEAT.md", ["heartbeat"]),
+}
+
+def _doc_nav(claw_name: str) -> str:
+    title = claw_name.title()
+    parts = [f"[[{title} Memory]]", f"[[{title} Soul]]", f"[[{title} Tools]]", f"[[{title} Agents]]", f"[[{title} Heartbeat]]"]
+    return " | ".join(parts)
+
 
 def _note_path(claw_name: str) -> Path:
     return VAULT_DIR / f"{claw_name.title()} Memory.md"
@@ -96,8 +108,43 @@ def _write_agent_note(claw_name: str) -> None:
     path.write_text(body, encoding="utf-8")
 
 
+def _write_agent_docs(claw_name: str) -> None:
+    """Write SOUL, TOOLS, AGENTS, HEARTBEAT notes for one claw."""
+    agents_dir = Path(__file__).resolve().parents[1] / claw_name
+    title = claw_name.title()
+    nav = _doc_nav(claw_name)
+    for key, (filename, tags) in _DOC_FILES.items():
+        src = agents_dir / filename
+        if not src.exists():
+            continue
+        raw = src.read_text(encoding="utf-8").strip()
+        # Strip a leading # heading from the source so we don't duplicate it
+        lines = raw.splitlines()
+        if lines and lines[0].startswith("# "):
+            raw = "\n".join(lines[1:]).lstrip("\n")
+        tag_str = ", ".join([claw_name] + tags)
+        doc_title = f"{title} {key.title()}"
+        body = (
+            f"---\ntags: [{tag_str}]\nclaw: {claw_name}\n---\n\n"
+            f"# {doc_title}\n\n"
+            f"> {nav}\n\n"
+            f"{raw}\n"
+        )
+        (VAULT_DIR / f"{doc_title}.md").write_text(body, encoding="utf-8")
+
+
 def _write_home() -> None:
     path = VAULT_DIR / "Home.md"
+    rows = ""
+    for claw, desc in [
+        ("Scout",    "Finds and scores local auto repair shop leads"),
+        ("Designer", "Generates website mockups for qualified leads"),
+        ("Pitcher",  "Drafts and queues personalized outreach emails"),
+        ("Closer",   "Classifies inbound replies and books meetings"),
+    ]:
+        cl = claw.lower()
+        docs = f"[[{claw} Soul]] · [[{claw} Tools]] · [[{claw} Agents]] · [[{claw} Heartbeat]]"
+        rows += f"| [[{claw} Memory]] | {desc} | {docs} |\n"
     path.write_text(
         "---\ntags: [home, index]\n---\n\n"
         "# Mainstreet Agent Memory\n\n"
@@ -105,15 +152,12 @@ def _write_home() -> None:
         "## Pipeline\n\n"
         f"{_PIPELINE}\n\n"
         "## Agents\n\n"
-        "| Agent | Role |\n"
-        "| --- | --- |\n"
-        "| [[Scout Memory]] | Finds and scores local auto repair shop leads |\n"
-        "| [[Designer Memory]] | Generates website mockups for qualified leads |\n"
-        "| [[Pitcher Memory]] | Drafts and queues personalized outreach emails |\n"
-        "| [[Closer Memory]] | Classifies inbound replies and books meetings |\n\n"
+        "| Memory | Role | Docs |\n"
+        "| --- | --- | --- |\n"
+        f"{rows}\n"
         "## Usage\n\n"
         "- Open this folder in Obsidian → graph view shows agent relationships\n"
-        "- Notes auto-update as claws run — each heartbeat appends a new entry\n"
+        "- Memory notes auto-update as claws run — each heartbeat appends a new entry\n"
         "- Search `#error` to find recent failures across all agents\n",
         encoding="utf-8",
     )
@@ -134,6 +178,7 @@ def init_vault() -> None:
     _write_home()
     for claw_name in VALID_CLAWS:
         _write_agent_note(claw_name)
+        _write_agent_docs(claw_name)
     print(f"Obsidian vault initialized at {VAULT_DIR}")
 
 

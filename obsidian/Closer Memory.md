@@ -10,7 +10,6 @@ claw: closer
 
 ## Observations
 
-_No observations yet._
 ### 2026-05-16 20:39 UTC
 ❌ Last closer heartbeat had a recoverable error: Connection error.
 
