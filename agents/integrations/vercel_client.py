@@ -49,6 +49,17 @@ def _safe_slug(slug: str) -> str:
     return value[:80] or "mainstreet-mockup"
 
 
+def _project_name() -> str:
+    """Return the stable Vercel project used for all mockup deployments."""
+
+    _load_env()
+    return (
+        os.environ.get("VERCEL_PROJECT_ID", "").strip()
+        or os.environ.get("VERCEL_PROJECT_NAME", "").strip()
+        or "mainstreet-mockups"
+    )
+
+
 def deploy_html_as_site(html: str, slug: str) -> str:
     """Deploy HTML to Vercel and return the public URL."""
 
@@ -65,11 +76,16 @@ def deploy_html_as_site(html: str, slug: str) -> str:
     if team_id:
         params["teamId"] = team_id
 
+    safe_slug = _safe_slug(slug)
     payload: dict[str, Any] = {
-        "name": _safe_slug(slug),
-        "files": [{"file": "index.html", "data": html}],
+        "name": _project_name(),
+        "project": _project_name(),
+        "files": [
+            {"file": "index.html", "data": html},
+            {"file": f"mockups/{safe_slug}/index.html", "data": html},
+        ],
         "public": True,
-        "meta": {"mainstreet_public_mockup": "true"},
+        "meta": {"mainstreet_public_mockup": "true", "mainstreet_mockup_slug": safe_slug},
         "projectSettings": {"framework": None},
         "target": "production",
     }
