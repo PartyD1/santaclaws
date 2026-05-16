@@ -409,6 +409,52 @@ def insert_memory(
     return row
 
 
+def pipeline_counts() -> dict[str, int]:
+    """Return lead counts at each pipeline stage for bot and dashboard queries."""
+
+    db = get_client()
+
+    def _count(table: str, filters: list) -> int:
+        try:
+            q = db.table(table).select("id", count="exact")
+            for method, *args in filters:
+                q = getattr(q, method)(*args)
+            return q.execute().count or 0
+        except Exception:
+            return 0
+
+    return {
+        "scouted": _count("leads", []),
+        "pending_design": _count("leads", [
+            ("in_", "qualification_status", ["qualified_for_mockup", "qualified_for_rebuild"]),
+            ("eq", "worked_by_designer", False),
+            ("eq", "do_not_contact", False),
+        ]),
+        "pending_pitch": _count("leads", [
+            ("eq", "worked_by_designer", True),
+            ("eq", "worked_by_pitcher", False),
+            ("eq", "do_not_contact", False),
+        ]),
+        "pitched": _count("leads", [("eq", "worked_by_pitcher", True)]),
+        "pending_approval": _count("outreach", [("eq", "status", "pending_approval")]),
+        "unhandled_inbound": _count("inbound", [("is_", "handled_at", "null")]),
+    }
+
+
+def recent_actions_all(limit: int = 4) -> list[dict[str, Any]]:
+    """Return the most recent actions across all claws, newest first."""
+
+    response = (
+        get_client()
+        .table("actions")
+        .select("claw_name, action_type, status, human_readable_log, started_at")
+        .order("started_at", desc=True)
+        .limit(limit * 4)
+        .execute()
+    )
+    return _data(response)
+
+
 def recent_memory(claw_name: ClawName, limit: int = 30) -> list[dict[str, Any]]:
     """Return recent durable memory rows for one claw."""
 
