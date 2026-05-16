@@ -337,12 +337,22 @@ def _memory_path(claw_name: str) -> Path:
 
 
 def read_memory(claw_name: ClawName) -> str:
-    """Read a claw's local MEMORY.md file."""
+    """Read durable claw memory from Supabase, falling back to MEMORY.md."""
+
+    db_memory = ""
+    try:
+        rows = recent_memory(claw_name, limit=30)
+        if rows:
+            db_memory = "\n".join(f"- {row['created_at']} - {row['pattern']}" for row in reversed(rows))
+    except Exception:
+        db_memory = ""
 
     path = _memory_path(claw_name)
-    if not path.exists():
-        return ""
-    return path.read_text(encoding="utf-8")
+    file_memory = path.read_text(encoding="utf-8") if path.exists() else ""
+
+    if db_memory and file_memory.strip():
+        return f"{db_memory}\n\nLocal compatibility cache:\n{file_memory}"
+    return db_memory or file_memory
 
 
 def append_memory(claw_name: ClawName, pattern: str) -> None:
@@ -355,3 +365,47 @@ def append_memory(claw_name: ClawName, pattern: str) -> None:
     timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with path.open("a", encoding="utf-8") as handle:
         handle.write(f"\n- {timestamp} - {pattern.strip()}\n")
+
+
+def insert_memory(
+    claw_name: ClawName,
+    pattern: str,
+    source: str = "nemotron",
+    heartbeat_summary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Persist one claw memory observation to Supabase."""
+
+    if claw_name not in VALID_CLAWS:
+        raise SupabaseDataError(f"Invalid claw_name for memory: {claw_name}")
+    pattern = pattern.strip()
+    if not pattern:
+        raise SupabaseDataError("pattern is required for memory insert.")
+
+    payload = {
+        "claw_name": claw_name,
+        "pattern": pattern,
+        "source": source,
+        "heartbeat_summary": heartbeat_summary,
+    }
+    response = get_client().table("agent_memory").insert(payload).execute()
+    row = _first(response)
+    if not row:
+        raise SupabaseDataError("insert_memory did not return an inserted row.")
+    return row
+
+
+def recent_memory(claw_name: ClawName, limit: int = 30) -> list[dict[str, Any]]:
+    """Return recent durable memory rows for one claw."""
+
+    if claw_name not in VALID_CLAWS:
+        raise SupabaseDataError(f"Invalid claw_name for memory: {claw_name}")
+    response = (
+        get_client()
+        .table("agent_memory")
+        .select("created_at, pattern, source")
+        .eq("claw_name", claw_name)
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return _data(response)

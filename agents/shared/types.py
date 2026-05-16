@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import re
 from typing import Any, Literal
 from uuid import UUID
 
@@ -34,6 +35,9 @@ ApprovalDecision = Literal["approve", "edit", "skip", "escalate"]
 MeetingStatus = Literal["booked", "completed", "cancelled"]
 
 
+_TIMESTAMP_FRACTION_RE = re.compile(r"(\.\d+)([+-]\d{2}:\d{2})$")
+
+
 def _uuid(value: Any) -> UUID:
     """Convert Supabase UUID strings to UUID objects."""
 
@@ -51,7 +55,13 @@ def _dt(value: Any) -> datetime:
 
     if isinstance(value, datetime):
         return value
-    return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    timestamp = str(value).replace("Z", "+00:00")
+    match = _TIMESTAMP_FRACTION_RE.search(timestamp)
+    if match:
+        fraction, tz_offset = match.groups()
+        normalized_fraction = fraction[:7].ljust(7, "0")
+        timestamp = f"{timestamp[:match.start()]}{normalized_fraction}{tz_offset}"
+    return datetime.fromisoformat(timestamp)
 
 
 def _optional_dt(value: Any) -> datetime | None:

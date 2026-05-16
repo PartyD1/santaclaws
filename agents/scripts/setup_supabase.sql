@@ -141,6 +141,17 @@ create table if not exists config (
   updated_at timestamptz default now()
 );
 
+create table if not exists agent_memory (
+  id uuid primary key default gen_random_uuid(),
+  claw_name text not null,
+  pattern text not null,
+  source text not null default 'nemotron',
+  heartbeat_summary jsonb,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_agent_memory_claw_recent on agent_memory(claw_name, created_at desc);
+
 insert into config (key, value) values
   ('target', '{"niche": "auto repair", "city": "Santa Cruz", "state": "CA"}'),
   ('autonomous_mode', 'false'),

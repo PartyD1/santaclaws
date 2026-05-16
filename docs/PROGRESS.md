@@ -27,6 +27,8 @@
 - Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
 - Replaced remaining demo-risk placeholders and documented the placeholder audit in `docs/PLACEHOLDER_AUDIT.md`.
 - Updated the default NemoClaw/Nemotron model configuration to `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning`.
+- Fixed Supabase timestamp parsing for Python 3.9 local venvs that reject five-digit fractional seconds.
+- Added Supabase-backed `agent_memory` persistence with `MEMORY.md` as a compatibility cache and deterministic fallback memory when Nemotron is unreachable.
 
 ## Spec Consistency Check
 
@@ -130,6 +132,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `npm.cmd run build` passed.
 - `python -m compileall agents/shared/nemotron_client.py` passed.
 - `rg "nemotron-3-super|Super 120B|super-120b"` returned no remaining old model references after switching to Nano Omni 30B reasoning.
+- Supabase timestamp parser validated against `2026-05-16T09:13:49.04514+00:00`, normalizing it to Python-compatible microseconds.
+- `python -m compileall agents/shared/memory_updater.py agents/shared/supabase_client.py` passed after adding durable memory helpers.
+- Fallback Scout memory pattern generation validated with a 5-lead heartbeat summary.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.

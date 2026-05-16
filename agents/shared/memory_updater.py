@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from agents.shared import nemotron_client
+from agents.shared.supabase_client import insert_memory
 from agents.shared.types import ClawName
 
 
@@ -71,6 +72,84 @@ def _one_line(value: Any) -> str:
     return text[:500]
 
 
+def _fallback_pattern(claw_name: str, heartbeat_summary: Any) -> str | None:
+    """Create a deterministic memory entry when Nemotron is unavailable."""
+
+    if not isinstance(heartbeat_summary, dict):
+        return None
+
+    errors = heartbeat_summary.get("errors")
+    if errors:
+        first_error = str(errors[0]) if isinstance(errors, list) and errors else str(errors)
+        return f"Last {claw_name} heartbeat had a recoverable error: {first_error[:220]}"
+
+    target = heartbeat_summary.get("target") if isinstance(heartbeat_summary.get("target"), dict) else {}
+    city = target.get("city") or heartbeat_summary.get("city") or "current city"
+    niche = target.get("niche") or heartbeat_summary.get("niche") or "current niche"
+
+    if claw_name == "scout":
+        processed = heartbeat_summary.get("processed", 0)
+        mockup = heartbeat_summary.get("qualified_for_mockup", 0)
+        rebuild = heartbeat_summary.get("qualified_for_rebuild", 0)
+        skipped = heartbeat_summary.get("skipped", 0)
+        if processed:
+            return (
+                f"Scout recently processed {processed} {niche} leads in {city}: "
+                f"{mockup} mockup, {rebuild} rebuild, {skipped} skipped."
+            )
+    elif claw_name == "designer":
+        lead = heartbeat_summary.get("business_name") or heartbeat_summary.get("lead_name")
+        winner = heartbeat_summary.get("winner") or heartbeat_summary.get("winning_variant")
+        if lead or winner:
+            return f"Designer last worked on {lead or 'a lead'}; winning variant was {winner or 'recorded in generated_sites'}."
+    elif claw_name == "pitcher":
+        angle = heartbeat_summary.get("winning_angle") or heartbeat_summary.get("angle")
+        if angle:
+            return f"Pitcher last winning outreach angle was {angle}; prefer it when similar lead context appears."
+    elif claw_name == "closer":
+        classification = heartbeat_summary.get("classification")
+        if classification:
+            return f"Closer last classified inbound as {classification}; reuse matching response posture for similar replies."
+
+    return None
+
+
+def _persist_memory(
+    claw_name: ClawName,
+    pattern: str,
+    source: str,
+    heartbeat_summary: Any,
+    path: Path,
+) -> dict[str, Any]:
+    """Persist memory to Supabase and mirror it into MEMORY.md."""
+
+    row: dict[str, Any] | None = None
+    summary_payload = heartbeat_summary if isinstance(heartbeat_summary, dict) else {"summary": _summary_text(heartbeat_summary)}
+    try:
+        row = insert_memory(claw_name, pattern, source=source, heartbeat_summary=summary_payload)
+    except Exception as exc:
+        print(f"{claw_name.title()} durable memory write failed: {exc}")
+
+    timestamp = str(row.get("created_at")) if row else datetime.now(timezone.utc).isoformat(timespec="seconds")
+    entries = _existing_entries(path)
+    entries.append(f"- {timestamp} - {pattern}")
+    try:
+        _write_entries(path, claw_name, entries)
+    except Exception as exc:  # pragma: no cover - filesystem failure.
+        print(f"{claw_name.title()} memory cache write failed: {exc}")
+        if row:
+            return {"status": "updated", "pattern": pattern, "source": source, "durable": True, "cache": "failed"}
+        return {"status": "failed", "reason": str(exc)}
+
+    return {
+        "status": "updated",
+        "pattern": pattern,
+        "source": source,
+        "durable": bool(row),
+        "entries": min(len(entries), MAX_MEMORY_ENTRIES),
+    }
+
+
 def maybe_update_memory(claw_name: ClawName, heartbeat_summary: Any) -> dict[str, Any]:
     """Ask Nemotron for one durable pattern and append it to a claw's memory.
 
@@ -94,29 +173,29 @@ def maybe_update_memory(claw_name: ClawName, heartbeat_summary: Any) -> dict[str
         "If there is no useful durable lesson, use null."
     )
 
+    source = "nemotron"
     try:
         result = nemotron_client.chat_json(system, user, retries=1)
     except nemotron_client.NemotronClientError as exc:
-        print(f"{claw_name.title()} memory update skipped: {exc}")
-        return {"status": "skipped", "reason": str(exc)}
+        pattern = _fallback_pattern(claw_name, heartbeat_summary)
+        if not pattern:
+            print(f"{claw_name.title()} memory update skipped: {exc}")
+            return {"status": "skipped", "reason": str(exc)}
+        print(f"{claw_name.title()} memory used fallback pattern because Nemotron failed: {exc}")
+        return _persist_memory(claw_name, pattern, "fallback", heartbeat_summary, path)
     except Exception as exc:  # pragma: no cover - keeps heartbeat alive.
-        print(f"{claw_name.title()} memory update failed: {exc}")
-        return {"status": "failed", "reason": str(exc)}
+        pattern = _fallback_pattern(claw_name, heartbeat_summary)
+        if not pattern:
+            print(f"{claw_name.title()} memory update failed: {exc}")
+            return {"status": "failed", "reason": str(exc)}
+        print(f"{claw_name.title()} memory used fallback pattern because update failed: {exc}")
+        return _persist_memory(claw_name, pattern, "fallback", heartbeat_summary, path)
 
     pattern = _one_line(result.get("pattern"))
     if not pattern or pattern.lower() in {"none", "null", "n/a"}:
         return {"status": "skipped", "reason": "no durable pattern"}
 
-    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    entries = _existing_entries(path)
-    entries.append(f"- {timestamp} - {pattern}")
-    try:
-        _write_entries(path, claw_name, entries)
-    except Exception as exc:  # pragma: no cover - filesystem failure.
-        print(f"{claw_name.title()} memory write failed: {exc}")
-        return {"status": "failed", "reason": str(exc)}
-
-    return {"status": "updated", "pattern": pattern, "entries": min(len(entries), MAX_MEMORY_ENTRIES)}
+    return _persist_memory(claw_name, pattern, source, heartbeat_summary, path)
 
 
 __all__ = ["maybe_update_memory"]
