@@ -179,6 +179,18 @@ For screenshot-based Designer critique, install the Chromium browser used by Pla
 python -m playwright install chromium
 ```
 
+Run the preflight checker before starting a demo run:
+
+```bash
+python -m agents.scripts.preflight_check
+```
+
+Use `--skip-live` when you only want local Python/package/env diagnostics and do not want to query Supabase:
+
+```bash
+python -m agents.scripts.preflight_check --skip-live
+```
+
 ## Running Locally
 
 Run one claw heartbeat at a time:
@@ -234,6 +246,7 @@ Then open the local Next.js URL printed by the command, usually `http://localhos
 Python validation:
 
 ```bash
+python -m agents.scripts.preflight_check
 python -m compileall agents integrations workers
 python -m agents.scout.claw --once
 python -m agents.designer.claw --once
