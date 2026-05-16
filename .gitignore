@@ -21,6 +21,11 @@ eggs/
 .eggs/
 lib/
 lib64/
+!dashboard/lib/
+dashboard/lib/*
+!dashboard/lib/realtime.ts
+!dashboard/lib/supabase.ts
+!dashboard/lib/types.ts
 parts/
 sdist/
 var/
