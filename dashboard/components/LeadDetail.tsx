@@ -54,15 +54,19 @@ function OutreachCard({ item }: { item: OutreachRow }) {
 }
 
 function InboundCard({ item }: { item: InboundRow }) {
+  const body = item.channel === "voice" ? item.transcript || item.raw_content : item.raw_content;
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-950">{item.from_address ?? "Unknown sender"}</h3>
+        <div>
+          <h3 className="text-sm font-semibold text-slate-950">{item.from_address ?? "Unknown sender"}</h3>
+          <p className="mt-1 text-xs font-medium uppercase text-slate-500">{item.channel}</p>
+        </div>
         <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
           {statusLabel(item.classification)}
         </span>
       </div>
-      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{item.raw_content}</p>
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{body}</p>
       <p className="mt-3 text-xs text-slate-500">
         Confidence {item.classification_confidence ?? "-"} / {item.classification_key_phrase ?? "No key phrase"} /{" "}
         {formatDate(item.received_at)}

@@ -30,6 +30,7 @@
 - Resend unavailable: keep outreach in `pending_approval` and show draft quality.
 - Google Calendar unavailable: show `demo-gcal-*` meeting rows.
 - Discord unavailable: use console approval instructions.
+- Vapi unavailable: use email inbound, seeded voice-free demo data, or backup video.
 
 ## Last Safe State
 

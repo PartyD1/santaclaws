@@ -24,6 +24,7 @@
 - Implemented Tasks 36-38 Designer self-critique, three-variant winner selection, and Pitcher four-angle quality path.
 - Implemented Tasks 39-41 MEMORY.md updater, demo data seeder, and claw start/stop scripts.
 - Implemented Tasks 42-46 demo runbook, rehearsal checklist, fallback plan, dashboard polish, and mockup prompt quality pass.
+- Implemented Task 47 Vapi inbound voice stretch with inbound-only assistant setup, webhook worker, voice transcript insertion, and dashboard transcript visibility.
 
 ## Spec Consistency Check
 
@@ -93,7 +94,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 40: Demo data seeder.
 - [x] Task 41: Start/stop all claws scripts.
 - [x] Task 42-46: Polish, monitor, rehearse, and fix.
-- [ ] Task 47: Vapi inbound stretch.
+- [x] Task 47: Vapi inbound stretch.
 
 ## First 5 Tasks To Implement
 
@@ -194,6 +195,14 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Bash syntax checks for `start_all_claws.sh` and `stop_all_claws.sh` could not run because `bash`/`sh` is unavailable in this Windows session.
 - `npm.cmd run typecheck` passed after Tasks 42-46 dashboard polish.
 - `npm.cmd run build` passed after Tasks 42-46 dashboard polish. Next.js emitted non-fatal webpack cache snapshot warnings.
+- `python -m compileall agents/integrations/vapi_client.py agents/closer/tools/handle_vapi_call.py agents/closer/tools/classify_reply.py agents/closer/claw.py workers/vapi_webhook.py` passed.
+- Vapi fake end-of-call webhook smoke inserted a `voice` inbound row with transcript and matched lead phone.
+- `python -m agents.integrations.vapi_client` skipped clearly because Vapi env is not configured.
+- `python -m agents.integrations.vapi_client` with only `VAPI_WEBHOOK_URL` set skipped clearly because `VAPI_API_KEY` is missing.
+- Vapi webhook missing-env smoke returned a clear non-inserting response.
+- `python -m agents.closer.claw --once` ran and exited cleanly because local Supabase/OpenAI dependencies are not installed.
+- `npm.cmd run typecheck` passed after Vapi dashboard transcript visibility.
+- `npm.cmd run build` passed after Vapi dashboard transcript visibility. Next.js emitted non-fatal webpack cache snapshot warnings.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -297,10 +306,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need decide whether mockup iframe previews should render `html_content` directly or only public Vercel/Supabase URLs.
 - Need dashboard Supabase env values available at build/runtime for live detail reads.
 
-## TASK 47 Blockers
+## Remaining Demo Blockers
 
 - Need run the rehearsal checklist with real credentials and seeded data.
 - Need record the backup demo video before presentation time.
 - Need final live monitor pass to tune heartbeat intervals and verify logs.
 - Need a bash-capable runtime such as Git Bash, WSL, or NemoClaw shell for live `start_all_claws.sh` and `stop_all_claws.sh` use.
-- Need Vapi API key, phone number, webhook URL, and call-flow decision before attempting the stretch.
+- Need Vapi API key, phone number, public webhook URL, and tunnel/server deployment before live voice validation.

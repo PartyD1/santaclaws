@@ -178,8 +178,8 @@ def heartbeat() -> dict[str, Any]:
         return _finish(summary)
 
     if inbound_obj is None:
-        _safe_log("fetch_inbound", "skipped", "found no unhandled inbound email.", summary)
-        print("Closer heartbeat found no unhandled inbound email.")
+        _safe_log("fetch_inbound", "skipped", "found no unhandled inbound email or voice call.", summary)
+        print("Closer heartbeat found no unhandled inbound email or voice call.")
         return _finish(summary)
 
     inbound = _inbound_to_dict(inbound_obj)
@@ -188,11 +188,11 @@ def heartbeat() -> dict[str, Any]:
     summary["inbound_id"] = inbound_id
     summary["lead_id"] = lead_id
 
-    if inbound.get("channel") != "email":
+    if inbound.get("channel") not in {"email", "voice"}:
         _mark_handled(inbound_id, "spam", summary)
         summary["classification"] = "spam"
-        summary["branch_result"] = {"next_step": "non-email inbound ignored until Vapi stretch"}
-        _safe_log("heartbeat", "skipped", "ignored non-email inbound until Vapi stretch.", summary, lead_id)
+        summary["branch_result"] = {"next_step": "unsupported inbound channel ignored"}
+        _safe_log("heartbeat", "skipped", "ignored unsupported inbound channel.", summary, lead_id)
         return _finish(summary)
 
     classification_result = classify_reply.run(inbound_id)

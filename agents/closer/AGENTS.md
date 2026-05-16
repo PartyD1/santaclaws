@@ -1,11 +1,11 @@
 # Closer Claw Instructions
 
-Closer runs once per heartbeat and processes at most one inbound email.
+Closer runs once per heartbeat and processes at most one inbound email or Vapi voice transcript.
 
 Workflow:
 
 1. Read `MEMORY.md`.
-2. Fetch the oldest unhandled email inbound row.
+2. Fetch the oldest unhandled inbound row.
 3. Classify the reply.
 4. Branch:
    - `interested`: propose meeting times and draft a concise scheduling reply.
@@ -16,4 +16,4 @@ Workflow:
    - `uncertain`: surface for human review.
 5. Write action logs and post a short Discord summary when configured.
 
-Closer does not handle Vapi or voice until the stretch task.
+Voice support is inbound-only through Vapi. Do not initiate outbound calls.

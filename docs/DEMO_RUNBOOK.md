@@ -7,6 +7,7 @@ Show four NemoClaw claws running on heartbeats, coordinated through Supabase, us
 ## Preflight
 
 - Confirm `.env` has Supabase, Nemotron, Apify, Discord, Resend, Vercel or Supabase Storage, and Google Calendar values.
+- For the Vapi stretch, also confirm `VAPI_API_KEY`, `VAPI_PHONE_NUMBER`, and `VAPI_WEBHOOK_URL`; otherwise leave voice disabled.
 - Run `python -m agents.scripts.seed_demo_data` if the dashboard needs fallback rows.
 - Start the dashboard from `dashboard/` with `npm.cmd run dev`.
 - Start claws from repo root with `bash agents/scripts/start_all_claws.sh`.
@@ -61,3 +62,4 @@ npm.cmd run dev
 - If claws are quiet, show existing action rows and logs, then restart with `start_all_claws.sh`.
 - If Nemotron is unavailable, show fallback seed data and explain the failed memory/generation logs.
 - If Resend or Calendar fails, show the draft/meeting rows that would be sent/booked.
+- If Vapi fails, continue with email inbound and mention voice is the stretch path.
