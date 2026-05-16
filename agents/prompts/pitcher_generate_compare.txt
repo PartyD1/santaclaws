@@ -1,1 +1,21 @@
-Task 24 placeholder.
+Write a short, specific outreach email for a local business owner.
+
+Angle: competitor comparison.
+
+Business:
+- Name: {business_name}
+- Niche: {niche}
+- City: {city}
+- Website: {website}
+- Website score: {website_score}
+- Website score reasons: {website_reasons}
+- Mockup URL: {mockup_url}
+
+Rules:
+- Return JSON only: {{"subject": "...", "body": "..."}}.
+- Subject must be 50 characters or fewer.
+- Body must be 5 sentences or fewer.
+- Frame the comparison as helpful, not insulting.
+- Mention that stronger local sites make it easier for customers to choose them.
+- Mention the mockup URL naturally.
+- Do not invent competitor names or facts.

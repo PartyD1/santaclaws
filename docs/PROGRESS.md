@@ -16,6 +16,7 @@
 - Implemented Tasks 16-20 Designer tools: mockup generation, screenshotting, critique, deploy fallback, and winner selection.
 - Implemented Task 21 Designer claw heartbeat and `--once` CLI mode.
 - Implemented Tasks 22-23 dashboard skeleton, leads table, metrics bar, and realtime activity feed with polling fallback.
+- Implemented Tasks 24-26 Pitcher tools: email generation, email critique, and Resend send helper.
 
 ## Spec Consistency Check
 
@@ -66,9 +67,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - [x] Task 21: Designer claw integration.
 - [x] Task 22: Dashboard skeleton.
 - [x] Task 23: Dashboard realtime activity feed.
-- [ ] Task 24: Pitcher `generate_email`.
-- [ ] Task 25: Pitcher `critique_email`.
-- [ ] Task 26: Pitcher `send_email`.
+- [x] Task 24: Pitcher `generate_email`.
+- [x] Task 25: Pitcher `critique_email`.
+- [x] Task 26: Pitcher `send_email`.
 - [ ] Task 27: Pitcher claw integration.
 - [ ] Task 28: Discord inbound approval worker.
 - [ ] Task 29: Closer `classify_reply`.
@@ -146,6 +147,12 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m agents.designer.claw --once` ran and exited cleanly because local Supabase/Python dependencies are not installed.
 - `npm.cmd run typecheck` passed for the dashboard.
 - `npm.cmd run build` passed for the dashboard. Next.js emitted non-fatal webpack cache snapshot warnings.
+- `python -m compileall agents/pitcher/tools agents/integrations/resend_client.py` passed.
+- Pitcher tool imports and signatures were validated.
+- Pitcher prompt formatting passed for all 4 angles.
+- `generate_email.run(...)` missing-Nemotron path returns a skipped result clearly.
+- `critique_email.run(...)` fallback scored a known bad email below 5.
+- `send_email.run(...)` approval guard and fallback from `outreach.to_address` to `leads.email` were validated with fake clients.
 
 Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high). No package upgrades were applied because Task 4 is locked to the basic Next.js skeleton.
 
@@ -220,3 +227,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Need at least one lead with `worked_by_designer = true`.
 - Need a chosen `generated_sites` row with a public mockup URL for the lead.
 - Need `leads.email` populated before Pitcher can become useful beyond draft-only output.
+
+## TASK 27 Blockers
+
+- Need live Supabase credentials and schema for Pitcher heartbeat integration.
+- Need at least one Designer-completed lead plus chosen mockup URL.
+- Need live Nemotron route for generating and critiquing real outreach variants.
+- Need Discord webhook if approval summaries should post.
+- Need `RESEND_API_KEY`, verified sender/domain, and `OUTREACH_FROM_ADDRESS` before approved emails can send.

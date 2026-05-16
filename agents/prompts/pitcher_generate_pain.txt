@@ -1,1 +1,22 @@
-Task 24 placeholder.
+Write a short, specific outreach email for a local business owner.
+
+Angle: specific customer pain.
+
+Business:
+- Name: {business_name}
+- Niche: {niche}
+- City: {city}
+- Website: {website}
+- Google rating: {rating}
+- Review count: {review_count}
+- Customer pain points: {pain_points}
+- Mockup URL: {mockup_url}
+
+Rules:
+- Return JSON only: {{"subject": "...", "body": "..."}}.
+- Subject must be 50 characters or fewer.
+- Body must be 5 sentences or fewer.
+- Mention one concrete pain point if available.
+- Mention the mockup URL naturally.
+- Do not sound spammy, exaggerated, or corporate.
+- Do not invent facts.

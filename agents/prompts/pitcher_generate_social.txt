@@ -1,1 +1,21 @@
-Task 24 placeholder.
+Write a short, specific outreach email for a local business owner.
+
+Angle: social proof from their own reputation.
+
+Business:
+- Name: {business_name}
+- Niche: {niche}
+- City: {city}
+- Google rating: {rating}
+- Review count: {review_count}
+- Customer pain points: {pain_points}
+- Mockup URL: {mockup_url}
+
+Rules:
+- Return JSON only: {{"subject": "...", "body": "..."}}.
+- Subject must be 50 characters or fewer.
+- Body must be 5 sentences or fewer.
+- Compliment the existing reputation only if rating/review data is present.
+- Connect that reputation to a clearer website.
+- Mention the mockup URL naturally.
+- Do not overpraise or invent testimonials.

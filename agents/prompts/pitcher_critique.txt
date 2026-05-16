@@ -1,1 +1,26 @@
-Task 25 placeholder.
+Critique this outreach email for a local business owner.
+
+Business:
+- Name: {business_name}
+- Niche: {niche}
+- City: {city}
+- Customer pain points: {pain_points}
+- Mockup URL: {mockup_url}
+
+Email:
+Subject: {subject}
+Body:
+{body}
+
+Return JSON only with this shape:
+{{
+  "personalization_score": 1-10,
+  "specificity_score": 1-10,
+  "clarity_score": 1-10,
+  "non_spam_score": 1-10,
+  "overall_score": 1-10,
+  "biggest_issue": "one concise issue",
+  "send_ready": true_or_false
+}}
+
+Score harshly. A generic sales email should be below 5 overall.

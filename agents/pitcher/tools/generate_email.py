@@ -1,1 +1,135 @@
-"""Task 24 placeholder."""
+"""Pitcher tool for generating short outreach email drafts with Nemotron."""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Any
+
+from agents.shared import nemotron_client
+from agents.shared.logger import logger
+
+
+PROMPT_DIR = Path(__file__).resolve().parents[2] / "prompts"
+PROMPT_BY_ANGLE = {
+    "specific_pain": "pitcher_generate_pain.txt",
+    "competitor_comparison": "pitcher_generate_compare.txt",
+    "social_proof": "pitcher_generate_social.txt",
+    "curiosity": "pitcher_generate_curiosity.txt",
+}
+
+
+def _lead_id(lead: dict[str, Any]) -> str | None:
+    """Return a string lead id when present."""
+
+    value = lead.get("id")
+    return None if value is None else str(value)
+
+
+def _safe_log(
+    action_type: str,
+    status: str,
+    message: str,
+    lead_id: str | None,
+    result: dict[str, Any],
+) -> None:
+    """Best-effort action logging."""
+
+    try:
+        logger.log("pitcher", action_type, status, message, lead_id=lead_id, result=result)
+    except Exception as exc:  # pragma: no cover - local/no-credential path.
+        print(f"Pitcher log skipped: {exc}")
+
+
+def _sentences(text: str) -> list[str]:
+    """Split text into rough sentence chunks for simple length validation."""
+
+    return [part.strip() for part in re.split(r"[.!?]+", text) if part.strip()]
+
+
+def _validate(payload: dict[str, Any]) -> dict[str, str]:
+    """Validate Nemotron's email draft payload."""
+
+    subject = str(payload.get("subject") or "").strip()
+    body = str(payload.get("body") or "").strip()
+    if not subject:
+        raise ValueError("subject is required.")
+    if not body:
+        raise ValueError("body is required.")
+    if len(subject) > 50:
+        raise ValueError("subject must be 50 characters or fewer.")
+    if len(_sentences(body)) > 5:
+        raise ValueError("body must be 5 sentences or fewer.")
+    return {"subject": subject, "body": body}
+
+
+def _format_prompt(lead: dict[str, Any], mockup_url: str, angle: str) -> str:
+    """Load and format the prompt for one Pitcher angle."""
+
+    if angle not in PROMPT_BY_ANGLE:
+        valid = ", ".join(sorted(PROMPT_BY_ANGLE))
+        raise ValueError(f"Unknown Pitcher angle: {angle}. Expected one of: {valid}.")
+
+    template = (PROMPT_DIR / PROMPT_BY_ANGLE[angle]).read_text(encoding="utf-8")
+    return template.format(
+        business_name=lead.get("business_name", "Unknown business"),
+        niche=lead.get("niche", "local service"),
+        city=lead.get("city", ""),
+        website=lead.get("website") or "not listed",
+        rating=lead.get("google_rating") or "unknown",
+        review_count=lead.get("review_count") or 0,
+        pain_points=", ".join(lead.get("top_review_pain_points") or []) or "none provided",
+        website_score=lead.get("website_score") or "unknown",
+        website_reasons=", ".join(lead.get("website_score_reasons") or []) or "none provided",
+        mockup_url=mockup_url,
+    )
+
+
+def run(lead: dict[str, Any], mockup_url: str, angle: str) -> dict[str, Any]:
+    """Generate a personalized email draft for one Pitcher angle.
+
+    Expected failures return an error dictionary so the future Pitcher claw can
+    keep moving without crashing the whole heartbeat.
+    """
+
+    lead_id = _lead_id(lead)
+    business_name = str(lead.get("business_name") or "lead")
+    if not mockup_url:
+        result = {"error": "mockup_url is required.", "_status": "skipped", "angle": angle}
+        _safe_log("generate_email", "skipped", f"could not draft email for {business_name}: no mockup URL.", lead_id, result)
+        return result
+
+    try:
+        prompt = _format_prompt(lead, mockup_url, angle)
+    except ValueError as exc:
+        result = {"error": str(exc), "_status": "skipped", "angle": angle}
+        _safe_log("generate_email", "skipped", f"could not draft email for {business_name}: {exc}", lead_id, result)
+        return result
+
+    last_error: Exception | None = None
+    for attempt in range(2):
+        retry_note = ""
+        if attempt:
+            retry_note = f"\n\nPrevious output violated rules: {last_error}. Regenerate with the exact JSON shape."
+        try:
+            payload = nemotron_client.chat_json(
+                system="You are Pitcher, a NemoClaw claw writing concise, non-spammy outreach. Return JSON only.",
+                user=prompt + retry_note,
+                retries=1,
+            )
+            draft = _validate(payload)
+            result: dict[str, Any] = {"angle": angle, **draft}
+            _safe_log(
+                "generate_email",
+                "succeeded",
+                f"drafted {angle} email for {business_name}.",
+                lead_id,
+                {"angle": angle, "subject": draft["subject"]},
+            )
+            return result
+        except (nemotron_client.NemotronClientError, ValueError) as exc:
+            last_error = exc
+
+    result = {"error": str(last_error), "_status": "skipped", "angle": angle}
+    _safe_log("generate_email", "skipped", f"could not draft {angle} email for {business_name}: {last_error}", lead_id, result)
+    return result

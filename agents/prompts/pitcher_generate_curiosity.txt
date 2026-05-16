@@ -1,1 +1,19 @@
-Task 24 placeholder.
+Write a short, specific outreach email for a local business owner.
+
+Angle: curiosity.
+
+Business:
+- Name: {business_name}
+- Niche: {niche}
+- City: {city}
+- Website: {website}
+- Mockup URL: {mockup_url}
+
+Rules:
+- Return JSON only: {{"subject": "...", "body": "..."}}.
+- Subject must be 50 characters or fewer.
+- Body must be 5 sentences or fewer.
+- Keep it low-pressure and conversational.
+- Mention that a quick mockup was made for them.
+- Mention the mockup URL naturally.
+- Do not use clickbait or fake urgency.
