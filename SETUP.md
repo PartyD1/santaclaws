@@ -174,11 +174,15 @@ source .venv/bin/activate
 Run one heartbeat for each claw:
 
 ```bash
-python -m agents.scout.claw --once
-python -m agents.designer.claw --once
-python -m agents.pitcher.claw --once
-python -m agents.closer.claw --once
+python -m agents.scripts.openclaw_run scout --once
+python -m agents.scripts.openclaw_run designer --once
+python -m agents.scripts.openclaw_run pitcher --once
+python -m agents.scripts.openclaw_run closer --once
 ```
+
+Those commands read each claw's `HEARTBEAT.md` entrypoint and load the
+OpenClaw-compatible `SOUL.md`, `AGENTS.md`, `TOOLS.md`, and `MEMORY.md`
+context before running the heartbeat.
 
 Useful smoke checks:
 

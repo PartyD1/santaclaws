@@ -16,6 +16,7 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
 from agents.scout.tools import extract_pain_points, score_website, scrape_leads
 from agents.shared import discord_bridge, memory_updater
 from agents.shared.logger import logger
+from agents.shared.openclaw_runtime import load_openclaw_context
 from agents.shared.supabase_client import DEFAULT_TARGET, get_client, next_scout_target, read_memory
 
 
@@ -191,6 +192,7 @@ def heartbeat() -> dict[str, Any]:
     """Run one Scout heartbeat."""
 
     _load_env()
+    openclaw_context = load_openclaw_context("scout")
     memory = read_memory("scout")
     target = _target()
     city = str(target.get("city", DEFAULT_TARGET["city"]))
@@ -203,6 +205,7 @@ def heartbeat() -> dict[str, Any]:
     summary: dict[str, Any] = {
         "target": {"city": city, "state": state, "niche": niche},
         "memory_loaded": bool(memory.strip()),
+        "openclaw_context": openclaw_context.summary(),
         "scraped_inserted": 0,
         "processed": 0,
         "qualified_for_mockup": 0,
@@ -212,6 +215,12 @@ def heartbeat() -> dict[str, Any]:
     }
 
     _safe_log("heartbeat", "started", f"heartbeat started for {niche} in {location}.", summary)
+    _safe_log(
+        "openclaw_context",
+        "succeeded",
+        "loaded Scout OpenClaw-compatible context files.",
+        openclaw_context.summary(),
+    )
 
     try:
         inserted = scrape_leads.run(city=city, niche=niche, limit=scrape_limit)

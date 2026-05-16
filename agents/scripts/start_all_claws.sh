@@ -10,7 +10,6 @@ cd "${ROOT_DIR}"
 
 start_claw() {
   local claw="$1"
-  local module="$2"
   local pid_file="${LOG_DIR}/${claw}.pid"
   local log_file="${LOG_DIR}/${claw}.log"
 
@@ -23,15 +22,15 @@ start_claw() {
     fi
   fi
 
-  nohup "${PYTHON_BIN}" -m "${module}" >"${log_file}" 2>&1 &
+  nohup "${PYTHON_BIN}" -m agents.scripts.openclaw_run "${claw}" >"${log_file}" 2>&1 &
   local pid="$!"
   echo "${pid}" >"${pid_file}"
   echo "started ${claw} PID ${pid}; log ${log_file}"
 }
 
-start_claw "scout" "agents.scout.claw"
-start_claw "designer" "agents.designer.claw"
-start_claw "pitcher" "agents.pitcher.claw"
-start_claw "closer" "agents.closer.claw"
+start_claw "scout"
+start_claw "designer"
+start_claw "pitcher"
+start_claw "closer"
 
 echo "NemoClaw claws are running. PID files live in ${LOG_DIR}."

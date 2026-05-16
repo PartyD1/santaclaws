@@ -32,6 +32,8 @@
 - Added a `agents/scripts/preflight_check.py` runtime checker for Python/package/env/Supabase table readiness.
 - Added `SETUP.md` as a teammate command reference for Brev, Ubuntu, NemoClaw, claw tests, dashboard, and full demo runs.
 - Added per-claw dashboard pages for live status, action logs, durable memory, and claw-specific work queues/outputs.
+- Added an OpenClaw-compatible runtime context loader plus `agents.scripts.openclaw_run`, and moved `start_all_claws.sh` onto that heartbeat runner.
+- Wired Scout to load and log its OpenClaw-compatible SOUL/AGENTS/TOOLS/HEARTBEAT/MEMORY context at heartbeat start.
 
 ## Spec Consistency Check
 
@@ -142,6 +144,9 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - `python -m agents.scripts.preflight_check --skip-live` produced clear FAIL/WARN diagnostics in the local non-venv shell.
 - `npm run typecheck` passed after adding per-claw dashboard pages.
 - `npm run build` passed after adding per-claw dashboard pages.
+- `python -m compileall agents/shared/openclaw_runtime.py agents/scripts/openclaw_run.py agents/scout/claw.py` passed after adding the OpenClaw-compatible runner.
+- `python -m agents.scripts.openclaw_run scout --once` loaded Scout's OpenClaw-compatible context and exited cleanly in the local missing-credential path.
+- `bash -n agents/scripts/start_all_claws.sh` passed after moving start-all onto the OpenClaw-compatible runner.
 - `python -m agents.shared.nemotron_client` ran and failed clearly because the local Python environment does not have the `openai` package installed.
 - `python -m compileall agents/shared/types.py agents/shared/supabase_client.py` passed.
 - `agents.shared.types` and `agents.shared.supabase_client` import successfully without live credentials.
