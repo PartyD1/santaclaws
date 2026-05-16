@@ -214,7 +214,7 @@ npm install
 npm run dev
 ```
 
-Next.js prints the remote port. If it says:
+Next.js is configured to use port `3002`:
 
 ```text
 Local: http://localhost:3002
@@ -230,12 +230,6 @@ Open this on your laptop:
 
 ```text
 http://localhost:3000
-```
-
-If Next.js uses port `3000`, use:
-
-```bash
-brev port-forward santaclaws1 -p 3000:3000
 ```
 
 ## 6. Running Everything

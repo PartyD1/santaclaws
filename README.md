@@ -246,7 +246,7 @@ cd dashboard
 npm run dev
 ```
 
-Then open the local Next.js URL printed by the command, usually `http://localhost:3000`.
+The dashboard dev server runs on `http://localhost:3002`.
 
 ## Validation
 

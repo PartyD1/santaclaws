@@ -461,3 +461,9 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Updated Designer lead selection to scan past any qualified but no-email lead and only build websites for leads that Pitcher can contact.
 - Validation: `python -m compileall agents/scout/claw.py agents/shared/supabase_client.py` passed.
 - Validation: local Scout qualification smoke check skips no-email leads and qualifies email-ready missing-website leads.
+
+## 2026-05-16 15:59 PDT — Dashboard Dev Port
+
+- Updated the dashboard `npm run dev` script to run Next.js on port `3002`.
+- Updated README and setup notes so dashboard instructions match the fixed dev port.
+- Validation: `npm run typecheck` in `dashboard/` passed.
