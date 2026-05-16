@@ -41,6 +41,7 @@
 - Replaced the visible Designer renderer with agency-grade templates using custom CSS, asymmetric hero layouts, audit dashboards, sticky mobile CTA, and stronger service/contact composition.
 - Replaced the visible Designer renderer again with finished client-facing websites: no Scout/Mainstreet/audit language, premium dealership-alternative positioning, full-site sections, real image assets, and client-facing stats.
 - Added three auto-repair website layouts with deterministic per-business rotation: showroom premium, concierge service journey, and performance garage.
+- Updated Designer one-variant MVP mode to rotate between `clean_modern`, `retro_local`, and `premium` per business instead of always generating `clean_modern`; fallback winner now avoids clean-modern tie bias.
 - Restored Vercel-first mockup URL storage so Designer keeps Vercel deployment links instead of rejecting protected links and falling back to Supabase Storage.
 - Updated Vercel mockup deployment to use one stable project via `VERCEL_PROJECT_ID` or `VERCEL_PROJECT_NAME` instead of creating one project per generated website.
 
@@ -183,6 +184,7 @@ No problematic product/story wording like "OpenClaw claws" was found.
 - Agency template smoke confirmed all variants include custom CSS, audit dashboard, mobile CTA, services, contact, and valid HTML.
 - Client website template smoke confirmed all variants include real image assets, premium positioning, services, reviews, contact, and no Scout/Mainstreet/audit language.
 - Multi-template smoke confirmed different auto shops rotate across at least two finished website layouts while preserving client-facing content.
+- Designer variant selection smoke confirmed MVP mode rotates styles across sample businesses and fallback winner prefers premium/local on ties.
 - `python -m compileall agents/integrations/vercel_client.py agents/designer/tools/deploy_to_vercel.py` passed after restoring Vercel-first URL storage.
 - Vercel payload smoke confirmed mockups target a stable `mainstreet-mockups` project name.
 - `critique_mockup.run(...)` falls back to HTML inspection when Playwright is unavailable.

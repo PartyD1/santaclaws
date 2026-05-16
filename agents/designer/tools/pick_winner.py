@@ -41,12 +41,19 @@ def _variants_summary(variants: list[dict[str, Any]]) -> str:
 
 
 def _fallback_winner(variants: list[dict[str, Any]]) -> dict[str, Any]:
-    """Pick the highest-scoring variant without Nemotron."""
+    """Pick the highest-scoring variant without Nemotron, rotating ties."""
 
-    best = max(variants, key=lambda item: float(item.get("score") or 0))
+    ranked_names = ["premium", "retro_local", "clean_modern"]
+    best = max(
+        variants,
+        key=lambda item: (
+            float(item.get("score") or 0),
+            -ranked_names.index(str(item.get("variant"))) if str(item.get("variant")) in ranked_names else -99,
+        ),
+    )
     return {
         "winner": best.get("variant"),
-        "reasoning": "Picked the highest critique score as a fallback.",
+        "reasoning": "Picked the highest critique score as a fallback, preferring distinctive premium/local styles on ties.",
     }
 
 

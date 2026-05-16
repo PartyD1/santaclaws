@@ -71,6 +71,24 @@ def _score(critique: dict[str, Any] | None) -> int:
         return 0
 
 
+def _stable_variant(lead: dict[str, Any]) -> str:
+    """Choose a stable one-variant style so clean_modern is not always picked."""
+
+    seed = str(lead.get("business_name") or lead.get("id") or lead.get("address") or "")
+    chars = [char.lower() for char in seed if char.isalnum()]
+    if not chars:
+        return VARIANT_ORDER[0]
+    return VARIANT_ORDER[(ord(chars[0]) + len(chars)) % len(VARIANT_ORDER)]
+
+
+def _variants_for_lead(lead: dict[str, Any]) -> list[str]:
+    """Return the variants to generate for one Designer heartbeat."""
+
+    if _variant_count() == 1:
+        return [_stable_variant(lead)]
+    return list(VARIANT_ORDER)
+
+
 def _safe_log(
     action_type: str,
     status: str,
@@ -272,7 +290,7 @@ def heartbeat() -> dict[str, Any]:
         print(f"Designer heartbeat claim failed: {exc}")
         return _finish(summary)
 
-    variants = VARIANT_ORDER[: _variant_count()]
+    variants = _variants_for_lead(lead)
     variant_results: list[dict[str, Any]] = []
     for variant in variants:
         summary["variants_attempted"].append(variant)
