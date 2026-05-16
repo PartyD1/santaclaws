@@ -92,7 +92,7 @@ Core tables:
 - `generated_sites`: HTML mockups, chosen winner, critique scores, hosted URLs.
 - `outreach`: drafted and sent emails.
 - `approvals`: human approval decisions from Discord or fallback flows.
-- `inbound`: inbound email or voice replies awaiting Closer handling.
+- `inbound`: inbound email replies awaiting Closer handling.
 - `meetings`: booked or demo-fallback meetings.
 - `config`: runtime knobs such as target niche/city and autonomous mode.
 

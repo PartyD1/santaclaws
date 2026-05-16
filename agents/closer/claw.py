@@ -209,8 +209,8 @@ def heartbeat() -> dict[str, Any]:
         return _finish(summary)
 
     if inbound_obj is None:
-        _safe_log("fetch_inbound", "skipped", "found no unhandled inbound email or voice call.", summary)
-        print("Closer heartbeat found no unhandled inbound email or voice call.")
+        _safe_log("fetch_inbound", "skipped", "found no unhandled inbound email reply.", summary)
+        print("Closer heartbeat found no unhandled inbound email reply.")
         return _finish(summary)
 
     inbound = _inbound_to_dict(inbound_obj)
@@ -219,7 +219,7 @@ def heartbeat() -> dict[str, Any]:
     summary["inbound_id"] = inbound_id
     summary["lead_id"] = lead_id
 
-    if inbound.get("channel") not in {"email", "voice"}:
+    if inbound.get("channel") != "email":
         _update_classification_fields(
             inbound_id,
             {"classification": "spam", "confidence": 90, "key_phrase": "unsupported inbound channel"},
@@ -228,7 +228,7 @@ def heartbeat() -> dict[str, Any]:
         _mark_handled(inbound_id, "spam", summary)
         summary["classification"] = "spam"
         summary["branch_result"] = {"next_step": "unsupported inbound channel ignored"}
-        _safe_log("heartbeat", "skipped", "ignored unsupported inbound channel.", summary, lead_id)
+        _safe_log("heartbeat", "skipped", "ignored unsupported non-email inbound channel.", summary, lead_id)
         return _finish(summary)
 
     classification_result = classify_reply.run(inbound_id)
@@ -236,7 +236,7 @@ def heartbeat() -> dict[str, Any]:
         summary["classification_fallback_reason"] = str(
             classification_result.get("error") or "classification tool failed"
         )
-        reply_text = str(inbound.get("raw_content") or inbound.get("transcript") or "")
+        reply_text = str(inbound.get("raw_content") or "")
         classification_result = classify_reply.fallback_classification(
             reply_text,
             str(summary["classification_fallback_reason"]),

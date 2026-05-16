@@ -1,4 +1,4 @@
-"""Closer tool for classifying inbound email replies and Vapi voice transcripts."""
+"""Closer tool for classifying inbound email replies."""
 
 from __future__ import annotations
 
@@ -61,16 +61,13 @@ def _fetch_latest_outreach(lead_id: str | None) -> dict[str, Any] | None:
 def _prompt(inbound: dict[str, Any], lead: dict[str, Any] | None, outreach: dict[str, Any] | None) -> str:
     """Build the classification prompt."""
 
-    channel = inbound.get("channel") or "email"
-    reply_text = inbound.get("transcript") or inbound.get("raw_content") or ""
+    reply_text = inbound.get("raw_content") or ""
     prompt = PROMPT_PATH.read_text(encoding="utf-8").format(
         reply_text=reply_text,
         business_name=(lead or {}).get("business_name") or "unknown",
         from_address=inbound.get("from_address") or (lead or {}).get("email") or "unknown",
         outreach_subject=(outreach or {}).get("subject") or "unknown",
     )
-    if channel == "voice":
-        prompt += "\n\nThis inbound came from a Vapi voice transcript, not an email reply."
     return prompt
 
 
@@ -123,25 +120,25 @@ def _normalize(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def run(inbound_id: UUID | str) -> dict[str, Any]:
-    """Classify one inbound email reply or Vapi voice transcript and update the inbound row."""
+    """Classify one inbound email reply and update the inbound row."""
 
     try:
         inbound = _fetch_row("inbound", inbound_id)
         if not inbound:
             return {"error": f"inbound row not found: {inbound_id}", "_status": "skipped"}
-        if inbound.get("channel") not in {"email", "voice"}:
-            result = {"error": "only email and Vapi voice inbound rows are supported.", "_status": "skipped"}
+        if inbound.get("channel") != "email":
+            result = {"error": "only email inbound rows are supported.", "_status": "skipped"}
             _safe_log("classify_reply", "skipped", "skipped unsupported inbound channel.", None, result)
             return result
 
         lead_id = None if inbound.get("lead_id") is None else str(inbound.get("lead_id"))
         lead = _fetch_row("leads", lead_id) if lead_id else None
         outreach = _fetch_latest_outreach(lead_id)
-        reply_text = str(inbound.get("raw_content") or inbound.get("transcript") or "")
+        reply_text = str(inbound.get("raw_content") or "")
 
         try:
             payload = nemotron_client.chat_json(
-                system="You are Closer, a NemoClaw claw classifying inbound email replies and Vapi voice transcripts. Return JSON only.",
+                system="You are Closer, a NemoClaw claw classifying inbound email replies. Return JSON only.",
                 user=_prompt(inbound, lead, outreach),
                 retries=1,
             )
@@ -159,7 +156,7 @@ def run(inbound_id: UUID | str) -> dict[str, Any]:
         _safe_log(
             "classify_reply",
             "succeeded",
-            f"classified inbound {inbound.get('channel')} as {result['classification']} ({result['confidence']}%).",
+            f"classified inbound email as {result['classification']} ({result['confidence']}%).",
             lead_id,
             result,
         )

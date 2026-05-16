@@ -1,6 +1,6 @@
 # Closer Claw Instructions
 
-Closer runs once per heartbeat and processes at most one inbound email or Vapi voice transcript.
+Closer runs once per heartbeat and processes at most one inbound email reply.
 
 Workflow:
 
@@ -15,5 +15,3 @@ Workflow:
    - `spam`: mark handled.
    - `uncertain`: surface for human review.
 5. Write action logs and post a short Discord summary when configured.
-
-Voice support is inbound-only through Vapi. Do not initiate outbound calls.

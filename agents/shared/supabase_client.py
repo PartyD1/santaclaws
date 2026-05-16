@@ -279,12 +279,13 @@ def claim_lead_for_pitcher(lead_id: UUID | str) -> bool:
 
 
 def next_inbound() -> Inbound | None:
-    """Return the oldest unhandled inbound reply/call."""
+    """Return the oldest unhandled inbound email reply."""
 
     response = (
         get_client()
         .table("inbound")
         .select("*")
+        .eq("channel", "email")
         .is_("handled_at", "null")
         .order("received_at")
         .limit(1)

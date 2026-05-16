@@ -467,3 +467,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Updated the dashboard `npm run dev` script to run Next.js on port `3002`.
 - Updated README and setup notes so dashboard instructions match the fixed dev port.
 - Validation: `npm run typecheck` in `dashboard/` passed.
+
+## 2026-05-16 16:07 PDT — Closer Email-Only Flow
+
+- Removed phone-call handling from the Closer runtime path.
+- Updated the shared inbound queue helper so Closer only pulls unhandled `email` rows.
+- Updated Closer classification copy, tool docs, and README table notes to describe email replies only.
+- Validation: `python -m compileall agents/closer/claw.py agents/closer/tools/classify_reply.py agents/shared/supabase_client.py` passed.
+- Validation: `git diff --check` passed.
