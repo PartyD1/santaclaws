@@ -141,6 +141,12 @@ def _persist_memory(
             return {"status": "updated", "pattern": pattern, "source": source, "durable": True, "cache": "failed"}
         return {"status": "failed", "reason": str(exc)}
 
+    try:
+        from agents.shared import obsidian_writer
+        obsidian_writer.append_entry(claw_name, timestamp, pattern)
+    except Exception:
+        pass
+
     return {
         "status": "updated",
         "pattern": pattern,

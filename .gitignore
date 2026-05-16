@@ -227,3 +227,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Obsidian workspace state (changes on every open/close)
+obsidian/.obsidian/workspace.json
+obsidian/.obsidian/workspace-mobile.json
