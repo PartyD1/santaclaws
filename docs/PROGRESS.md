@@ -584,3 +584,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Verified the dashboard no longer contains the Mission Control, pipeline readiness, refresh, step-list, or Discord-controls copy.
 - Validation: `npm run typecheck` in `dashboard/` passed.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 18:03 PDT — Hackathon Thumbnail
+
+- Added a 3:2 Santa Claws hackathon submission thumbnail at `dashboard/public/thumbnail.svg`.
+- The thumbnail uses the project name, concise value prop, NemoClaw/Nemotron/Supabase badges, and a mockup/agent visual.
+- Validation: local SVG smoke check confirmed 1200x800 dimensions and project text.
+- Validation: `git diff --check` passed.
