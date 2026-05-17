@@ -1,44 +1,80 @@
 #!/usr/bin/env bash
+# Creates the `mainstreet` NemoClaw sandbox and verifies it is ready.
+# Run from the repo root: bash nemoclaw/install_and_onboard.sh
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-echo "Mainstreet NemoClaw onboarding checklist"
+echo "Mainstreet NemoClaw onboarding"
 echo "repo: ${ROOT_DIR}"
+echo
+
+# ── Prerequisite checks ────────────────────────────────────────────────────────
 
 require_command() {
   local name="$1"
   if command -v "${name}" >/dev/null 2>&1; then
-    echo "OK: ${name} found"
+    echo "OK: ${name}"
   else
-    echo "WARN: ${name} is not installed or not on PATH"
+    echo "MISSING: ${name} — install it before continuing" >&2
+    exit 1
   fi
 }
 
 if command -v python >/dev/null 2>&1; then
-  echo "OK: python found"
+  echo "OK: python"
 elif command -v python3 >/dev/null 2>&1; then
-  echo "OK: python3 found"
+  echo "OK: python3"
 else
-  echo "WARN: python/python3 is not installed or not on PATH"
+  echo "MISSING: python/python3" >&2
+  exit 1
 fi
-require_command npm
 require_command git
 require_command nemoclaw
 
 echo
-echo "Task 0 NemoClaw setup:"
-echo "1. Install/login to NemoClaw or Brev runtime if 'nemoclaw' is missing above."
-echo "2. Run: nemoclaw onboard --sandbox mainstreet"
-echo "3. Run: nemoclaw mainstreet status"
-echo "4. Run: nemoclaw mainstreet connect"
-echo "5. Mount/sync this repo at: /workspace/mainstreet"
-echo "6. Set env vars from .env.example inside the sandbox."
-echo "7. Allow egress domains listed in nemoclaw/network-policy.md."
-echo "8. Verify Nemotron routing from nemoclaw/model-routing.md."
+
+# ── Create sandbox if it doesn't exist ────────────────────────────────────────
+
+if nemoclaw list 2>/dev/null | grep -q "mainstreet"; then
+  echo "Sandbox 'mainstreet' already exists."
+else
+  echo "Sandbox 'mainstreet' does not exist yet."
+  echo
+  echo "Run this command interactively in your terminal and follow the prompts"
+  echo "(choose option 1 — NVIDIA Endpoints):"
+  echo
+  echo "  nemoclaw onboard --name mainstreet --yes-i-accept-third-party-software"
+  echo
+  echo "Once it completes, re-run this script to add policies and verify:"
+  echo "  bash nemoclaw/install_and_onboard.sh"
+  exit 0
+fi
+
 echo
-echo "Inside the sandbox, run smoke tests:"
-echo "  python3 -m agents.shared.nemotron_client"
-echo "  python3 -m agents.scripts.preflight_check --skip-live"
-echo "  python3 -m agents.scripts.preflight_check"
-echo "  python3 -m agents.scripts.rate_limit_check --nemotron-rounds 3 --skip-apify"
+
+# ── Network policies ──────────────────────────────────────────────────────────
+
+echo "Adding network policies..."
+nemoclaw mainstreet policy-add discord    || echo "WARN: discord policy-add failed (may already be set)"
+
+echo
+echo "Note: Supabase, Apify, Resend, Vercel, and Google APIs may require"
+echo "additional policy-add steps. See nemoclaw/network-policy.md for the"
+echo "required egress domains."
+echo
+
+# ── Status check ──────────────────────────────────────────────────────────────
+
+echo "Sandbox status:"
+nemoclaw mainstreet status
+
+echo
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Sandbox ready. Next steps:"
+echo
+echo "  # 1. Connect into the sandbox"
+echo "  nemoclaw mainstreet connect"
+echo
+echo "  # 2. Inside the sandbox, install deps and start all 5 agents:"
+echo "  bash /workspace/mainstreet/nemoclaw/start_inside_sandbox.sh"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
