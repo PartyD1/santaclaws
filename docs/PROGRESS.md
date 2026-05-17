@@ -577,3 +577,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/integrations/apify_client.py` passed.
 - Validation: local smoke check confirmed repo `.env` resolution and token fingerprint formatting.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:54 PDT — Dashboard Mission Control Removal
+
+- Removed the Mission Control panel from the dashboard header.
+- Verified the dashboard no longer contains the Mission Control, pipeline readiness, refresh, step-list, or Discord-controls copy.
+- Validation: `npm run typecheck` in `dashboard/` passed.
+- Validation: `git diff --check` passed.
