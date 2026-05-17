@@ -544,3 +544,12 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall agents/pitcher/claw.py agents/pitcher/tools/send_email.py agents/shared/supabase_client.py agents/pitcher/tools/generate_email.py` passed.
 - Validation: local smoke check confirmed Pitcher ignores `storage_url` when `vercel_url` is missing and pastes the exact Vercel URL when present.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:24 PDT — Discord Agent Run Commands
+
+- Added Discord commands to trigger one NemoClaw heartbeat: `RUN SCOUT`, `RUN DESIGNER`, `RUN PITCHER`, `RUN CLOSER`, and `RUN ALL`.
+- Commands run `python -m agents.scripts.openclaw_run <claw> --once` in a subprocess and reply with the captured output.
+- Updated Discord help text to list the new run commands alongside approvals and plain-English pipeline questions.
+- Validation: `python -m compileall workers/discord_bridge.py` passed.
+- Validation: local parser smoke check covered run/start commands for all claws and approval non-matches.
+- Validation: `git diff --check` passed.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +31,7 @@ _LOGS_DIR = Path(__file__).resolve().parents[1] / "logs"
 Decision = Literal["approve", "skip", "edit"]
 COMMAND_RE = re.compile(r"^\s*(APPROVE|SKIP|EDIT)\s+([0-9a-fA-F-]{32,36})(?:\s+([\s\S]+))?\s*$", re.IGNORECASE)
 PING_RE = re.compile(r"^\s*!?(PING|HELP)\s*$", re.IGNORECASE)
+RUN_RE = re.compile(r"^\s*(?:RUN|START)\s+(SCOUT|DESIGNER|PITCHER|CLOSER|ALL)\s*$", re.IGNORECASE)
 _CLAWS = ("scout", "designer", "pitcher", "closer")
 
 
@@ -199,6 +201,62 @@ def _ask_nemotron(question: str, context: str) -> str:
     return str(result.get("response", "I couldn't generate a response. Try again."))
 
 
+def parse_run_command(content: str) -> str | None:
+    """Parse a Discord command to run one NemoClaw heartbeat."""
+
+    match = RUN_RE.match(content.strip())
+    if not match:
+        return None
+    return match.group(1).lower()
+
+
+async def run_claw_once(claw: str) -> dict[str, Any]:
+    """Run one NemoClaw-compatible heartbeat in a subprocess."""
+
+    if claw not in {*_CLAWS, "all"}:
+        raise ValueError(f"Unsupported claw: {claw}")
+
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-m",
+        "agents.scripts.openclaw_run",
+        claw,
+        "--once",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+        cwd=str(Path(__file__).resolve().parents[1]),
+    )
+    try:
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=240)
+    except asyncio.TimeoutError:
+        process.kill()
+        await process.communicate()
+        raise TimeoutError(f"{claw} did not finish within 240 seconds.")
+
+    output = stdout.decode("utf-8", errors="replace").strip()
+    return {"claw": claw, "returncode": process.returncode, "output": output[-1600:]}
+
+
+async def handle_run_command(message: Any, claw: str) -> None:
+    """Run a claw and reply with the heartbeat result."""
+
+    await message.reply(f"Running `{claw}` once through NemoClaw...")
+    try:
+        result = await run_claw_once(claw)
+        status = "finished" if result["returncode"] == 0 else f"failed with exit {result['returncode']}"
+        output = result["output"] or "(no output)"
+        await message.reply(f"`{claw}` {status}.\n```text\n{output[:1700]}\n```")
+        _safe_log(
+            "discord_run_claw",
+            "succeeded" if result["returncode"] == 0 else "failed",
+            f"Discord ran {claw} once.",
+            result,
+        )
+    except Exception as exc:
+        _safe_log("discord_run_claw", "failed", f"Discord run command failed for {claw}: {exc}", {"error": str(exc)})
+        await message.reply(f"Could not run `{claw}`: {exc}")
+
+
 async def handle_query(message: Any) -> None:
     """Answer a natural language pipeline question in Discord."""
 
@@ -263,8 +321,13 @@ def run_bot() -> int:
                     "NemoClaw approval worker is online. "
                     "Use `APPROVE <outreach_id>`, `SKIP <outreach_id>`, "
                     "or `EDIT <outreach_id> <new body>`. "
+                    "Use `RUN SCOUT`, `RUN DESIGNER`, `RUN PITCHER`, `RUN CLOSER`, or `RUN ALL` to trigger claws. "
                     "You can also ask me anything about the pipeline in plain English."
                 )
+                return
+            run_claw = parse_run_command(message.content)
+            if run_claw:
+                await handle_run_command(message, run_claw)
                 return
             command = parse_command(message.content)
             if command is None:
