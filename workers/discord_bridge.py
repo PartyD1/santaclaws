@@ -26,6 +26,8 @@ from agents.shared.supabase_client import (
 )
 
 _LOGS_DIR = Path(__file__).resolve().parents[1] / "logs"
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_ENV_PATH = _REPO_ROOT / ".env"
 
 
 Decision = Literal["approve", "skip", "edit"]
@@ -45,10 +47,10 @@ class ApprovalCommand:
 
 
 def _load_env() -> None:
-    """Load `.env` if python-dotenv is available."""
+    """Load the repo-root `.env` if python-dotenv is available."""
 
     if load_dotenv is not None:
-        load_dotenv()
+        load_dotenv(dotenv_path=_ENV_PATH)
 
 
 def _now_iso() -> str:
@@ -224,7 +226,7 @@ async def run_claw_once(claw: str) -> dict[str, Any]:
         "--once",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT,
-        cwd=str(Path(__file__).resolve().parents[1]),
+        cwd=str(_REPO_ROOT),
     )
     try:
         stdout, _ = await asyncio.wait_for(process.communicate(), timeout=240)

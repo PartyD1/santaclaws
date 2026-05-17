@@ -561,3 +561,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Added compact operational cards for shared memory, demo control, and live outputs.
 - Validation: `npm run typecheck` in `dashboard/` passed.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:40 PDT — Discord Root Env Loading
+
+- Updated the Discord worker to load the repo-root `.env` by absolute path instead of relying on the launch directory.
+- Reused the resolved repo root as the subprocess cwd for Discord-run claw commands.
+- Validation: `python -m compileall workers/discord_bridge.py` passed.
+- Validation: local smoke check confirmed the resolved `.env` path and run-command parser.
+- Validation: `git diff --check` passed.
