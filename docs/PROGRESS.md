@@ -591,3 +591,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - The thumbnail uses the project name, concise value prop, NemoClaw/Nemotron/Supabase badges, and a mockup/agent visual.
 - Validation: local SVG smoke check confirmed 1200x800 dimensions and project text.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 18:12 PDT — README Refresh
+
+- Rewrote the root README as a polished hackathon project page.
+- Added a clearer demo story, agent role table, architecture, tech stack, database table guide, setup commands, Brev flow, validation commands, and lessons learned.
+- Validation: checked README for em dashes and en dashes.
+- Validation: `git diff --check` passed.

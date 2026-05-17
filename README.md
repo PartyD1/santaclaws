@@ -1,68 +1,51 @@
 # Santa Claws
 
-Santa Claws is a 24-hour hackathon build for a four-claw autonomous sales workshop powered by NemoClaw, Nemotron, Supabase, and a live Next.js dashboard.
+AI agents that turn local business leads into live website mockups and personalized outreach.
 
-The demo target is local service businesses in Santa Cruz County. The system finds businesses with weak or missing websites, generates redesign mockups, drafts personalized outreach, routes approvals through Discord, and handles interested replies through the Santa Claws closer agent.
+Santa Claws is a hackathon project built around a simple idea: a small team of autonomous agents should be able to find local businesses, build polished website mockups for them, draft outreach, and show every step in a live dashboard.
 
-## Current State
-
-The repo has the core demo pipeline implemented through Section 10 Task 41 of the execution spec:
-
-- Rudolph Scout tools and heartbeat for scraping, website scoring, and review pain extraction.
-- Workshop Elves tools and heartbeat for generating mockup variants, self-critiquing, picking a winner, and deploying via Vercel or Supabase Storage fallback.
-- Snowball Pitcher tools and heartbeat for generating email angles, self-critiquing, queuing approval, and sending through Resend.
-- Cookie Closer tools and heartbeat for classifying inbound replies, proposing meeting times, drafting replies, and booking Google Calendar meetings or demo fallback meetings.
-- Supabase schema, shared client helpers, action logger, dataclasses, memory updater, and demo data seeder.
-- Next.js dashboard with metrics, leads table, activity feed, lead detail pages, and inbound email webhook.
-- Start/stop scripts for running all claws locally.
-
-Manual setup tasks are still open for the live demo: NemoClaw onboarding, Supabase project creation, Resend DNS, Vercel project setup, Discord setup, Google Calendar credentials, and optional Vapi stretch work. See [docs/PROGRESS.md](docs/PROGRESS.md) for the exact checklist and validation history.
+The project uses NemoClaw as the runtime story, Nemotron for reasoning, Supabase for persistent shared memory, and a Next.js dashboard for the demo surface.
 
 ## Demo Story
 
-The concise story for judges:
+> NemoClaw gives us secure always-on claws. Supabase gives them shared memory. Nemotron gives them reasoning.
 
-> NemoClaw gives us secure always-on claws; Supabase gives them shared memory; Nemotron gives them reasoning.
+Santa Claws is not one giant script. It is a small agent team with clear roles:
 
-The claws do not call each other directly. Supabase is the queue, the shared memory layer, and the audit log. Every meaningful action writes a row to `actions`, which is what the dashboard shows in real time.
+| Claw | Role | What it does |
+| --- | --- | --- |
+| Rudolph Scout | Lead finder | Finds local businesses, enriches rows, and qualifies email-ready leads. |
+| Workshop Elves | Designer | Builds professional website mockups and deploys the winner to Vercel. |
+| Snowball Pitcher | Outreach | Writes personalized emails and inserts the exact Vercel mockup link. |
+| Cookie Closer | Follow-up | Handles inbound email replies, drafts responses, and moves warm leads toward meetings. |
 
-Happy path for one lead:
+The dashboard shows the live pipeline, logs, generated sites, outreach, replies, and persistent memory.
 
-1. Rudolph Scout finds and qualifies a local service lead.
-2. The Workshop Elves create mockup variants and pick the best redesign.
-3. Snowball Pitcher drafts and critiques outreach, then queues it for approval.
-4. A human approves in Discord, or `AUTONOMOUS_MODE=true` auto-approves.
-5. Snowball Pitcher sends the email through Resend.
-6. Inbound replies land in Supabase.
-7. Cookie Closer classifies the reply, proposes times, drafts a response, and books a meeting.
-
-## Repository Layout
+## How It Works
 
 ```text
-.
-|-- agents/                 Python 3.11 NemoClaw claws, tools, prompts, shared helpers
-|-- dashboard/              Next.js 14 App Router dashboard and webhooks
-|-- docs/                   Execution spec and live progress notes
-|-- integrations/           Top-level integration clients kept for compatibility
-|-- nemoclaw/               NemoClaw/OpenShell setup notes and runtime policy docs
-|-- workers/                Long-running bridge workers
-|-- .env.example            Environment variable template
-|-- docker-compose.yml      Placeholder for optional local services
-`-- README.md               This project guide
+Lead discovery
+  -> website mockup
+  -> personalized pitch
+  -> approval or autonomous send
+  -> reply handling
+  -> meeting workflow
 ```
 
-Important docs:
+The agents communicate through Supabase, not direct calls. Supabase acts as:
 
-- [Execution spec](docs/Mainstreet_NemoClaw_Codex_Execution_Spec.md)
-- [Progress log](docs/PROGRESS.md)
-- [Agents README](agents/README.md)
-- [Dashboard README](dashboard/README.md)
-- [NemoClaw README](nemoclaw/README.md)
+- a work queue
+- persistent memory
+- an audit log
+- the dashboard data source
+
+Each heartbeat claims one unit of work, updates the database, and writes a human-readable action log.
 
 ## Architecture
 
 ```text
-NemoClaw / OpenShell sandbox
+NemoClaw / OpenShell-compatible runtime
+  |
   |-- Rudolph Scout
   |-- Workshop Elves
   |-- Snowball Pitcher
@@ -70,105 +53,90 @@ NemoClaw / OpenShell sandbox
         |
         v
 Python tool layer
-  |-- Apify
-  |-- Nemotron
-  |-- Supabase
-  |-- Resend
-  |-- Vercel / Supabase Storage
-  |-- Discord
-  `-- Google Calendar
-        |
-        v
-Supabase Postgres + Realtime
+  |
+  |-- Apify for lead discovery
+  |-- Nemotron for reasoning and generation
+  |-- Vercel for mockup deployment
+  |-- Resend or SMTP for email
+  |-- Discord for approvals and controls
+  |-- Google Calendar path for meetings
+  `-- Supabase for memory, queues, and logs
         |
         v
 Next.js dashboard
 ```
 
-Core tables:
+## Tech Stack
 
-- `leads`: scraped businesses, enrichment, qualification, and workflow flags.
-- `actions`: claw activity log for the dashboard.
-- `generated_sites`: HTML mockups, chosen winner, critique scores, hosted URLs.
-- `outreach`: drafted and sent emails.
-- `approvals`: human approval decisions from Discord or fallback flows.
-- `inbound`: inbound email replies awaiting Closer handling.
-- `meetings`: booked or demo-fallback meetings.
-- `config`: runtime knobs such as target niche/city and autonomous mode.
+| Layer | Tools |
+| --- | --- |
+| Frontend | Next.js 14, React, TypeScript, Tailwind CSS |
+| Agents | Python |
+| Runtime story | NemoClaw with OpenClaw-compatible agent files |
+| Model | Nemotron 3 Nano Omni 30B reasoning |
+| Database and memory | Supabase Postgres |
+| Lead discovery | Apify Google Places actor |
+| Mockup hosting | Vercel |
+| Email | Resend or SMTP |
+| Controls | Discord bot |
+| Demo compute | Brev Ubuntu instance |
 
-## Prerequisites
+## Repository Tour
 
-- Python 3.11.
-- Node.js 18+ and npm.
-- Supabase project with the schema from [agents/scripts/setup_supabase.sql](agents/scripts/setup_supabase.sql).
-- NemoClaw/OpenShell sandbox for the real runtime story.
-- NVIDIA/Nemotron credentials or a NemoClaw-routed inference endpoint.
-- Optional live integrations: Apify, Resend, Vercel, Discord, Google Calendar, Vapi.
+```text
+.
+|-- agents/        Python claws, tools, prompts, integrations, and scripts
+|-- dashboard/     Next.js dashboard and API routes
+|-- docs/          Execution spec, runbooks, progress log, and fallback notes
+|-- nemoclaw/      NemoClaw and OpenShell setup notes
+|-- workers/       Discord and webhook workers
+|-- SETUP.md       Team command reference for Brev and the demo
+`-- README.md      Project overview
+```
 
-The local code is written to fail clearly or use demo fallbacks when credentials are missing, but the full live demo needs the external services configured.
+Useful docs:
 
-## Environment
+- [Team setup commands](SETUP.md)
+- [Execution spec](docs/Mainstreet_NemoClaw_Codex_Execution_Spec.md)
+- [Progress log](docs/PROGRESS.md)
+- [Demo runbook](docs/DEMO_RUNBOOK.md)
+- [Dashboard notes](dashboard/README.md)
 
-Start from the template:
+## Core Database Tables
+
+| Table | Purpose |
+| --- | --- |
+| `leads` | Businesses found by Scout and moved through the pipeline. |
+| `generated_sites` | Designer mockups, winner metadata, and Vercel URLs. |
+| `outreach` | Pitcher drafts, approvals, send status, and email bodies. |
+| `actions` | Human-readable agent activity logs for the dashboard. |
+| `approvals` | Discord or fallback approval decisions. |
+| `inbound` | Inbound email replies for Closer. |
+| `meetings` | Booked or demo-fallback meetings. |
+| `agent_memory` | Durable agent memory patterns. |
+
+## Quick Start
+
+Clone and enter the repo:
+
+```bash
+git clone https://github.com/PartyD1/santaclaws.git mainstreet
+cd mainstreet
+```
+
+Create the Python environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r agents/requirements.txt
+```
+
+Create the root environment file:
 
 ```bash
 cp .env.example .env
-```
-
-Python claws read these main variables:
-
-```bash
-NEMOCLAW_SANDBOX_NAME=mainstreet
-NEMOTRON_BASE_URL=https://inference.local/v1
-NEMOTRON_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
-NVIDIA_API_KEY=
-
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_KEY=
-
-APIFY_TOKEN=
-SCOUT_NICHES=restaurants,cafes,hair salons,barbers,fitness centers,spas,house cleaners,contractors
-SCOUT_NICHE_ATTEMPTS=4
-SCOUT_DEMO_FALLBACK=true
-SCOUT_TEST_EMAIL=
-RESEND_API_KEY=
-OUTREACH_FROM_ADDRESS=
-VERCEL_TOKEN=
-VERCEL_TEAM_ID=
-VERCEL_PROJECT_ID=
-VERCEL_PROJECT_NAME=mainstreet-mockups
-DISCORD_WEBHOOK_URL=
-DISCORD_BOT_TOKEN=
-DISCORD_APPROVAL_CHANNEL_ID=
-GCAL_CLIENT_ID=
-GCAL_CLIENT_SECRET=
-GCAL_REFRESH_TOKEN=
-
-AUTONOMOUS_MODE=false
-IGNORE_QUIET_HOURS=true
-DESIGNER_USE_NEMOTRON_HTML=false
-```
-
-The dashboard needs browser-safe Supabase variables in `dashboard/.env.local`:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_URL=
-SUPABASE_SERVICE_KEY=
-```
-
-`NEXT_PUBLIC_*` is used for read-only dashboard data. `SUPABASE_SERVICE_KEY` is used by server routes such as the inbound email webhook.
-
-## Setup
-
-Install Python dependencies from the repo root:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r agents/requirements.txt
+nano .env
 ```
 
 Install dashboard dependencies:
@@ -178,65 +146,98 @@ cd dashboard
 npm install
 ```
 
-Apply the Supabase schema by running [agents/scripts/setup_supabase.sql](agents/scripts/setup_supabase.sql) in the Supabase SQL editor. Ensure Realtime is enabled for the tables listed in that file.
+Apply the Supabase schema from:
 
-For screenshot-based Designer critique, install the Chromium browser used by Playwright:
-
-```bash
-python -m playwright install chromium
+```text
+agents/scripts/setup_supabase.sql
 ```
 
-Run the preflight checker before starting a demo run:
+Run it in the Supabase SQL editor.
+
+## Environment
+
+The Python agents read from the root `.env`.
+
+Common variables:
 
 ```bash
-python -m agents.scripts.preflight_check
+NEMOTRON_BASE_URL=https://inference.local/v1
+NEMOTRON_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+NVIDIA_API_KEY=
+
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_KEY=
+
+APIFY_TOKEN=
+VERCEL_TOKEN=
+VERCEL_TEAM_ID=
+VERCEL_PROJECT_ID=
+VERCEL_PROJECT_NAME=santa-claws
+
+RESEND_API_KEY=
+OUTREACH_FROM_ADDRESS=
+EMAIL_PROVIDER=resend
+
+DISCORD_WEBHOOK_URL=
+DISCORD_BOT_TOKEN=
+DISCORD_APPROVAL_CHANNEL_ID=
+
+AUTONOMOUS_MODE=false
+SCOUT_DEMO_FALLBACK=true
+SCOUT_TEST_EMAIL=
 ```
 
-Use `--skip-live` when you only want local Python/package/env diagnostics and do not want to query Supabase:
+The dashboard uses `dashboard/.env.local`:
 
 ```bash
-python -m agents.scripts.preflight_check --skip-live
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_URL=
+SUPABASE_SERVICE_KEY=
 ```
 
-## Running Locally
+## Run The Pipeline
 
-Run one claw heartbeat at a time:
+From the repo root:
 
 ```bash
-python -m agents.scout.claw --once
-python -m agents.designer.claw --once
-python -m agents.pitcher.claw --once
-python -m agents.closer.claw --once
+source .venv/bin/activate
 ```
 
-Run all claws continuously:
+Run one heartbeat at a time:
 
 ```bash
-agents/scripts/start_all_claws.sh
+python -m agents.scripts.openclaw_run scout --once
+python -m agents.scripts.openclaw_run designer --once
+python -m agents.scripts.openclaw_run pitcher --once
+python -m agents.scripts.openclaw_run closer --once
 ```
 
-Stop all claws:
+Run every claw once:
 
 ```bash
-agents/scripts/stop_all_claws.sh
+python -m agents.scripts.openclaw_run all --once
 ```
 
-Run the Discord approval worker:
+Run the Discord bot:
 
 ```bash
 python -m workers.discord_bridge
 ```
 
-Seed demo fallback data:
+Discord commands:
 
-```bash
-python -m agents.scripts.seed_demo_data
-```
-
-Use `--clear` to remove existing demo-prefixed rows before reseeding:
-
-```bash
-python -m agents.scripts.seed_demo_data --clear
+```text
+HELP
+RUN SCOUT
+RUN DESIGNER
+RUN PITCHER
+RUN CLOSER
+RUN ALL
+APPROVE <outreach_id>
+SKIP <outreach_id>
+EDIT <outreach_id> <new body>
 ```
 
 Run the dashboard:
@@ -246,22 +247,48 @@ cd dashboard
 npm run dev
 ```
 
-The dashboard dev server runs on `http://localhost:3002`.
+The dashboard runs at:
+
+```text
+http://localhost:3002
+```
+
+## Brev Demo Flow
+
+```bash
+brev shell santaclaws1
+cd ~/mainstreet
+git pull
+source .venv/bin/activate
+```
+
+Start the dashboard:
+
+```bash
+cd ~/mainstreet/dashboard
+npm run dev
+```
+
+In another Brev shell, run agents:
+
+```bash
+cd ~/mainstreet
+source .venv/bin/activate
+python -m agents.scripts.openclaw_run scout --once
+python -m agents.scripts.openclaw_run designer --once
+python -m agents.scripts.openclaw_run pitcher --once
+```
 
 ## Validation
 
-Python validation:
+Python:
 
 ```bash
-python -m agents.scripts.preflight_check
-python -m compileall agents integrations workers
-python -m agents.scout.claw --once
-python -m agents.designer.claw --once
-python -m agents.pitcher.claw --once
-python -m agents.closer.claw --once
+python -m compileall agents workers
+python -m agents.scripts.preflight_check --skip-live
 ```
 
-Dashboard validation:
+Dashboard:
 
 ```bash
 cd dashboard
@@ -269,26 +296,25 @@ npm run typecheck
 npm run build
 ```
 
-The latest known validation results are tracked in [docs/PROGRESS.md](docs/PROGRESS.md). Some live checks currently skip or fail clearly when local credentials and Python packages are missing.
+Latest validation notes live in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-## Operational Notes
+## What We Learned
 
-- Keep the build scoped to the execution spec. No auth, billing, settings pages, queue systems, or production-scale abstractions.
-- Use NemoClaw/Nemotron language for the product story. Only mention OpenClaw for compatibility inside NemoClaw/OpenShell.
-- Treat Supabase as the queue. Each claw claims one unit of work per heartbeat and writes results back to the database.
-- Keep every claw action visible through the `actions.human_readable_log` field. The dashboard depends on those logs for the live narrative.
-- `AUTONOMOUS_MODE=true` is useful for unattended demo runs. Keep it `false` when you want Discord approval in the loop.
-- `IGNORE_QUIET_HOURS=true` is currently configured for hackathon/demo usage.
+The hardest part of Santa Claws was not making one model call. It was making a multi-agent system reliable enough to demo.
 
-## Known Gaps
+We learned that agentic products need:
 
-- NemoClaw install/onboarding is still documented as expected flow, not verified final commands.
-- The rate-limit check script is still a placeholder.
-- Domain, Resend DNS, Supabase cloud project, Vercel, Discord, and Google Calendar setup remain manual blockers.
-- `dashboard/app/api/discord-reply` and `dashboard/app/api/trigger-demo` are placeholders.
-- Vapi voice handling is stretch scope.
-- Local `docker-compose.yml` is a placeholder; production/demo persistence is expected to use Supabase cloud.
+- persistent memory
+- clear queues
+- visible logs
+- exact external links
+- careful environment loading
+- simple human controls
 
-## Hackathon Guardrails
+The dashboard became just as important as the agents because it made the autonomous work legible.
 
-This repo is optimized for demo reliability, not perfect architecture. Keep diffs small, validate after each task, and update [docs/PROGRESS.md](docs/PROGRESS.md) whenever the project state changes.
+## Hackathon Notes
+
+This repo is optimized for demo reliability. It intentionally avoids auth, billing, settings pages, and heavy production abstractions. The goal is to show a working autonomous workflow with persistent memory, real generated sites, and visible agent behavior.
+
+For teammate commands, use [SETUP.md](SETUP.md).
