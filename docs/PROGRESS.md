@@ -553,3 +553,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall workers/discord_bridge.py` passed.
 - Validation: local parser smoke check covered run/start commands for all claws and approval non-matches.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:32 PDT — Dashboard Mission Control Header
+
+- Removed the "Tonight's route" hero copy from the dashboard.
+- Replaced the decorative header panel with a Mission Control panel showing pipeline steps, refresh cadence, and Discord run-command hints.
+- Added compact operational cards for shared memory, demo control, and live outputs.
+- Validation: `npm run typecheck` in `dashboard/` passed.
+- Validation: `git diff --check` passed.
