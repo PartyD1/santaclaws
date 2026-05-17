@@ -569,3 +569,11 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: `python -m compileall workers/discord_bridge.py` passed.
 - Validation: local smoke check confirmed the resolved `.env` path and run-command parser.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 17:47 PDT — Apify Env Diagnostics
+
+- Updated the Apify integration to load the repo-root `.env` by absolute path.
+- Added safe Apify token fingerprints to non-2xx Apify errors so stale env loading can be diagnosed without printing secrets.
+- Validation: `python -m compileall agents/integrations/apify_client.py` passed.
+- Validation: local smoke check confirmed repo `.env` resolution and token fingerprint formatting.
+- Validation: `git diff --check` passed.

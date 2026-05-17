@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+from pathlib import Path
 from typing import Any
 
 try:
@@ -14,6 +15,8 @@ except ImportError:  # pragma: no cover - dependency validation catches this.
 
 APIFY_ACTOR = "compass/crawler-google-places"
 APIFY_TIMEOUT_SECONDS = 120.0
+REPO_ROOT = Path(__file__).resolve().parents[2]
+ENV_PATH = REPO_ROOT / ".env"
 
 
 class ApifyError(RuntimeError):
@@ -25,10 +28,10 @@ class ApifyConfigError(ApifyError):
 
 
 def _load_env() -> None:
-    """Load `.env` when available."""
+    """Load repo-root `.env` when available."""
 
     if load_dotenv is not None:
-        load_dotenv()
+        load_dotenv(dotenv_path=ENV_PATH)
 
 
 def _token() -> str:
@@ -39,6 +42,12 @@ def _token() -> str:
     if not token:
         raise ApifyConfigError("APIFY_TOKEN is required for Scout lead scraping.")
     return token
+
+
+def _token_fingerprint(token: str) -> str:
+    """Return a safe token fingerprint for debugging env loading."""
+
+    return f"len={len(token)} last4={token[-4:] if len(token) >= 4 else 'short'}"
 
 
 def _actor_url() -> str:
@@ -91,9 +100,10 @@ def scrape_google_places(
     last_error: Exception | None = None
     for attempt in range(2):
         try:
+            token = _token()
             response = httpx.post(
                 _actor_url(),
-                params={"token": _token()},
+                params={"token": token},
                 json=payload,
                 timeout=APIFY_TIMEOUT_SECONDS,
             )
@@ -104,7 +114,10 @@ def scrape_google_places(
                 return data
             if response.status_code >= 500:
                 raise ApifyError(f"Apify transient HTTP {response.status_code}: {response.text[:200]}")
-            raise ApifyError(f"Apify rejected scrape with HTTP {response.status_code}: {response.text[:200]}")
+            raise ApifyError(
+                f"Apify rejected scrape with HTTP {response.status_code} "
+                f"using APIFY_TOKEN {_token_fingerprint(token)}: {response.text[:200]}"
+            )
         except (httpx.RequestError, ApifyError) as exc:
             last_error = exc
             if attempt == 0:
