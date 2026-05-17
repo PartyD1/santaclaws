@@ -606,3 +606,10 @@ Note: npm reported 2 audit findings in the dependency tree (1 moderate, 1 high).
 - Validation: README template smoke check passed.
 - Validation: checked README for em dashes and en dashes.
 - Validation: `git diff --check` passed.
+
+## 2026-05-16 18:31 PDT — Markdown Cleanup
+
+- Removed obsolete non-agent Markdown files from git, including root assistant/setup scratch files, old demo docs, placeholder notes, Vapi setup notes, Obsidian exports, and test attribution notes.
+- Left all `agents/**` Markdown files untouched.
+- Kept core project docs: `README.md`, root `AGENTS.md`, the execution spec, `docs/PROGRESS.md`, and NemoClaw docs.
+- Updated README links so it does not point at removed Markdown files.

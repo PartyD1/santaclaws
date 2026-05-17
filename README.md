@@ -231,17 +231,13 @@ santaclaws/
 ├── docs/                         # Execution spec, runbooks, progress log, fallback notes
 ├── nemoclaw/                     # NemoClaw and OpenShell setup notes
 ├── workers/                      # Discord and webhook workers
-├── SETUP.md                      # Team command scratchpad
 └── README.md
 ```
 
 Useful docs:
 
-- [Team setup commands](SETUP.md)
 - [Execution spec](docs/Mainstreet_NemoClaw_Codex_Execution_Spec.md)
 - [Progress log](docs/PROGRESS.md)
-- [Demo runbook](docs/DEMO_RUNBOOK.md)
-- [Dashboard notes](dashboard/README.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
