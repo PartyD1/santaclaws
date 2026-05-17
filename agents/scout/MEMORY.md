@@ -1,3 +1,32 @@
 # Scout Memory
 
-- 2026-05-16T19:32:47.901101+00:00 - Scout recently processed 5 auto repair leads in Santa Cruz: 3 mockup, 0 rebuild, 2 skipped.
+- 2026-05-16T23:33:01.71437+00:00 - Upgrade to a paid Apify plan before usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:34:06.230458+00:00 - Upgrade to a paid Apify plan before reaching usage limits to avoid HTTP 402 errors.
+- 2026-05-16T23:36:14.908067+00:00 - Upgrade to paid Apify plan before usage limits to avoid HTTP 402 errors.
+- 2026-05-16T23:37:20.285815+00:00 - Upgrade to a paid Apify plan before usage limits are reached to avoid HTTP 402 errors.
+- 2026-05-16T23:38:24.524774+00:00 - Upgrade to paid Apify plan before usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:39:29.019098+00:00 - Upgrade to a paid Apify plan before reaching usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:40:09.383068+00:00 - Upgrade to a paid Apify plan before usage limits are reached to prevent HTTP 402 errors
+- 2026-05-16T23:40:33.003108+00:00 - Upgrade to a paid Apify plan before usage limits are reached to avoid HTTP 402 errors.
+- 2026-05-16T23:41:37.418078+00:00 - Upgrade to paid Apify plan before usage limits are reached to avoid HTTP 402 errors.
+- 2026-05-16T23:42:41.807753+00:00 - Upgrade to a paid Apify plan before hitting usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:43:46.724977+00:00 - Upgrade to a paid Apify plan before usage limits are reached to prevent HTTP 402 errors.
+- 2026-05-16T23:44:51.089758+00:00 - Upgrade to a paid Apify plan before usage limits are reached to prevent HTTP 402 errors.
+- 2026-05-16T23:44:51.220029+00:00 - Upgrade to a paid Apify plan before hitting usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:45:55.581719+00:00 - Upgrade to a paid Apify plan before hitting usage limits to prevent HTTP 402 errors
+- 2026-05-16T23:47:00.207498+00:00 - Upgrade to a paid Apify plan before usage limits are reached to avoid HTTP 402 errors.
+- 2026-05-16T23:48:04.690055+00:00 - Upgrade to a paid Apify plan before usage limits are reached to prevent HTTP 402 errors
+- 2026-05-16T23:49:10.651307+00:00 - Upgrade to a paid Apify plan before hitting usage limits to avoid HTTP 402 errors.
+- 2026-05-16T23:49:54.668413+00:00 - Check Apify usage limits and implement timeout retries before scraping
+- 2026-05-16T23:50:15.826869+00:00 - Upgrade to a paid Apify plan before hitting usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:52:29.441519+00:00 - Last scout heartbeat had a recoverable error: scrape failed: Apify scrape failed after retry: Apify rejected scrape with HTTP 402: {
+- 2026-05-16T23:53:33.738491+00:00 - Upgrade to a paid Apify plan before hitting usage limits to avoid HTTP 402 errors
+- 2026-05-16T23:54:18.707426+00:00 - Upgrade to a paid Apify plan before hitting usage limits to prevent HTTP 402 errors.
+- 2026-05-16T23:54:38.379405+00:00 - Upgrade to a paid Apify plan before usage limits are reached and add timeout retry logic to handle HTTP 402 errors.
+- 2026-05-16T23:55:39.016486+00:00 - Implement timeout retries and monitor Apify memory usage to prevent HTTP 402 and actor‑memory‑limit‑exceeded errors.
+- 2026-05-16T23:55:42.728509+00:00 - Upgrade to a paid Apify plan before hitting usage limits and add timeout retry logic to handle HTTP 402 errors.
+- 2026-05-16T23:56:47.874483+00:00 - Upgrade to a paid Apify plan and implement timeout retry logic to prevent HTTP 402 errors.
+- 2026-05-16T23:57:52.514354+00:00 - Upgrade to a paid Apify plan and implement timeout retries while monitoring memory usage to avoid HTTP 402 errors.
+- 2026-05-16T23:58:57.022897+00:00 - Upgrade to a paid Apify plan before hitting usage limits and implement timeout retries with memory usage monitoring to avoid HTTP 402 errors.
+- 2026-05-16T23:59:54.300547+00:00 - Upgrade to a paid Apify plan and add timeout retries with memory usage monitoring to prevent HTTP 402 errors.
+- 2026-05-17T00:00:01.273912+00:00 - Upgrade to a paid Apify plan before hitting usage limits and implement timeout retries with memory usage monitoring to prevent HTTP 402 errors.

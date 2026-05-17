@@ -29,6 +29,12 @@
       "entrypoint": "claw.py:heartbeat",
       "interval": "30s",
       "description": "Classifies replies and books meetings"
+    },
+    {
+      "name": "discord_bridge",
+      "entrypoint": "claw.py:heartbeat",
+      "interval": "30s",
+      "description": "Discord approval worker — listens for APPROVE/SKIP/EDIT commands and answers pipeline queries"
     }
   ],
   "notes": "Verify these values against the live NemoClaw/OpenShell route before the demo."

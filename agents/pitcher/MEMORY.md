@@ -1,14 +1,32 @@
 # Pitcher Memory
 
-- 2026-05-16T21:02:11+00:00 - Last pitcher heartbeat had a recoverable error: approved send sweep failed: [Errno 8] nodename nor servname provided, or not known
-- 2026-05-16T21:03:49+00:00 - Last pitcher heartbeat had a recoverable error: approved send sweep failed: [Errno 8] nodename nor servname provided, or not known
-- 2026-05-16T21:06:10.680908+00:00 - Verify DNS resolution for the target host before sending sweep.
-- 2026-05-16T21:07:10.493725+00:00 - Verify DNS resolution for target host before initiating sweep
-- 2026-05-16T21:09:46.723544+00:00 - Verify DNS resolution for target host before sweep.
-- 2026-05-16T21:14:22.341066+00:00 - Verify DNS resolution of target host before sweep
-- 2026-05-16T21:16:23.693877+00:00 - Verify DNS resolution of target host before sweep
-- 2026-05-16T21:19:30.664218+00:00 - Verify DNS resolution of target host before sweep
-- 2026-05-16T21:26:06.972838+00:00 - Validate DNS resolution and SMTP credentials before sweep
-- 2026-05-16T21:32:33.942429+00:00 - Validate DNS resolution and SMTP credentials before sweep
-- 2026-05-16T21:42:40.128262+00:00 - Validate DNS resolution before sweep
-- 2026-05-16T21:46:49.215564+00:00 - Verify DNS resolution of target host before sweep
+- 2026-05-16T23:35:01.680992+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:35:43.309188+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:36:26.197568+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:38:01.485886+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:38:30.517675+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:39:33.494379+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:40:49.911181+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:41:08.498696+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:41:18.010385+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:42:41.807341+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:44:37.226901+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:45:30.514763+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:45:37.034871+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:46:03.570061+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:47:36.201998+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:48:29.58608+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:49:07.905135+00:00 - Include a valid mockup URL in every pitcher heartbeat before proceeding.
+- 2026-05-16T23:49:09.976469+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:49:29.129107+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:50:04.395537+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:50:11.44358+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:50:52.045813+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:52:22.749889+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:52:36.696774+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:55:03.768242+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:55:35.917769+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:56:37.301221+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:58:09.115503+00:00 - Attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-16T23:59:54.208478+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
+- 2026-05-17T00:00:05.560555+00:00 - Always attach a valid mockup URL to each pitcher heartbeat before proceeding.
