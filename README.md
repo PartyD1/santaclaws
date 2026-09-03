@@ -10,7 +10,7 @@
 <div align="center">
 
   <a href="https://github.com/PartyD1/santaclaws">
-    <img src="dashboard/public/thumbnail.svg" alt="Santa Claws" width="600">
+    <h1> Santa Claws </h1>
   </a>
 
   <p align="center">
